@@ -1,0 +1,764 @@
+{
+  "jobs": [
+    {
+      "id": 1,
+      "title": "Software Engineer",
+      "company": "TechNaija Solutions",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦800,000",
+      "description": "Join our dynamic team to build innovative solutions for Nigerian businesses...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "3+ years of experience with JavaScript",
+        "Experience with React/Vue.js",
+        "BSc in Computer Science or related field"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-15"
+    },
+    {
+      "id": 2,
+      "title": "Product Manager",
+      "company": "FinTech Nigeria",
+      "companyLogo": "",
+      "location": "Abuja",
+      "type": "Full-time",
+      "salary": "₦1,200,000",
+      "description": "Lead product development for our financial services platform...",
+      "field": "Banking/Finance",
+      "educationLevel": "Master's Degree",
+      "requirements": [
+        "5+ years in product management",
+        "Experience in fintech",
+        "MBA preferred"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-14"
+    },
+    {
+      "id": 3,
+      "title": "Digital Marketing Manager",
+      "company": "AfriCommerce Ltd",
+      "companyLogo": "",
+      "location": "Port Harcourt",
+      "type": "Full-time",
+      "salary": "₦650,000",
+      "description": "Lead our digital marketing initiatives and grow our online presence across Nigeria...",
+      "field": "Media/Entertainment",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "4+ years digital marketing experience",
+        "Proven track record in e-commerce",
+        "Strong analytics skills"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-13"
+    },
+    {
+      "id": 4,
+      "title": "Senior Backend Developer",
+      "company": "PayStack",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,500,000",
+      "description": "Build robust payment infrastructure for African businesses...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "5+ years Python/Node.js experience",
+        "Experience with payment systems",
+        "Strong security background"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-13"
+    },
+    {
+      "id": 5,
+      "title": "HR Manager",
+      "company": "Dangote Industries",
+      "companyLogo": "",
+      "location": "Kano",
+      "type": "Full-time",
+      "salary": "₦900,000",
+      "description": "Oversee HR operations for our northern regional office...",
+      "field": "Manufacturing",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "7+ years HR experience",
+        "CIPM certification",
+        "Experience in manufacturing sector"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-12"
+    },
+    {
+      "id": 6,
+      "title": "Sales Manager",
+      "company": "MTN Nigeria",
+      "companyLogo": "",
+      "location": "Ibadan",
+      "type": "Full-time",
+      "salary": "₦950,000",
+      "description": "Drive sales growth and manage key accounts in the South-Western region...",
+      "field": "Telecommunications",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "5+ years sales experience",
+        "Strong network in telecom industry",
+        "Track record of meeting targets"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-12"
+    },
+    {
+      "id": 7,
+      "title": "Frontend Developer",
+      "company": "Flutterwave",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Remote",
+      "salary": "₦700,000",
+      "description": "Create responsive and intuitive user interfaces for our payment products...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "3+ years React/Vue experience",
+        "Strong UI/UX skills",
+        "Experience with payment platforms"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-11"
+    },
+    {
+      "id": 8,
+      "title": "Operations Manager",
+      "company": "Nigerian Breweries",
+      "companyLogo": "",
+      "location": "Enugu",
+      "type": "Full-time",
+      "salary": "₦850,000",
+      "description": "Manage day-to-day operations of our brewing facility...",
+      "field": "Manufacturing",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "6+ years operations experience",
+        "BSc in Engineering",
+        "Experience in FMCG"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-11"
+    },
+    {
+      "id": 9,
+      "title": "Data Scientist",
+      "company": "Access Bank",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,300,000",
+      "description": "Develop ML models for risk assessment and fraud detection...",
+      "field": "Banking/Finance",
+      "educationLevel": "Master's Degree",
+      "requirements": [
+        "MSc in Data Science or related field",
+        "Python, R, SQL expertise",
+        "Banking sector experience preferred"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-10"
+    },
+    {
+      "id": 10,
+      "title": "Project Manager",
+      "company": "Julius Berger",
+      "companyLogo": "",
+      "location": "Abuja",
+      "type": "Full-time",
+      "salary": "₦1,100,000",
+      "description": "Manage large-scale infrastructure projects in the FCT...",
+      "field": "Construction",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "PMP Certification",
+        "8+ years construction experience",
+        "Strong stakeholder management"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-10"
+    },
+    {
+      "id": 11,
+      "title": "Petroleum Engineer",
+      "company": "Shell Nigeria",
+      "companyLogo": "",
+      "location": "Port Harcourt",
+      "type": "Full-time",
+      "salary": "₦1,800,000",
+      "description": "Oversee oil extraction processes and optimize production efficiency...",
+      "field": "Oil & Gas",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc in Petroleum Engineering",
+        "5+ years field experience",
+        "COREN registration"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-10"
+    },
+    {
+      "id": 12,
+      "title": "Medical Doctor",
+      "company": "Reddington Hospital",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,400,000",
+      "description": "Join our team of healthcare professionals in providing quality medical care...",
+      "field": "Healthcare",
+      "educationLevel": "Master's Degree",
+      "requirements": [
+        "MBBS degree",
+        "3+ years post-NYSC experience",
+        "Current MDCN registration"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-09"
+    },
+    {
+      "id": 13,
+      "title": "Supply Chain Manager",
+      "company": "Nestle Nigeria",
+      "companyLogo": "",
+      "location": "Ogun",
+      "type": "Full-time",
+      "salary": "₦1,200,000",
+      "description": "Optimize supply chain operations and manage vendor relationships...",
+      "field": "Manufacturing",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc in Supply Chain or related",
+        "6+ years FMCG experience",
+        "SAP knowledge required"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-09"
+    },
+    {
+      "id": 14,
+      "title": "University Lecturer",
+      "company": "University of Lagos",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦500,000",
+      "description": "Teach undergraduate courses in Computer Science department...",
+      "field": "Education",
+      "educationLevel": "PhD",
+      "requirements": [
+        "PhD in Computer Science",
+        "Research publications",
+        "Teaching experience"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-09"
+    },
+    {
+      "id": 15,
+      "title": "Mobile App Developer",
+      "company": "Kuda Bank",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Remote",
+      "salary": "₦900,000",
+      "description": "Build and maintain our mobile banking applications...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "4+ years mobile development",
+        "React Native expertise",
+        "Fintech experience preferred"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-08"
+    },
+    {
+      "id": 16,
+      "title": "Network Engineer",
+      "company": "Globacom Limited",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦850,000",
+      "description": "Maintain and optimize our telecommunications network infrastructure...",
+      "field": "Telecommunications",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "CCNP Certification",
+        "4+ years network experience",
+        "Experience with 5G technologies"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-08"
+    },
+    {
+      "id": 17,
+      "title": "Brand Manager",
+      "company": "Coca-Cola Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,100,000",
+      "description": "Lead brand strategy and marketing campaigns for our beverage portfolio...",
+      "field": "FMCG",
+      "educationLevel": "Master's Degree",
+      "requirements": [
+        "MBA Marketing",
+        "5+ years FMCG experience",
+        "Strong analytical skills"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-08"
+    },
+    {
+      "id": 18,
+      "title": "DevOps Engineer",
+      "company": "Andela",
+      "companyLogo": "",
+      "location": "Remote",
+      "type": "Full-time",
+      "salary": "₦1,300,000",
+      "description": "Build and maintain our cloud infrastructure and CI/CD pipelines...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "AWS/Azure certification",
+        "Strong Linux administration",
+        "Experience with Docker/Kubernetes"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-07"
+    },
+    {
+      "id": 19,
+      "title": "Financial Analyst",
+      "company": "GTBank",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦750,000",
+      "description": "Conduct financial analysis and prepare reports for management...",
+      "field": "Banking/Finance",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc Finance/Economics",
+        "CFA Level 2 minimum",
+        "3+ years banking experience"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-07"
+    },
+    {
+      "id": 20,
+      "title": "Logistics Coordinator",
+      "company": "Jumia",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦450,000",
+      "description": "Coordinate delivery operations and optimize logistics processes...",
+      "field": "Logistics",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc in Logistics/Supply Chain",
+        "2+ years e-commerce experience",
+        "Strong MS Excel skills"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-07"
+    },
+    {
+      "id": 21,
+      "title": "UI/UX Designer",
+      "company": "Carbon",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Remote",
+      "salary": "₦700,000",
+      "description": "Design intuitive interfaces for our financial products...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "3+ years UI/UX experience",
+        "Strong portfolio",
+        "Fintech experience a plus"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-07"
+    },
+    {
+      "id": 22,
+      "title": "Aviation Engineer",
+      "company": "Air Peace",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,600,000",
+      "description": "Maintain and inspect aircraft systems and components...",
+      "field": "Aviation",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "Aircraft Maintenance License",
+        "5+ years aviation experience",
+        "B1/B2 certification"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-06"
+    },
+    {
+      "id": 23,
+      "title": "Real Estate Agent",
+      "company": "PropertyPro",
+      "companyLogo": "",
+      "location": "Abuja",
+      "type": "Full-time",
+      "salary": "₦400,000",
+      "description": "Help clients buy, sell, and rent properties in the FCT...",
+      "field": "Real Estate",
+      "educationLevel": "OND",
+      "requirements": [
+        "Real Estate certification",
+        "2+ years sales experience",
+        "Own transportation"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-06"
+    },
+    {
+      "id": 24,
+      "title": "Agricultural Officer",
+      "company": "Olam Nigeria",
+      "companyLogo": "",
+      "location": "Kaduna",
+      "type": "Full-time",
+      "salary": "₦550,000",
+      "description": "Oversee farming operations and provide technical support to farmers...",
+      "field": "Agriculture",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc in Agriculture",
+        "3+ years field experience",
+        "Knowledge of modern farming techniques"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-06"
+    },
+    {
+      "id": 25,
+      "title": "Quality Assurance Engineer",
+      "company": "Interswitch",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦750,000",
+      "description": "Ensure quality of our payment solutions through automated and manual testing...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "ISTQB certification",
+        "3+ years QA experience",
+        "Experience with Selenium/Cypress"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-05"
+    },
+    {
+      "id": 26,
+      "title": "Drilling Engineer",
+      "company": "NNPC Limited",
+      "companyLogo": "",
+      "location": "Port Harcourt",
+      "type": "Full-time",
+      "salary": "₦1,900,000",
+      "description": "Supervise drilling operations and optimize well performance...",
+      "field": "Oil & Gas",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc Petroleum Engineering",
+        "7+ years drilling experience",
+        "IWCF certification"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-05"
+    },
+    {
+      "id": 27,
+      "title": "Tax Consultant",
+      "company": "KPMG Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦800,000",
+      "description": "Provide tax advisory services to multinational clients...",
+      "field": "Consulting",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "ICAN/ACCA qualification",
+        "3+ years tax consulting",
+        "Strong analytical skills"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-05"
+    },
+    {
+      "id": 28,
+      "title": "Content Producer",
+      "company": "MultiChoice Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦600,000",
+      "description": "Create engaging content for our entertainment channels...",
+      "field": "Media/Entertainment",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc Mass Communication",
+        "4+ years production experience",
+        "Portfolio of work"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-04"
+    },
+    {
+      "id": 29,
+      "title": "Cloud Security Engineer",
+      "company": "Palmpay",
+      "companyLogo": "https://via.placeholder.com/50",
+      "location": "Lagos",
+      "type": "Remote",
+      "salary": "₦1,400,000",
+      "description": "Implement and maintain cloud security infrastructure...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "AWS Security certification",
+        "5+ years security experience",
+        "Financial services background"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-04"
+    },
+    {
+      "id": 30,
+      "title": "Insurance Underwriter",
+      "company": "AXA Mansard",
+      "companyLogo": "https://via.placeholder.com/50",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦550,000",
+      "description": "Evaluate insurance applications and assess risks...",
+      "field": "Insurance",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "CIIN certification",
+        "3+ years underwriting experience",
+        "Strong analytical skills"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-04"
+    },
+    {
+      "id": 31,
+      "title": "Cybersecurity Analyst",
+      "company": "UBA Group",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦950,000",
+      "description": "Monitor and protect bank's digital assets from cyber threats...",
+      "field": "Banking/Finance",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "CISSP certification",
+        "4+ years security experience",
+        "Banking sector experience"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-04"
+    },
+    {
+      "id": 32,
+      "title": "Civil Engineer",
+      "company": "Reynolds Construction",
+      "companyLogo": "",
+      "location": "Abuja",
+      "type": "Full-time",
+      "salary": "₦750,000",
+      "description": "Oversee construction projects and ensure quality standards...",
+      "field": "Construction",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc Civil Engineering",
+        "5+ years construction experience",
+        "COREN registration"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-03"
+    },
+    {
+      "id": 33,
+      "title": "Hotel Manager",
+      "company": "Transcorp Hilton",
+      "companyLogo": "",
+      "location": "Abuja",
+      "type": "Full-time",
+      "salary": "₦850,000",
+      "description": "Manage daily operations of our 5-star hotel facility...",
+      "field": "Hospitality",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "Degree in Hospitality Management",
+        "6+ years hotel experience",
+        "Strong leadership skills"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-03"
+    },
+    {
+      "id": 34,
+      "title": "Manufacturing Supervisor",
+      "company": "Unilever Nigeria",
+      "companyLogo": "",
+      "location": "Ogun",
+      "type": "Full-time",
+      "salary": "₦600,000",
+      "description": "Supervise production lines and maintain quality standards...",
+      "field": "Manufacturing",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc Engineering",
+        "4+ years manufacturing experience",
+        "Six Sigma certification"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-03"
+    },
+    {
+      "id": 35,
+      "title": "Data Engineer",
+      "company": "OPay",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Remote",
+      "salary": "₦1,200,000",
+      "description": "Build and maintain data pipelines for our fintech platform...",
+      "field": "Technology",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "Advanced SQL skills",
+        "Python/Scala expertise",
+        "Experience with big data tools"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-02"
+    },
+    {
+      "id": 36,
+      "title": "Retail Operations Manager",
+      "company": "Shoprite Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦700,000",
+      "description": "Oversee daily operations of our flagship retail store...",
+      "field": "Retail",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "5+ years retail management",
+        "Experience with POS systems",
+        "Strong team leadership"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-02"
+    },
+    {
+      "id": 37,
+      "title": "Management Consultant",
+      "company": "Deloitte Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦1,100,000",
+      "description": "Provide strategic consulting services to major corporations...",
+      "field": "Consulting",
+      "educationLevel": "Master's Degree",
+      "requirements": [
+        "MBA from top institution",
+        "4+ years consulting experience",
+        "Strong analytical skills"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-02"
+    },
+    {
+      "id": 38,
+      "title": "Clinical Research Manager",
+      "company": "GSK Nigeria",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦950,000",
+      "description": "Manage clinical trials and research projects...",
+      "field": "Pharmaceutical",
+      "educationLevel": "PhD",
+      "requirements": [
+        "PharmD or PhD in Life Sciences",
+        "5+ years clinical research",
+        "GCP certification"
+      ],
+      "featured": true,
+      "postedDate": "2024-03-01"
+    },
+    {
+      "id": 39,
+      "title": "Business Intelligence Analyst",
+      "company": "9mobile",
+      "companyLogo": "",
+      "location": "Lagos",
+      "type": "Full-time",
+      "salary": "₦800,000",
+      "description": "Analyze business data and create actionable insights...",
+      "field": "Telecommunications",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "BSc in Statistics/Analytics",
+        "3+ years BI experience",
+        "Power BI/Tableau expertise"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-01"
+    },
+    {
+      "id": 40,
+      "title": "Procurement Officer",
+      "company": "Total Energies",
+      "companyLogo": "",
+      "location": "Port Harcourt",
+      "type": "Full-time",
+      "salary": "₦650,000",
+      "description": "Manage procurement processes for oil & gas operations...",
+      "field": "Oil & Gas",
+      "educationLevel": "Bachelor's Degree",
+      "requirements": [
+        "CIPS certification",
+        "4+ years procurement",
+        "Oil & gas experience"
+      ],
+      "featured": false,
+      "postedDate": "2024-03-01"
+    }
+  ]
+} 
