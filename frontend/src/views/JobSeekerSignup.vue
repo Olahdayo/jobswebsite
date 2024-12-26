@@ -1,43 +1,60 @@
 <template>
-  <div class="container py-5">
-    <h1 class="text-3xl font-bold">Job Seeker Signup</h1>
-    <form @submit.prevent="submitForm">
-      <div class="mb-4">
-        <label for="name" class="block">Name:</label>
-        <input
-          v-model="form.name"
-          type="text"
-          id="name"
-          class="border rounded p-2 w-full"
-        />
-        <span v-if="errors.name" class="text-red-500">{{ errors.name }}</span>
+  <div
+    class="container d-flex align-items-center justify-content-center min-vh-100"
+  >
+    <div class="col-md-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h1 class="text-center mb-4">Job Seeker Signup</h1>
+          <form @submit.prevent="submitForm">
+            <div class="mb-3">
+              <label for="name" class="form-label">Name:</label>
+              <input
+                v-model="form.name"
+                type="text"
+                id="name"
+                class="form-control"
+                required
+              />
+              <span v-if="errors.name" class="text-danger">{{
+                errors.name
+              }}</span>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email:</label>
+              <input
+                v-model="form.email"
+                type="email"
+                id="email"
+                class="form-control"
+                required
+              />
+              <span v-if="errors.email" class="text-danger">{{
+                errors.email
+              }}</span>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password:</label>
+              <input
+                v-model="form.password"
+                type="password"
+                id="password"
+                class="form-control"
+                required
+              />
+              <span v-if="errors.password" class="text-danger">{{
+                errors.password
+              }}</span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+          </form>
+          <p class="mt-3 text-center">
+            Already have an account?
+            <router-link to="/login" class="link-primary">Login</router-link>
+          </p>
+        </div>
       </div>
-      <div class="mb-4">
-        <label for="email" class="block">Email:</label>
-        <input
-          v-model="form.email"
-          type="email"
-          id="email"
-          class="border rounded p-2 w-full"
-        />
-        <span v-if="errors.email" class="text-red-500">{{ errors.email }}</span>
-      </div>
-      <div class="mb-4">
-        <label for="password" class="block">Password:</label>
-        <input
-          v-model="form.password"
-          type="password"
-          id="password"
-          class="border rounded p-2 w-full"
-        />
-        <span v-if="errors.password" class="text-red-500">{{
-          errors.password
-        }}</span>
-      </div>
-      <button type="submit" class="bg-primary text-white rounded px-4 py-2">
-        Sign Up
-      </button>
-    </form>
+    </div>
   </div>
 </template>
 
@@ -98,7 +115,7 @@ export default {
         const newUser = {
           email: this.form.email,
           password: this.form.password,
-          role: "jobseeker",
+          type: "jobseeker",
           name: this.form.name,
         };
 
@@ -115,8 +132,7 @@ export default {
 </script>
 
 <style scoped>
-/* Add any specific styles here */
-.text-red-500 {
-  color: red;
+.text-danger {
+  color: #dc3545; /* Bootstrap danger color */
 }
 </style>
