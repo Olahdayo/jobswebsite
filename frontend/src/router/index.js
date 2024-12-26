@@ -1,5 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "../views/Home.vue";
+import JobSeekerSignup from "@/views/JobSeekerSignup.vue";
+import JobListings from "@/views/JobListings.vue";
+import JobDetails from "@/views/JobDetails.vue";
+import EmployerSignup from "@/views/EmployerSignup.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,6 +34,16 @@ const router = createRouter({
       component: () => import("../views/signup.vue"),
     },
     {
+      path: "/signup/jobseeker",
+      name: "JobseekerSignup",
+      component: JobSeekerSignup,
+    },
+    {
+      path: "/signup/employer",
+      name: "EmployerSignup",
+      component: EmployerSignup,
+    },
+    {
       // path: '/faq',
       // name: 'FAQ',
       // component: () => import('../views/FAQ.vue')
@@ -54,7 +68,8 @@ const router = createRouter({
     {
       path: "/jobs/:id",
       name: "JobDetails",
-      component: () => import("@/views/JobDetails.vue"), 
+      component: JobDetails,
+      props: true,
     },
     {
       path: "/jobs/state/:state",
@@ -69,4 +84,10 @@ const router = createRouter({
   ],
 });
 
-export default router
+// Global navigation guard to scroll to the top on route change
+router.beforeEach((to, from, next) => {
+  window.scrollTo(0, 0); // Scroll to the top
+  next(); // Proceed to the next route
+});
+
+export default router;
