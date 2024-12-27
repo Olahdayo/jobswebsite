@@ -34,7 +34,7 @@
               <div class="d-flex justify-content-between mb-3">
                 <div class="text-center">
                   <h3 class="fw-bold text-success">
-                    {{ jobsStore.jobs.length }}
+                    {{ jobsStore.activeJobs.length }}
                   </h3>
                   <p class="text-muted mb-0">Active Jobs</p>
                 </div>
@@ -220,7 +220,7 @@ export default {
     },
     // Gets the newest jobs
     latestJobs() {
-      return this.jobsStore.getLatestJobs().slice(0, this.jobsToShow);
+      return this.jobsStore.getLatestJobs().slice(0, 6);
     },
   },
   methods: {
@@ -283,19 +283,29 @@ export default {
   setup() {
     const jobsStore = useJobsStore();
     jobsStore.initializeJobs();
+
+    // Get only active jobs
+    const activeJobs = jobsStore.activeJobs;
+
     return {
       jobsStore,
-      recentPostings: [...jobsStore.jobs]
+      // Recent postings - only active jobs
+      recentPostings: [...activeJobs]
         .sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate))
         .slice(0, 5),
-      jobsByState: jobsStore.jobs.reduce((acc, job) => {
+
+      // Jobs by state - only active jobs
+      jobsByState: activeJobs.reduce((acc, job) => {
         acc[job.location] = (acc[job.location] || 0) + 1;
         return acc;
       }, {}),
-      jobsByField: jobsStore.jobs.reduce((acc, job) => {
+
+      // Jobs by field - only active jobs
+      jobsByField: activeJobs.reduce((acc, job) => {
         acc[job.field] = (acc[job.field] || 0) + 1;
         return acc;
       }, {}),
+
       formatDate: (dateString) => {
         const days = Math.floor(
           (new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)

@@ -71,33 +71,26 @@ export default {
     };
   },
   methods: {
-    submitForm() {
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      console.log("Users:", users);
+    async handleLogin() {
+      try {
+        await this.authStore.login(this.form);
 
-      const user = users.find(
-        (u) => u.email === this.form.email && u.password === this.form.password
-      );
-
-      if (user) {
-        if (user.type === this.selectedRole) {
-          const authStore = useAuthStore();
-          authStore.user = user;
-          localStorage.setItem("currentUser", JSON.stringify(user));
-
-          // Redirect based on user type
-          if (user.type === "jobseeker") {
-            this.$router.push("/dashboard/jobseeker");
-          } else if (user.type === "employer") {
-            this.$router.push("/dashboard/employer");
-          }
+        // Check for return URL
+        const returnUrl = localStorage.getItem("returnUrl");
+        if (returnUrl) {
+          localStorage.removeItem("returnUrl");
+          this.$router.push(returnUrl);
         } else {
-          this.errorMessage = "Invalid credentials";
-          //   console.log("Type mismatch:", user.type, this.selectedRole);
+          // Default navigation based on role
+          if (this.authStore.user.role === "employer") {
+            this.$router.push("/dashboard/employer");
+          } else {
+            this.$router.push("/dashboard/jobseeker");
+          }
         }
-      } else {
-        this.errorMessage = "Invalid credentials";
-        // console.log("User not found for the provided credentials.");
+      } catch (error) {
+        console.error("Login error:", error);
+        alert(error.message || "Failed to login. Please try again.");
       }
     },
   },

@@ -1,190 +1,275 @@
 <template>
-  <div class="container py-5">
+  <div class="container py-4">
     <h1 class="mb-4">Featured Jobs</h1>
-    <div class="row">
-      <div class="col-md-8">
-        <div v-if="activeFilters.length" class="alert alert-info mb-3">
-          <strong>Showing results for:</strong>
-          <div class="d-flex flex-wrap">
-            <div
-              class="badge bg-secondary me-2 mb-2"
-              v-for="(filter, index) in activeFilters"
-              :key="index"
-            >
-              {{ filter.label }}
-              <button
-                type="button"
-                class="btn-close btn-close-white"
-                @click="removeFilter(filter.key)"
-                aria-label="Close"
-              ></button>
-            </div>
-          </div>
-          <button class="btn btn-outline-danger" @click="clearAllFilters">
-            Clear All Filters
-          </button>
-        </div>
-        
-        <!-- Display message if no jobs found -->
-        <div v-if="filteredJobs.length === 0" class="alert alert-warning">
-          No jobs found matching your filters.
-        </div>
-        <div class="row">
-          <div class="col-12 mb-4" v-for="job in paginatedJobs" :key="job.id">
-          <router-link :to="{ name: 'JobDetails', params: { id: job.id } }" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100 job-card">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                  <img
-                    :src="job.companyLogo || defaultLogo"
-                    alt="Company Logo"
-                    class="company-logo me-3"
-                  />
-                  <div>
-                    <h5 class="card-title mb-1 job-title">{{ job.title }}</h5>
-                    <h6 class="text-muted">{{ job.company }}</h6>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- No Featured Jobs -->
+    <div v-else-if="!featuredJobs.length" class="text-center py-5">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No featured jobs available at the moment.
+      </div>
+    </div>
+
+    <!-- Featured Jobs List -->
+    <div v-else>
+      <p class="text-muted mb-4">
+        Showing {{ paginatedJobs.length }} of {{ featuredJobs.length }} featured
+        jobs
+      </p>
+
+      <div class="row g-4">
+        <div v-for="job in paginatedJobs" :key="job.id" class="col-12">
+          <div class="card job-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start gap-3">
+                <img
+                  :src="job.companyLogo || '/path/to/default-logo.png'"
+                  :alt="job.company"
+                  class="company-logo"
+                  width="60"
+                  height="60"
+                />
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h5 class="card-title mb-1">{{ job.title }}</h5>
+                      <p class="text-muted mb-2">{{ job.company }}</p>
+                    </div>
+                    <span class="badge bg-warning text-dark">
+                      <i class="fas fa-star me-1"></i>
+                      Featured
+                    </span>
                   </div>
-                </div>
-                <p class="card-text">{{ job.description }}</p>
-                <div class="justify-content-between align-items-center">
-                  <span class="badge bg-light text-dark">{{
-                    job.location
-                  }}</span>
-                  <p class="text-dark">{{ job.salary }}/month</p>
-                </div>
-                <div class="mt-2">
-                  <i class="bi bi-calendar"></i>
-                  <span class="text-muted">{{
-                    formatDate(job.postedDate)
-                  }}</span>
+                  <p class="card-text mb-3">{{ job.description }}</p>
+                  <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-dark">
+                      <i class="fas fa-map-marker-alt me-1"></i>
+                      {{ job.location }}
+                    </span>
+                    <span class="badge bg-light text-dark">
+                      <i class="fas fa-briefcase me-1"></i>
+                      {{ job.type }}
+                    </span>
+                    <span class="badge bg-light text-dark">
+                      <i class="fas fa-graduation-cap me-1"></i>
+                      {{ job.educationLevel }}
+                    </span>
+                    <span class="badge bg-light text-success">
+                      <i class="fas fa-money-bill-wave me-1"></i>
+                      {{ job.salary }}/month
+                    </span>
+                  </div>
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <small class="text-muted">
+                      <i class="fas fa-clock me-1"></i>
+                      Posted {{ formatDate(job.postedDate) }}
+                    </small>
+                    <router-link
+                      :to="`/jobs/${job.id}`"
+                      class="btn btn-primary btn-sm"
+                    >
+                      View Details
+                    </router-link>
+                  </div>
                 </div>
               </div>
             </div>
-            </router-link>
           </div>
         </div>
-        <nav aria-label="Page navigation">
-          <ul class="pagination">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" @click="changePage(currentPage - 1)"
-                >Previous</a
-              >
-            </li>
-            <li
-              class="page-item"
-              v-for="page in totalPages"
-              :key="page"
-              :class="{ active: currentPage === page }"
-            >
-              <a class="page-link" @click="changePage(page)">{{ page }}</a>
-            </li>
-            <li
-              class="page-item"
-              :class="{ disabled: currentPage === totalPages }"
-            >
-              <a class="page-link" @click="changePage(currentPage + 1)">Next</a>
-            </li>
-          </ul>
-        </nav>
       </div>
-      <div class="col-md-4">
-        <SearchFilter @filter-applied="applyFilters" />
-      </div>
+
+      <!-- Pagination -->
+      <nav
+        v-if="totalPages > 1"
+        class="mt-4"
+        aria-label="Featured jobs pagination"
+      >
+        <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button
+              class="page-link"
+              @click="changePage(currentPage - 1)"
+              :disabled="currentPage === 1"
+            >
+              Previous
+            </button>
+          </li>
+
+          <li
+            v-for="page in totalPages"
+            :key="page"
+            class="page-item"
+            :class="{ active: currentPage === page }"
+          >
+            <button class="page-link" @click="changePage(page)">
+              {{ page }}
+            </button>
+          </li>
+
+          <li
+            class="page-item"
+            :class="{ disabled: currentPage === totalPages }"
+          >
+            <button
+              class="page-link"
+              @click="changePage(currentPage + 1)"
+              :disabled="currentPage === totalPages"
+            >
+              Next
+            </button>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
 
 <script>
+import { ref, computed, onMounted } from "vue";
 import { useJobsStore } from "@/stores/jobs";
-import SearchFilter from "@/components/SearchFilter.vue";
 
 export default {
   name: "FeaturedJobs",
-  components: {
-    SearchFilter,
-  },
-  data() {
-    return {
-      currentPage: 1,
-      jobsPerPage: 10,
-      defaultLogo: "/images/dashboard-default.svg",
-    };
-  },
-  computed: {
-    featuredJobs() {
-      return this.jobsStore.getAllFeaturedJobs();
-    },
-    paginatedJobs() {
-      const start = (this.currentPage - 1) * this.jobsPerPage;
-      return this.filteredJobs.slice(start, start + this.jobsPerPage);
-    },
-    totalPages() {
-      return Math.ceil(this.filteredJobs.length / this.jobsPerPage);
-    },
-     filteredJobs() {
-      return this.jobsStore.filteredJobs;
-    },
-    activeFilters() {
-      return this.jobsStore.searchFilters;
-    }
-  },
+
   setup() {
     const jobsStore = useJobsStore();
-    jobsStore.initializeJobs();
-    return { jobsStore };
-  },
-  methods: {
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
-        window.scrollTo(0, 0);
+    const isLoading = ref(true);
+    const featuredJobs = ref([]);
+    const currentPage = ref(1);
+    const jobsPerPage = 20;
+
+    const totalPages = computed(() =>
+      Math.ceil(featuredJobs.value.length / jobsPerPage)
+    );
+
+    const paginatedJobs = computed(() => {
+      const startIndex = (currentPage.value - 1) * jobsPerPage;
+      const endIndex = startIndex + jobsPerPage;
+      return featuredJobs.value.slice(startIndex, endIndex);
+    });
+
+    const loadFeaturedJobs = () => {
+      featuredJobs.value = jobsStore.featuredActiveJobs;
+    };
+
+    const changePage = (page) => {
+      if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    },
-     applyFilters(filters) {
-      this.jobsStore.searchFilters = filters;
-      this.jobsStore.filterJobs();
-      this.currentPage = 1;
-      window.scrollTo(0, 0);
-    },
-      clearAllFilters() {
-      this.jobsStore.searchFilters = {
-        query: '',
-        location: '',
-        field: '',
-        education: '',
-        jobType: ''
-      };
-      this.jobsStore.filterJobs();
-      this.currentPage = 1;
-      window.scrollTo(0, 0);
-    },
-    formatDate(dateString) {
-      const options = { day: "numeric", month: "long", year: "numeric" };
-      return new Date(dateString).toLocaleDateString(undefined, options);
-    },
-  },
-  beforeRouteEnter(to, from, next) {
-    window.scrollTo(0, 0);
-    next();
+    };
+
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    };
+
+    onMounted(async () => {
+      try {
+        await jobsStore.initializeJobs();
+        loadFeaturedJobs();
+      } catch (error) {
+        console.error("Error loading featured jobs:", error);
+      } finally {
+        isLoading.value = false;
+      }
+    });
+
+    return {
+      featuredJobs,
+      paginatedJobs,
+      isLoading,
+      currentPage,
+      totalPages,
+      formatDate,
+      changePage,
+    };
   },
 };
 </script>
 
 <style scoped>
-.company-logo {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-}
-.job-title {
-  transition: text-decoration 0.3s;
-}
-.job-card:hover .job-title {
-  text-decoration: underline;
-  color: black;
+.job-card {
+  transition: transform 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.pagination .page-link {
+.job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.company-logo {
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.5em 1em;
+}
+
+.card-title {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.btn-primary {
+  padding: 0.5rem 1.5rem;
+}
+
+.alert {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.pagination {
+  margin-bottom: 2rem;
+}
+
+.page-link {
+  color: #2c3e50;
+  border-color: #dee2e6;
+  padding: 0.5rem 1rem;
   cursor: pointer;
+}
+
+.page-item.active .page-link {
+  background-color: #2c3e50;
+  border-color: #2c3e50;
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.page-link:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #2c3e50;
+}
+
+.page-item.active .page-link:hover {
+  background-color: #2c3e50;
+  color: white;
 }
 </style>

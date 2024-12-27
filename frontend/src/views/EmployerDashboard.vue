@@ -1,108 +1,128 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="dashboard-container">
     <!-- Dashboard Header -->
-    <header class="bg-white shadow">
-      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center">
-          <h1 class="text-3xl font-bold text-gray-900">Employer Dashboard</h1>
-          <div class="flex items-center gap-4">
-            <button
-              @click="showPostJobModal = true"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none"
-            >
-              <i class="fas fa-plus-circle mr-2"></i>
-              Post New Job
-            </button>
-            <button
-              @click="authStore.logout"
-              class="text-gray-600 hover:text-gray-900"
-            >
-              <i class="fas fa-sign-out-alt mr-2"></i>
-              Logout
-            </button>
-          </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container-fluid px-4">
+        <h1 class="navbar-brand mb-0 h1 fw-bold">Employer Dashboard</h1>
+        <div class="d-flex align-items-center gap-3">
+          <button
+            @click="openPostJobModal"
+            class="btn btn-primary d-flex align-items-center"
+          >
+            <i class="fas fa-plus-circle me-2"></i>
+            Post New Job
+          </button>
+          <button
+            @click="handleLogout"
+            class="btn btn-outline-danger d-flex align-items-center"
+          >
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Logout
+          </button>
         </div>
       </div>
-    </header>
+    </nav>
 
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <!-- Stats Overview -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class="fas fa-briefcase text-2xl text-primary"></i>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Active Jobs
-                  </dt>
-                  <dd class="text-lg font-semibold text-gray-900">
-                    {{ postedJobs.length }}
-                  </dd>
-                </dl>
+    <div class="container py-4">
+      <!-- Stats Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon jobs">
+                  <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Active Jobs</h6>
+                  <h2 class="card-title mb-0">{{ activeJobs.length }}</h2>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class="fas fa-users text-2xl text-blue-500"></i>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon applicants">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">
                     Total Applicants
-                  </dt>
-                  <dd class="text-lg font-semibold text-gray-900">
-                    {{ totalApplications }}
-                  </dd>
-                </dl>
+                  </h6>
+                  <h2 class="card-title mb-0">{{ totalApplications }}</h2>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class="fas fa-clock text-2xl text-yellow-500"></i>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Pending Review
-                  </dt>
-                  <dd class="text-lg font-semibold text-gray-900">
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon pending">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Pending Review</h6>
+                  <h2 class="card-title mb-0">
                     {{ pendingApplications.length }}
-                  </dd>
-                </dl>
+                  </h2>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class="fas fa-check-circle text-2xl text-green-500"></i>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Approved
-                  </dt>
-                  <dd class="text-lg font-semibold text-gray-900">
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon approved">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Approved</h6>
+                  <h2 class="card-title mb-0">
                     {{ approvedApplications.length }}
-                  </dd>
-                </dl>
+                  </h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon closed">
+                  <i class="fas fa-door-closed"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Closed Jobs</h6>
+                  <h2 class="card-title mb-0">{{ closedJobs.length }}</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon featured">
+                  <i class="fas fa-star"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Featured Jobs</h6>
+                  <h2 class="card-title mb-0">{{ featuredJobs.length }}</h2>
+                </div>
               </div>
             </div>
           </div>
@@ -110,102 +130,209 @@
       </div>
 
       <!-- Applications Chart -->
-      <div class="bg-white shadow rounded-lg p-6 mb-8">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">
-          Application Trends
-        </h3>
-        <canvas ref="chartCanvas" height="100"></canvas>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom-0 py-3">
+          <h5 class="card-title mb-0">Application Trends</h5>
+        </div>
+        <div class="card-body">
+          <canvas ref="chartCanvas" height="300"></canvas>
+        </div>
       </div>
 
-      <!-- Job Listings with Applications -->
-      <div class="bg-white shadow rounded-lg">
-        <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Posted Jobs & Applications
-          </h3>
+      <!-- Posted Jobs & Applications -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom-0 py-3">
+          <h5 class="card-title mb-0">Posted Jobs & Applications</h5>
         </div>
-        <div class="divide-y divide-gray-200">
-          <div
-            v-for="job in postedJobs"
-            :key="job.id"
-            class="px-4 py-4 sm:px-6 hover:bg-gray-50"
-          >
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h4 class="text-lg font-medium text-primary">
-                  {{ job.title }}
-                </h4>
-                <p class="text-sm text-gray-500">
-                  Posted {{ formatDate(job.postedDate) }}
-                </p>
-              </div>
-              <div class="flex items-center gap-4">
-                <span
-                  class="px-3 py-1 rounded-full text-sm font-medium"
+        <div class="card-body">
+          <!-- Jobs List -->
+          <div class="row g-4">
+            <div v-for="job in postedJobs" :key="job.id" class="col-12">
+              <div class="card border">
+                <!-- Job Header -->
+                <div
+                  class="card-header bg-light py-3 cursor-pointer"
+                  @click="toggleJobDetails(job.id)"
                   :class="{
-                    'bg-green-100 text-green-800': job.status === 'active',
-                    'bg-gray-100 text-gray-800': job.status === 'closed',
+                    'border-bottom-0': !expandedJobs.includes(job.id),
+                    closed: job.status === 'closed',
                   }"
                 >
-                  {{ job.status }}
-                </span>
-                <button
-                  @click="toggleJobStatus(job)"
-                  class="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  {{ job.status === "active" ? "Close" : "Reopen" }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Applications for this job -->
-            <div class="mt-4">
-              <h5 class="text-sm font-medium text-gray-700 mb-2">
-                Applications ({{ getJobApplications(job.id).length }})
-              </h5>
-              <div class="space-y-3">
-                <div
-                  v-for="application in getJobApplications(job.id)"
-                  :key="application.id"
-                  class="flex items-center justify-between bg-gray-50 p-3 rounded"
-                >
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">
-                      {{ getApplicantName(application.userId) }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      Applied {{ formatDate(application.appliedDate) }}
-                    </p>
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <div>
+                      <h5 class="card-title mb-1">{{ job.title }}</h5>
+                      <div class="text-muted small">
+                        <span class="me-3">
+                          <i class="fas fa-calendar-alt me-1"></i>
+                          Posted {{ formatDate(job.postedDate) }}
+                        </span>
+                        <span class="me-3">
+                          <i class="fas fa-map-marker-alt me-1"></i>
+                          {{ job.location }}
+                        </span>
+                        <span class="me-3">
+                          <i class="fas fa-briefcase me-1"></i>
+                          {{ job.type }}
+                        </span>
+                        <span>
+                          <i class="fas fa-users me-1"></i>
+                          {{ getJobApplications(job.id).length }} applicant(s)
+                        </span>
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                      <span
+                        class="badge rounded-pill"
+                        :class="
+                          job.status === 'active'
+                            ? 'bg-success'
+                            : 'bg-secondary'
+                        "
+                      >
+                        {{ job.status }}
+                      </span>
+                      <span
+                        v-if="job.featured"
+                        class="badge bg-warning text-dark me-2"
+                        title="Featured Job"
+                      >
+                        <i class="fas fa-star me-1"></i>
+                        Featured
+                      </span>
+                      <button
+                        @click.stop="toggleJobStatus(job)"
+                        class="btn btn-sm"
+                        :class="
+                          job.status === 'active'
+                            ? 'btn-outline-danger'
+                            : 'btn-outline-success'
+                        "
+                      >
+                        <i
+                          :class="
+                            job.status === 'active'
+                              ? 'fas fa-times-circle me-1'
+                              : 'fas fa-check-circle me-1'
+                          "
+                        ></i>
+                        {{
+                          job.status === "active" ? "Close Job" : "Reopen Job"
+                        }}
+                      </button>
+                      <i
+                        class="fas fa-chevron-down transition-transform"
+                        :class="{ 'rotate-180': expandedJobs.includes(job.id) }"
+                      ></i>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <button
-                      v-if="application.status === 'pending'"
-                      @click="updateApplicationStatus(application, 'approved')"
-                      class="text-sm text-green-600 hover:text-green-800"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      v-if="application.status === 'pending'"
-                      @click="updateApplicationStatus(application, 'rejected')"
-                      class="text-sm text-red-600 hover:text-red-800"
-                    >
-                      Reject
-                    </button>
-                    <span
-                      v-else
-                      :class="[
-                        'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                        {
-                          'bg-green-100 text-green-800':
-                            application.status === 'approved',
-                          'bg-red-100 text-red-800':
-                            application.status === 'rejected',
-                        },
-                      ]"
-                    >
-                      {{ application.status }}
-                    </span>
+                </div>
+
+                <!-- Applicants Table (Collapsible) -->
+                <div
+                  v-show="expandedJobs.includes(job.id)"
+                  class="collapse-transition"
+                >
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th class="ps-4">Applicant</th>
+                            <th>Email</th>
+                            <th>Applied Date</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="application in getJobApplications(job.id)"
+                            :key="application.userId"
+                          >
+                            <td class="ps-4">
+                              <div class="d-flex align-items-center">
+                                <div class="avatar-placeholder me-3">
+                                  {{ getApplicantInitials(application.userId) }}
+                                </div>
+                                <div>
+                                  <div class="fw-medium">
+                                    {{ getApplicantName(application.userId) }}
+                                  </div>
+                                  <div class="text-muted small">
+                                    {{
+                                      getApplicantEducation(application.userId)
+                                    }}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{{ getApplicantEmail(application.userId) }}</td>
+                            <td>{{ formatDate(application.appliedDate) }}</td>
+                            <td>
+                              <span
+                                class="badge"
+                                :class="{
+                                  'bg-warning text-dark':
+                                    application.status === 'pending',
+                                  'bg-success':
+                                    application.status === 'approved',
+                                  'bg-danger':
+                                    application.status === 'rejected',
+                                }"
+                              >
+                                {{ application.status }}
+                              </span>
+                            </td>
+                            <td class="text-end pe-4">
+                              <div class="btn-group">
+                                <button
+                                  @click="
+                                    updateApplicationStatus(
+                                      application,
+                                      'approved'
+                                    )
+                                  "
+                                  class="btn btn-sm btn-outline-success"
+                                  :disabled="application.status === 'approved'"
+                                >
+                                  <i class="fas fa-check me-1"></i>
+                                  Approve
+                                </button>
+                                <button
+                                  @click="
+                                    updateApplicationStatus(
+                                      application,
+                                      'rejected'
+                                    )
+                                  "
+                                  class="btn btn-sm btn-outline-danger"
+                                  :disabled="application.status === 'rejected'"
+                                >
+                                  <i class="fas fa-times me-1"></i>
+                                  Reject
+                                </button>
+                                <button
+                                  @click="
+                                    viewApplicantDetails(application.userId)
+                                  "
+                                  class="btn btn-sm btn-outline-primary"
+                                >
+                                  <i class="fas fa-eye me-1"></i>
+                                  View Details
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr v-if="getJobApplications(job.id).length === 0">
+                            <td colspan="5" class="text-center py-4 text-muted">
+                              No applications received yet
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -213,277 +340,657 @@
           </div>
         </div>
       </div>
-    </main>
+    </div>
 
     <!-- Post Job Modal -->
-    <Modal v-if="showPostJobModal" @close="showPostJobModal = false">
-      <template #header>
-        <h3 class="text-xl font-bold">Post New Job</h3>
-      </template>
-      <template #body>
-        <form @submit.prevent="handlePostJob" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Job Title
-            </label>
-            <input
-              v-model="newJob.title"
-              type="text"
-              required
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-            />
-          </div>
+    <Teleport to="body">
+      <PostJobModal
+        v-if="showPostJobModal"
+        @close="closePostJobModal"
+        @submit="handlePostJob"
+      />
+    </Teleport>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              v-model="newJob.description"
-              rows="4"
-              required
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-            ></textarea>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">
-                Location
-              </label>
-              <input
-                v-model="newJob.location"
-                type="text"
-                required
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">
-                Salary
-              </label>
-              <input
-                v-model="newJob.salary"
-                type="text"
-                required
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">
-                Job Type
-              </label>
-              <select
-                v-model="newJob.type"
-                required
-                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-              >
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Contract">Contract</option>
-                <option value="Remote">Remote</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">
-                Field
-              </label>
-              <input
-                v-model="newJob.field"
-                type="text"
-                required
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              />
-            </div>
-          </div>
-        </form>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <Button variant="secondary" @click="showPostJobModal = false">
-            Cancel
-          </Button>
-          <Button :loading="isPosting" @click="handlePostJob">
-            Post Job
-          </Button>
-        </div>
-      </template>
-    </Modal>
+    <SuccessModal
+      v-if="showSuccessModal"
+      :message="successMessage"
+      @close="handleSuccessModalClose"
+    />
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from "vue";
+<script>
 import { useAuthStore } from "@/stores/auth";
 import { useJobsStore } from "@/stores/jobs";
-import Modal from "@/components/Modal.vue";
-import Button from "@/components/Button.vue";
+import PostJobModal from "@/components/PostJobModal.vue";
 import Chart from "chart.js/auto";
+import SuccessModal from "@/components/SuccessModal.vue";
 
-const authStore = useAuthStore();
-const jobsStore = useJobsStore();
+export default {
+  name: "EmployerDashboard",
+  components: {
+    PostJobModal,
+    SuccessModal,
+  },
 
-const showPostJobModal = ref(false);
-const isPosting = ref(false);
-const chartCanvas = ref(null);
-let chart = null;
-
-const newJob = ref({
-  title: "",
-  description: "",
-  location: "",
-  salary: "",
-  type: "Full-time",
-  field: "",
-});
-
-// Get jobs posted by current employer
-const postedJobs = computed(() =>
-  jobsStore.jobs.filter((job) => job.company === authStore.user.companyName)
-);
-
-// Get all applications for employer's jobs
-const applications = computed(() => {
-  const allApplications = JSON.parse(
-    localStorage.getItem("jobApplications") || "[]"
-  );
-  return allApplications.filter((app) =>
-    postedJobs.value.some((job) => job.id === app.jobId)
-  );
-});
-
-const totalApplications = computed(() => applications.value.length);
-
-const pendingApplications = computed(() =>
-  applications.value.filter((app) => app.status === "pending")
-);
-
-const approvedApplications = computed(() =>
-  applications.value.filter((app) => app.status === "approved")
-);
-
-const getJobApplications = (jobId) => {
-  return applications.value.filter((app) => app.jobId === jobId);
-};
-
-const getApplicantName = (userId) => {
-  const users = JSON.parse(localStorage.getItem("users") || "[]");
-  const user = users.find((u) => u.id === userId);
-  return user ? user.fullName : "Unknown Applicant";
-};
-
-const updateApplicationStatus = (application, newStatus) => {
-  const applications = JSON.parse(
-    localStorage.getItem("jobApplications") || "[]"
-  );
-  const index = applications.findIndex(
-    (app) =>
-      app.jobId === application.jobId && app.userId === application.userId
-  );
-
-  if (index !== -1) {
-    applications[index].status = newStatus;
-    localStorage.setItem("jobApplications", JSON.stringify(applications));
-    // Refresh the applications
-    location.reload();
-  }
-};
-
-const toggleJobStatus = (job) => {
-  job.status = job.status === "active" ? "closed" : "active";
-  // Update in localStorage
-  const jobs = JSON.parse(localStorage.getItem("jobs") || "[]");
-  const index = jobs.findIndex((j) => j.id === job.id);
-  if (index !== -1) {
-    jobs[index].status = job.status;
-    localStorage.setItem("jobs", JSON.stringify(jobs));
-  }
-};
-
-const handlePostJob = async () => {
-  isPosting.value = true;
-  try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const newJobData = {
-      id: Date.now(),
-      ...newJob.value,
-      company: authStore.user.companyName,
-      companyLogo: "",
-      postedDate: new Date().toISOString(),
-      status: "active",
-      featured: false,
+  data() {
+    return {
+      chart: null,
+      showPostJobModal: false,
+      applications: [],
+      totalApplications: 0,
+      pendingApplications: [],
+      approvedApplications: [],
+      authStore: null,
+      jobsStore: null,
+      isSubmitting: false,
+      expandedJobs: [],
+      showSuccessModal: false,
+      successMessage: "",
     };
+  },
 
-    // Add to jobs store
-    jobsStore.jobs.push(newJobData);
+  created() {
+    this.authStore = useAuthStore();
+    this.jobsStore = useJobsStore();
 
-    // Update localStorage
-    const jobs = JSON.parse(localStorage.getItem("jobs") || "[]");
-    jobs.push(newJobData);
-    localStorage.setItem("jobs", JSON.stringify(jobs));
+    // Check if user is logged in
+    if (!this.authStore.user) {
+      this.$router.push("/login");
+      return;
+    }
 
-    showPostJobModal.value = false;
-    newJob.value = {
-      title: "",
-      description: "",
-      location: "",
-      salary: "",
-      type: "Full-time",
-      field: "",
-    };
-  } finally {
-    isPosting.value = false;
-  }
-};
+    this.jobsStore.initializeJobs();
+    this.loadData();
+  },
 
-onMounted(() => {
-  // Initialize chart
-  const ctx = chartCanvas.value.getContext("2d");
-  const dates = [
-    ...new Set(
-      applications.value.map((app) =>
-        new Date(app.appliedDate).toLocaleDateString()
-      )
-    ),
-  ];
+  computed: {
+    postedJobs() {
+      if (!this.authStore?.user) return [];
+      return this.jobsStore.jobs.filter(
+        (job) => job.company === this.authStore.user.companyName
+      );
+    },
 
-  const applicationCounts = dates.map(
-    (date) =>
-      applications.value.filter(
-        (app) => new Date(app.appliedDate).toLocaleDateString() === date
-      ).length
-  );
+    activeJobs() {
+      return this.postedJobs.filter((job) => job.status === "active");
+    },
 
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: dates,
-      datasets: [
-        {
-          label: "Applications",
-          data: applicationCounts,
-          borderColor: "rgb(59, 130, 246)",
-          tension: 0.1,
+    closedJobs() {
+      return this.postedJobs.filter((job) => job.status === "closed");
+    },
+
+    featuredJobs() {
+      return this.postedJobs.filter((job) => job.featured);
+    },
+  },
+
+  mounted() {
+    this.loadData();
+    this.initializeChart();
+  },
+
+  methods: {
+    initializeChart() {
+      if (this.chart) {
+        this.chart.destroy();
+      }
+
+      const ctx = this.$refs.chartCanvas.getContext("2d");
+      const dates = [
+        ...new Set(
+          this.applications.map((app) =>
+            new Date(app.appliedDate).toLocaleDateString()
+          )
+        ),
+      ].sort((a, b) => new Date(a) - new Date(b));
+
+      const applicationCounts = dates.map(
+        (date) =>
+          this.applications.filter(
+            (app) => new Date(app.appliedDate).toLocaleDateString() === date
+          ).length
+      );
+
+      this.chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: "Applications",
+              data: applicationCounts,
+              borderColor: "#0d6efd",
+              backgroundColor: "rgba(13, 110, 253, 0.1)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#0d6efd",
+              pointBorderColor: "#fff",
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+            },
+          ],
         },
-      ],
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              padding: 12,
+              titleFont: {
+                size: 14,
+                weight: "bold",
+              },
+              bodyFont: {
+                size: 13,
+              },
+              displayColors: false,
+              callbacks: {
+                label: function (context) {
+                  return `${context.parsed.y} applications`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false,
+              },
+              ticks: {
+                font: {
+                  size: 12,
+                },
+              },
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: "rgba(0, 0, 0, 0.05)",
+              },
+              ticks: {
+                stepSize: 1,
+                font: {
+                  size: 12,
+                },
+                callback: function (value) {
+                  if (value % 1 === 0) {
+                    return value;
+                  }
+                },
+              },
+            },
+          },
+          interaction: {
+            intersect: false,
+            mode: "index",
+          },
+          animation: {
+            duration: 1000,
+            easing: "easeInOutQuart",
+          },
+        },
+      });
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-    },
-  });
-});
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString("en-NG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+    getJobApplications(jobId) {
+      return this.applications.filter((app) => app.jobId === jobId);
+    },
+
+    getApplicantName(userId) {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const user = users.find((u) => u.id === userId);
+      return user ? user.name : "Unknown Applicant";
+    },
+
+    updateApplicationStatus(application, newStatus) {
+      const applications = JSON.parse(
+        localStorage.getItem("jobApplications") || "[]"
+      );
+      const index = applications.findIndex(
+        (app) =>
+          app.jobId === application.jobId && app.userId === application.userId
+      );
+
+      if (index !== -1) {
+        applications[index].status = newStatus;
+        localStorage.setItem("jobApplications", JSON.stringify(applications));
+        location.reload();
+      }
+    },
+
+    async toggleJobStatus(job) {
+      try {
+        const newStatus = job.status === "active" ? "closed" : "active";
+
+        // Update job status in localStorage
+        const jobs = JSON.parse(localStorage.getItem("jobs") || "[]");
+        const jobIndex = jobs.findIndex((j) => j.id === job.id);
+        if (jobIndex !== -1) {
+          jobs[jobIndex].status = newStatus;
+          localStorage.setItem("jobs", JSON.stringify(jobs));
+        }
+
+        // Update job status in store
+        const storeJobIndex = this.jobsStore.jobs.findIndex(
+          (j) => j.id === job.id
+        );
+        if (storeJobIndex !== -1) {
+          this.jobsStore.jobs[storeJobIndex].status = newStatus;
+        }
+
+        // Show success message
+        alert(
+          `Job ${newStatus === "active" ? "reopened" : "closed"} successfully!`
+        );
+      } catch (error) {
+        console.error("Error updating job status:", error);
+        alert("Failed to update job status. Please try again.");
+      }
+    },
+
+    openPostJobModal() {
+      this.showPostJobModal = true;
+    },
+
+    closePostJobModal() {
+      this.showPostJobModal = false;
+    },
+
+    async handlePostJob(jobData) {
+      if (this.isSubmitting) return;
+
+      try {
+        this.isSubmitting = true;
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        const newJobData = {
+          id: Date.now(),
+          ...jobData,
+          company: this.authStore.user.companyName,
+          companyLogo: "",
+          postedDate: new Date().toISOString(),
+          status: "active",
+          featured: jobData.featured || false,
+        };
+
+        // Add job through store
+        await this.jobsStore.addJob(newJobData);
+
+        // Close post job modal
+        this.closePostJobModal();
+
+        // Wait for post modal to close before showing success modal
+        setTimeout(() => {
+          // Show success modal
+          this.successMessage = "Job posted successfully!";
+          this.showSuccessModal = true;
+
+          // Refresh data
+          this.loadData();
+        }, 300);
+      } catch (error) {
+        console.error("Error posting job:", error);
+        alert(error.message || "Failed to post job. Please try again.");
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+
+    formatDate(date) {
+      return new Date(date).toLocaleDateString("en-NG", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    },
+
+    handleLogout() {
+      this.authStore.logout();
+      this.$router.push("/login");
+    },
+
+    loadData() {
+      if (!this.authStore?.user) return;
+
+      // Load jobs posted by the current employer
+      const allJobs = JSON.parse(localStorage.getItem("jobs") || "[]");
+      const filteredJobs = allJobs.filter(
+        (job) => job.company === this.authStore.user.companyName
+      );
+
+      // Load all applications
+      const applications = JSON.parse(
+        localStorage.getItem("jobApplications") || "[]"
+      );
+
+      this.applications = applications.filter((app) => {
+        const job = filteredJobs.find((j) => j.id === app.jobId);
+        return job !== undefined;
+      });
+
+      // Calculate total applications
+      this.totalApplications = this.applications.length;
+
+      // Filter applications by status
+      this.pendingApplications = this.applications.filter(
+        (app) => app.status === "pending"
+      );
+      this.approvedApplications = this.applications.filter(
+        (app) => app.status === "approved"
+      );
+
+      // Initialize chart if needed
+      if (this.$refs.chartCanvas) {
+        this.initializeChart();
+      }
+    },
+
+    getApplicantInitials(userId) {
+      const name = this.getApplicantName(userId);
+      return name
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase();
+    },
+
+    getApplicantEmail(userId) {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const user = users.find((u) => u.id === userId);
+      return user ? user.email : "N/A";
+    },
+
+    getApplicantEducation(userId) {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const user = users.find((u) => u.id === userId);
+      return user ? user.educationLevel : "N/A";
+    },
+
+    viewApplicantDetails(userId) {
+      // Implement applicant details view
+      alert("Applicant details view to be implemented");
+    },
+
+    toggleJobDetails(jobId) {
+      const index = this.expandedJobs.indexOf(jobId);
+      if (index === -1) {
+        this.expandedJobs.push(jobId);
+      } else {
+        this.expandedJobs.splice(index, 1);
+      }
+    },
+
+    async toggleFeatured(job) {
+      try {
+        // Update job featured status in localStorage
+        const jobs = JSON.parse(localStorage.getItem("jobs") || "[]");
+        const jobIndex = jobs.findIndex((j) => j.id === job.id);
+        if (jobIndex !== -1) {
+          jobs[jobIndex].featured = !jobs[jobIndex].featured;
+          localStorage.setItem("jobs", JSON.stringify(jobs));
+        }
+
+        // Update job featured status in store
+        const storeJobIndex = this.jobsStore.jobs.findIndex(
+          (j) => j.id === job.id
+        );
+        if (storeJobIndex !== -1) {
+          this.jobsStore.jobs[storeJobIndex].featured =
+            !this.jobsStore.jobs[storeJobIndex].featured;
+        }
+
+        // Show success message
+        alert(
+          `Job ${job.featured ? "removed from" : "added to"} featured listings!`
+        );
+      } catch (error) {
+        console.error("Error updating featured status:", error);
+        alert("Failed to update featured status. Please try again.");
+      }
+    },
+
+    handleSuccessModalClose() {
+      // Use setTimeout to ensure proper cleanup
+      setTimeout(() => {
+        this.showSuccessModal = false;
+        this.successMessage = "";
+
+        // Ensure body is scrollable
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+        document.body.classList.remove("modal-open");
+      }, 300);
+    },
+  },
 };
 </script>
+
+<style scoped>
+.dashboard-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.stat-card {
+  transition: transform 0.2s;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-icon.jobs {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.stat-icon.applicants {
+  background-color: rgba(111, 66, 193, 0.1);
+  color: #6f42c1;
+}
+
+.stat-icon.pending {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.stat-icon.approved {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.card-header {
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
+}
+
+.accordion-item {
+  background-color: transparent;
+}
+
+.accordion-button {
+  background-color: white;
+  padding: 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #f8f9fa;
+  color: inherit;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0.125);
+}
+
+.table td {
+  padding: 1rem;
+}
+
+.badge {
+  padding: 0.5em 1em;
+  font-weight: 500;
+}
+
+.btn-group .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.navbar {
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .stat-card {
+    margin-bottom: 1rem;
+  }
+
+  .accordion-button {
+    padding: 0.75rem;
+  }
+}
+
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.btn-group .btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-header {
+  background-color: #f8f9fa !important;
+}
+
+.badge {
+  padding: 0.5em 1em;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.collapse-transition {
+  transition: max-height 0.3s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.collapse-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+.card-header:hover {
+  background-color: #f0f2f4 !important;
+}
+
+/* Prevent button clicks from triggering card expansion */
+.btn {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-icon.closed {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+/* Optional: Add a visual indicator for closed jobs in the list */
+.card-header.closed {
+  background-color: #f8f9fa !important;
+  opacity: 0.8;
+}
+
+.card-header.closed .card-title {
+  color: #6c757d;
+}
+
+.stat-icon.featured {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+/* Add a subtle star indicator for featured jobs */
+.card-header.featured {
+  position: relative;
+}
+
+.card-header.featured::before {
+  content: "★";
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: #ffc107;
+  font-size: 1.2rem;
+}
+
+/* Style for the featured checkbox */
+.form-check-input:checked {
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+</style>
