@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
 import JobSeekerSignup from "@/views/JobSeekerSignup.vue";
-import JobListings from "@/views/JobListings.vue";
+// import JobListings from "@/views/JobListings.vue";
 import JobDetails from "@/views/JobDetails.vue";
 import EmployerSignup from "@/views/EmployerSignup.vue";
 
@@ -74,20 +74,20 @@ const router = createRouter({
     {
       path: "/jobs/state/:state",
       name: "JobsByState",
-      component: () => import("@/views/JobsByState.vue"), // Adjust the path as necessary
+      component: () => import("@/views/JobsByState.vue"), 
     },
     {
       path: "/jobs/category/:category",
       name: "JobsByCategory",
-      component: () => import("@/views/JobsByCategory.vue"), // Adjust the path as necessary
+      component: () => import("@/views/JobsByCategory.vue"), 
     },
   ],
 });
 
 // Global navigation guard to scroll to the top on route change
 router.beforeEach((to, from, next) => {
-  window.scrollTo(0, 0); // Scroll to the top
-  next(); // Proceed to the next route
+  window.scrollTo(0, 0); 
+  next(); 
 });
 
 export default router;
