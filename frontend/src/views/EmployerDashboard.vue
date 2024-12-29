@@ -426,117 +426,140 @@ export default {
   },
 
   mounted() {
-    this.loadData();
+  this.loadData();
+  setTimeout(() => {
     this.initializeChart();
-  },
+  }, 500);
+},
 
   methods: {
     initializeChart() {
-      if (this.chart) {
-        this.chart.destroy();
-      }
+  try {
+    if (!this.applications?.length) {
+      console.warn('No applications data available');
+      return;
+    }
 
-      const ctx = this.$refs.chartCanvas.getContext("2d");
-      const dates = [
-        ...new Set(
-          this.applications.map((app) =>
-            new Date(app.appliedDate).toLocaleDateString()
-          )
-        ),
-      ].sort((a, b) => new Date(a) - new Date(b));
+    const canvas = this.$refs.chartCanvas;
+    if (!canvas) {
+      console.warn('Chart canvas not found');
+      return;
+    }
 
-      const applicationCounts = dates.map(
-        (date) =>
-          this.applications.filter(
-            (app) => new Date(app.appliedDate).toLocaleDateString() === date
-          ).length
-      );
+    if (this.chart) {
+      this.chart.destroy();
+    }
 
-      this.chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: dates,
-          datasets: [
-            {
-              label: "Applications",
-              data: applicationCounts,
-              borderColor: "#0d6efd",
-              backgroundColor: "rgba(13, 110, 253, 0.1)",
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: "#0d6efd",
-              pointBorderColor: "#fff",
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.warn('Could not get 2D context from canvas');
+      return;
+    }
+
+    const dates = [
+      ...new Set(
+        this.applications.map((app) =>
+          new Date(app.appliedDate).toLocaleDateString()
+        )
+      ),
+    ].sort((a, b) => new Date(a) - new Date(b));
+
+    const applicationCounts = dates.map(
+      (date) =>
+        this.applications.filter(
+          (app) => new Date(app.appliedDate).toLocaleDateString() === date
+        ).length
+    );
+
+    this.chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: "Applications",
+            data: applicationCounts,
+            borderColor: "#0d6efd",
+            backgroundColor: "rgba(13, 110, 253, 0.1)",
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "#0d6efd",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            padding: 12,
+            titleFont: {
+              size: 14,
+              weight: "bold",
             },
-          ],
+            bodyFont: {
+              size: 13,
+            },
+            displayColors: false,
+            callbacks: {
+              label: function (context) {
+                return `${context.parsed.y} applications`;
+              },
+            },
+          },
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
+        scales: {
+          x: {
+            grid: {
               display: false,
             },
-            tooltip: {
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-              padding: 12,
-              titleFont: {
-                size: 14,
-                weight: "bold",
-              },
-              bodyFont: {
-                size: 13,
-              },
-              displayColors: false,
-              callbacks: {
-                label: function (context) {
-                  return `${context.parsed.y} applications`;
-                },
+            ticks: {
+              font: {
+                size: 12,
               },
             },
           },
-          scales: {
-            x: {
-              grid: {
-                display: false,
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: "rgba(0, 0, 0, 0.05)",
+            },
+            ticks: {
+              stepSize: 1,
+              font: {
+                size: 12,
               },
-              ticks: {
-                font: {
-                  size: 12,
-                },
+              callback: function (value) {
+                if (value % 1 === 0) {
+                  return value;
+                }
               },
             },
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: "rgba(0, 0, 0, 0.05)",
-              },
-              ticks: {
-                stepSize: 1,
-                font: {
-                  size: 12,
-                },
-                callback: function (value) {
-                  if (value % 1 === 0) {
-                    return value;
-                  }
-                },
-              },
-            },
-          },
-          interaction: {
-            intersect: false,
-            mode: "index",
-          },
-          animation: {
-            duration: 1000,
-            easing: "easeInOutQuart",
           },
         },
-      });
-    },
+        interaction: {
+          intersect: false,
+          mode: "index",
+        },
+        animation: {
+          duration: 1000,
+          easing: "easeInOutQuart",
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error initializing chart:', error);
+  }
+},
+    
 
     getJobApplications(jobId) {
       return this.applications.filter((app) => app.jobId === jobId);

@@ -8,18 +8,23 @@ export const useAuthStore = defineStore("auth", {
   actions: {
     login(email, password) {
       const users = JSON.parse(localStorage.getItem("users")) || [];
+      console.log("Stored users:", users); // Debug log
 
       const user = users.find(
         (u) => u.email === email && u.password === password
       );
 
-      if (user) {
-        this.user = user;
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        return user;
+      if (!user) {
+        throw new Error("Invalid credentials");
       }
 
-      throw new Error("Invalid credentials");
+      if (!user.type) {
+        throw new Error("User type not found");
+      }
+
+      this.user = user;
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      return user;
     },
 
     signup(newUser) {

@@ -1,9 +1,18 @@
 <template>
   <div class="job-listings-container">
     <div class="container py-4">
+      <!-- Mobile Search Toggle -->
+      <button
+        class="btn btn-primary d-lg-none w-100 mb-3"
+        @click="toggleMobileSearch"
+      >
+        <i class="fas fa-filter me-2"></i>
+        Filter Jobs
+      </button>
+
       <div class="row">
         <!-- Main Content -->
-        <div class="col-md-9">
+        <div class="col-lg-9">
           <!-- Page Header -->
           <div class="page-header mb-4">
             <h1 class="display-6 fw-bold">Browse Jobs</h1>
@@ -165,8 +174,18 @@
         </div>
 
         <!-- Sidebar -->
-        <div class="col-md-3">
+        <div
+          class="col-lg-3 search-sidebar-wrapper"
+          :class="{ 'mobile-search-active': showMobileSearch }"
+        >
+          <div class="search-sidebar-overlay" @click="toggleMobileSearch"></div>
           <div class="search-sidebar">
+            <div
+              class="d-flex justify-content-between align-items-center d-lg-none mb-3"
+            >
+              <h5 class="mb-0">Filter Jobs</h5>
+              <button class="btn-close" @click="toggleMobileSearch"></button>
+            </div>
             <SearchFilter @filter-applied="applyFilters" />
           </div>
         </div>
@@ -187,9 +206,18 @@
   padding-bottom: 1rem;
 }
 
+.search-sidebar-wrapper {
+  position: relative;
+  z-index: 1030;
+}
+
 .search-sidebar {
   position: sticky;
   top: 2rem;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .jobs-grid {
@@ -203,6 +231,7 @@
   color: inherit;
   display: block;
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .job-card:hover {
@@ -232,15 +261,12 @@
 .job-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.85rem;
+  gap: 0.5rem;
 }
 
 .meta-item {
-  color: #6c757d;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
 }
 
 .meta-item.salary {
@@ -314,22 +340,123 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
+  .search-sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .search-sidebar-wrapper.mobile-search-active {
+    right: 0;
+    visibility: visible;
+  }
+
   .search-sidebar {
-    position: static;
-    margin-top: 2rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .mobile-search-active .search-sidebar {
+    transform: translateX(0);
+  }
+
+  .search-sidebar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 
-@media (min-width: 992px) {
-  .jobs-grid {
-    grid-template-columns: repeat(1, 1fr);
+/* Responsive Job Cards */
+.job-card {
+  height: 100%;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meta-item {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .job-card .company-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .company-name {
+    font-size: 0.875rem;
+  }
+
+  .job-meta {
+    font-size: 0.75rem;
+  }
+
+  .posted-date {
+    font-size: 0.75rem;
+  }
+}
+
+/* Pagination Responsive */
+@media (max-width: 576px) {
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .page-link {
+    width: 35px;
+    height: 35px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Quick Actions Responsive */
+@media (max-width: 768px) {
+  .results-summary {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .sort-options {
+    width: 100%;
+  }
+
+  .active-filters {
+    justify-content: center;
   }
 }
 </style>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useJobsStore } from "@/stores/jobs";
 import SearchFilter from "@/components/SearchFilter.vue";
 
@@ -344,6 +471,7 @@ export default {
     const isLoading = ref(true);
     const currentPage = ref(1);
     const jobsPerPage = 20;
+    const showMobileSearch = ref(false);
 
     const jobs = computed(() => jobsStore?.filteredJobs || []);
 
@@ -444,6 +572,15 @@ export default {
       }
     };
 
+    const toggleMobileSearch = () => {
+      showMobileSearch.value = !showMobileSearch.value;
+      document.body.classList.toggle("overflow-hidden", showMobileSearch.value);
+    };
+
+    onUnmounted(() => {
+      document.body.classList.remove("overflow-hidden");
+    });
+
     onMounted(async () => {
       try {
         await jobsStore.initializeJobs();
@@ -468,6 +605,8 @@ export default {
       applyFilters,
       removeFilter,
       clearAllFilters,
+      showMobileSearch,
+      toggleMobileSearch,
     };
   },
 };

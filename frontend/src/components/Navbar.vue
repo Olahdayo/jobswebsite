@@ -199,12 +199,20 @@ export default {
       this.showDropdown = true;
     },
     handleClickOutside(event) {
-      const dropdown = this.$el.querySelector('.job-dropdown');
-      const searchInput = this.$el.querySelector('input[placeholder="Job title or company"]');
-      const locationInput = this.$el.querySelector('input[placeholder="Location"]');
+      const dropdown = this.$el.querySelector(".job-dropdown");
+      const searchInput = this.$el.querySelector(
+        'input[placeholder="Job title or company"]'
+      );
+      const locationInput = this.$el.querySelector(
+        'input[placeholder="Location"]'
+      );
 
       if (dropdown && searchInput && locationInput) {
-        if (!dropdown.contains(event.target) && !searchInput.contains(event.target) && !locationInput.contains(event.target)) {
+        if (
+          !dropdown.contains(event.target) &&
+          !searchInput.contains(event.target) &&
+          !locationInput.contains(event.target)
+        ) {
           this.showDropdown = false;
           this.searchFilters.query = "";
           this.searchFilters.location = "";
@@ -230,8 +238,7 @@ export default {
   z-index: 1030;
   height: 72px;
   transition: height 0.3s ease, padding 0.3s ease;
-  background-color: rgba(248, 248, 248, 0.9); 
-  
+  background-color: rgba(248, 248, 248, 0.9);
 }
 
 .navbar.navbar-scrolled {
@@ -244,22 +251,19 @@ export default {
   font-size: 1.1rem;
 }
 
-
 .navbar-brand {
   margin-left: 0;
   padding-left: 5px;
-  color: #2A4D74;
+  color: #2a4d74;
 }
-
 
 .navbar-nav {
   margin-left: 20px;
 }
 
 .no-underline {
-  text-decoration: none !important; 
+  text-decoration: none !important;
 }
-
 
 .search-dropdown {
   width: 320px;
@@ -267,21 +271,19 @@ export default {
   border-radius: 8px;
 }
 
-
 .navbar .form-control {
-  width: 150px; 
+  width: 150px;
 }
 
 .navbar .btn-search {
-  padding: 0.25rem 0.5rem; 
-  font-size: 0.875rem; 
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
 .dropdown-menu {
-  max-height: 200px; 
-  overflow-y: auto; 
+  max-height: 200px;
+  overflow-y: auto;
 }
-
 
 .job-dropdown {
   position: fixed;
@@ -292,16 +294,16 @@ export default {
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1050; 
-  width: 300px; 
+  z-index: 1050;
+  width: 300px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
 }
 
 .dropdown-content {
-  max-height: 300px; 
-  overflow-y: auto; 
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .navbar-nav .nav-link {
@@ -309,32 +311,32 @@ export default {
 }
 
 .navbar-nav .nav-link:hover {
-  border-bottom: 2px solid #2A4D74;
+  border-bottom: 2px solid #2a4d74;
 }
 
 .btn-outline-primary {
   color: #0847a7;
-  border: 1px solid #2A4D74;
+  border: 1px solid #2a4d74;
   padding: 2px;
   border-radius: 10px;
 }
 
 .btn-outline-primary:hover {
-  background-color: rgba(30, 180, 155, 0.9); 
+  background-color: rgba(30, 180, 155, 0.9);
 }
 
 .btn-primary {
   color: #0847a7;
-  border: 1px solid #2A4D74;
+  border: 1px solid #2a4d74;
   background-color: white;
   padding: 5px;
 }
 
 .btn-primary:hover {
-  background-color: rgba(30, 180, 155, 0.9); 
+  background-color: rgba(30, 180, 155, 0.9);
 }
 .form-control {
-  border: 1px solid rgba(10, 11, 112, 0.9)
+  border: 1px solid rgba(10, 11, 112, 0.9);
 }
 
 @media (max-width: 991.98px) {

@@ -8,6 +8,17 @@ import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import { useAuthStore } from "@/stores/auth";
 
+const publicPages = [
+  "/login",
+  "/signup",
+  "/signup/jobseeker",
+  "/signup/employer",
+  "/",
+  "/jobs",
+  "/featured-jobs",
+  "/jobs/:id",
+];
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -97,29 +108,13 @@ const router = createRouter({
   ],
 });
 
-// Global navigation guard to scroll to the top on route change
+// Global navigation guard
 router.beforeEach((to, from, next) => {
-  window.scrollTo(0, 0);
   const authStore = useAuthStore();
-  const publicPages = [
-    "/login",
-    "/signup",
-    "/",
-    "/jobs",
-    "/featured-jobs",
-    "/jobs/:id",
-  ];
-  const authRequired =
-    !publicPages.includes(to.path) && !to.path.match(/^\/jobs\/\d+$/); // Allow job detail pages
+  const isPublic = publicPages.includes(to.path);
+  const authRequired = !isPublic;
 
   if (authRequired && !authStore.user) {
-    return next("/login");
-  }
-
-  if (
-    to.path === "/employer-dashboard" &&
-    authStore.user?.role !== "employer"
-  ) {
     return next("/login");
   }
 

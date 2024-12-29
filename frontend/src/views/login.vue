@@ -6,7 +6,7 @@
       <div class="card shadow">
         <div class="card-body">
           <h1 class="text-center mb-4">Login</h1>
-          <form @submit.prevent="submitForm">
+          <form @submit.prevent="handleLogin">
             <div class="mb-3">
               <label for="email" class="form-label">Email:</label>
               <input
@@ -72,25 +72,26 @@ export default {
   },
   methods: {
     async handleLogin() {
+      const authStore = useAuthStore();
       try {
-        await this.authStore.login(this.form);
+        console.log("Attempting to log in with:", this.form);
+        const user = await authStore.login(this.form.email, this.form.password);
 
-        // Check for return URL
-        const returnUrl = localStorage.getItem("returnUrl");
-        if (returnUrl) {
-          localStorage.removeItem("returnUrl");
-          this.$router.push(returnUrl);
+        // Verify that the user's type matches the selected role
+        if (user.type !== this.selectedRole) {
+          throw new Error("Selected role doesn't match your account type");
+        }
+
+        if (user.type === "employer") {
+          this.$router.push("/dashboard/employer");
+        } else if (user.type === "jobseeker") {
+          this.$router.push("/dashboard/jobseeker");
         } else {
-          // Default navigation based on role
-          if (this.authStore.user.role === "employer") {
-            this.$router.push("/dashboard/employer");
-          } else {
-            this.$router.push("/dashboard/jobseeker");
-          }
+          throw new Error("Invalid user type");
         }
       } catch (error) {
         console.error("Login error:", error);
-        alert(error.message || "Failed to login. Please try again.");
+        this.errorMessage = error.message || "Failed to login. Please try again.";
       }
     },
   },
