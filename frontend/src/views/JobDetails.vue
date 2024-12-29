@@ -100,42 +100,14 @@
             <button
               v-if="!hasApplied"
               @click="handleApply"
-              class="btn btn-primary btn-lg"
+              class="apply-button"
               :disabled="isSubmitting"
             >
-              <span v-if="isSubmitting">
-                <i class="fas fa-spinner fa-spin me-2"></i>
-                Applying...
-              </span>
-              <span v-else>Apply Now</span>
+              {{ isSubmitting ? "Submitting..." : "Apply Now" }}
             </button>
             <div v-else class="alert alert-success">
-              <i class="fas fa-check-circle me-2"></i>
-              You have already applied for this position
+              You have already applied for this job
             </div>
-          </div>
-
-          <Modal v-if="showSuccessModal" @close="showSuccessModal = false">
-            <template #header>
-              <h3 class="modal-title">Application Submitted!</h3>
-            </template>
-            <template #body>
-              <p>
-                Your application for {{ job.title }} at {{ job.company }} has
-                been submitted successfully.
-              </p>
-            </template>
-            <template #footer>
-              <Button @click="showSuccessModal = false">Close</Button>
-            </template>
-          </Modal>
-        </div>
-      </div>
-      <div v-else>
-        <div class="loading-container">
-          <p>Loading job details...</p>
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
           </div>
         </div>
       </div>
@@ -144,141 +116,111 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useJobsStore } from "@/stores/jobs";
 import { useAuthStore } from "@/stores/auth";
-import Modal from "@/components/Modal.vue";
-import Button from "@/components/Button.vue";
+import { useJobsStore } from "@/stores/jobs";
 
 export default {
   name: "JobDetails",
-  components: {
-    Modal,
-    Button,
+  
+  data() {
+    return {
+      job: null,
+      isSubmitting: false,
+      showLoginModal: false,
+      hasApplied: false,
+      showSuccessModal: false,
+      applications: []
+    };
   },
 
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    const jobsStore = useJobsStore();
-    const authStore = useAuthStore();
+  created() {
+    this.authStore = useAuthStore();
+    this.jobsStore = useJobsStore();
+    this.loadJobDetails();
+    if (this.authStore.user) {
+      this.checkIfApplied();
+    }
+  },
 
-    const job = ref(null);
-    const isSubmitting = ref(false);
-    const showLoginModal = ref(false);
-    const hasApplied = ref(false);
-
-    const checkAuth = () => {
-      if (!authStore.user) {
-        localStorage.setItem("returnUrl", route.fullPath);
-        router.push("/login");
-        return false;
+  watch: {
+    '$route.params.id': function() {
+      this.loadJobDetails();
+      if (this.authStore.user) {
+        this.checkIfApplied();
       }
-      return true;
-    };
+    }
+  },
 
-    const formatDate = (date) => {
+  methods: {
+    handleApply() {
+      if (!this.authStore.user) {
+        this.$router.push("/login");
+        return;
+      }
+
+      if (this.authStore.user.type !== "jobseeker") {
+        alert("Only job seekers can apply for jobs");
+        return;
+      }
+
+      const existingApplication = this.applications.find(
+        (app) =>
+          app.jobId === this.job.id && app.userId === this.authStore.user.id
+      );
+
+      if (existingApplication) {
+        alert("You have already applied for this job");
+        return;
+      }
+
+      const newApplication = {
+        id: Date.now(),
+        jobId: this.job.id,
+        userId: this.authStore.user.id,
+        status: "pending",
+        appliedDate: new Date().toISOString(),
+      };
+
+      const existingApplications =
+        JSON.parse(localStorage.getItem("applications")) || [];
+      existingApplications.push(newApplication);
+      localStorage.setItem(
+        "applications",
+        JSON.stringify(existingApplications)
+      );
+
+      this.hasApplied = true;
+      alert("Application submitted successfully!");
+    },
+
+    formatDate(date) {
       return new Date(date).toLocaleDateString("en-NG", {
         year: "numeric",
         month: "long",
         day: "numeric",
       });
-    };
+    },
 
-    const handleApply = async () => {
-      if (!authStore.user) {
-        localStorage.setItem("returnUrl", route.fullPath);
-        router.push("/login");
-        return;
+    loadJobDetails() {
+      const jobId = parseInt(this.$route.params.id);
+      this.job = this.jobsStore.jobs.find((j) => j.id === jobId);
+
+      if (!this.job) {
+        this.$router.push("/jobs");
       }
+    },
 
-      try {
-        isSubmitting.value = true;
-        const applications = JSON.parse(
-          localStorage.getItem("jobApplications") || "[]"
-        );
-
-        const hasAlreadyApplied = applications.some(
-          (app) =>
-            app.jobId === job.value.id && app.userId === authStore.user.id
-        );
-
-        if (hasAlreadyApplied) {
-          hasApplied.value = true;
-          return;
-        }
-
-        applications.push({
-          jobId: job.value.id,
-          userId: authStore.user.id,
-          appliedDate: new Date().toISOString(),
-        });
-
-        localStorage.setItem("jobApplications", JSON.stringify(applications));
-        hasApplied.value = true;
-        showSuccessModal.value = true;
-      } catch (error) {
-        console.error("Error submitting application:", error);
-        alert("Failed to submit application. Please try again.");
-      } finally {
-        isSubmitting.value = false;
-      }
-    };
-
-    const loadJobDetails = () => {
-      const jobId = parseInt(route.params.id);
-      job.value = jobsStore.jobs.find((j) => j.id === jobId);
-
-      if (!job.value) {
-        router.push("/jobs");
-      }
-    };
-
-    const checkIfApplied = () => {
-      if (!authStore.user || !job.value) return;
+    checkIfApplied() {
+      if (!this.authStore.user || !this.job) return;
 
       const applications = JSON.parse(
-        localStorage.getItem("jobApplications") || "[]"
+        localStorage.getItem("applications") || "[]"
       );
-      hasApplied.value = applications.some(
-        (app) => app.jobId === job.value.id && app.userId === authStore.user.id
+      this.hasApplied = applications.some(
+        (app) => app.jobId === this.job.id && app.userId === this.authStore.user.id
       );
-    };
-
-    // Initialize data
-    onMounted(() => {
-      jobsStore.initializeJobs();
-      loadJobDetails();
-      if (authStore.user) {
-        checkIfApplied();
-      }
-    });
-
-    // Watch for route changes
-    watch(
-      () => route.params.id,
-      () => {
-        loadJobDetails();
-        if (authStore.user) {
-          checkIfApplied();
-        }
-      }
-    );
-
-    return {
-      job,
-      isSubmitting,
-      showLoginModal,
-      hasApplied,
-      authStore,
-      jobsStore,
-      loadJobDetails,
-      checkIfApplied,
-      formatDate,
-      handleApply,
-    };
-  },
+    }
+  }
 };
 </script>
 

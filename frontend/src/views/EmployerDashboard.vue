@@ -134,9 +134,14 @@
         <div class="card-header bg-white border-bottom-0 py-3">
           <h5 class="card-title mb-0">Application Trends</h5>
         </div>
-        <div class="card-body">
-          <canvas ref="chartCanvas" height="300"></canvas>
-        </div>
+       <div class="card-body">
+  <div v-if="!applications.length" class="text-center py-5 text-muted">
+    <i class="fas fa-chart-line fa-3x mb-3"></i>
+    <h5>No Application Data</h5>
+    <p>Application trends will appear here once job seekers start applying.</p>
+  </div>
+  <canvas v-else ref="chartCanvas" height="300"></canvas>
+</div>
       </div>
 
       <!-- Posted Jobs & Applications -->
@@ -688,9 +693,9 @@ export default {
       );
 
       // Load all applications
-      const applications = JSON.parse(
-        localStorage.getItem("jobApplications") || "[]"
-      );
+     const applications = JSON.parse(
+  localStorage.getItem("applications") || "[]"
+);
 
       this.applications = applications.filter((app) => {
         const job = filteredJobs.find((j) => j.id === app.jobId);

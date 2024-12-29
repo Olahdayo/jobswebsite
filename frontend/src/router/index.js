@@ -17,6 +17,9 @@ const publicPages = [
   "/jobs",
   "/featured-jobs",
   "/jobs/:id",
+  "/Joblistings",
+  "/jobs/state/:state",
+  "/jobs/category/:category"
 ];
 
 const router = createRouter({
@@ -106,16 +109,23 @@ const router = createRouter({
       component: () => import("@/views/JobsByCategory.vue"),
     },
   ],
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  }
 });
 
 // Global navigation guard
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-  const isPublic = publicPages.includes(to.path);
-  const authRequired = !isPublic;
+  const privatePages = ['/dashboard/employer', '/dashboard/jobseeker'];
+  const authRequired = privatePages.includes(to.path);
 
   if (authRequired && !authStore.user) {
-    return next("/login");
+    return next('/login');
   }
 
   next();
