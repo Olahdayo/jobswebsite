@@ -7,7 +7,7 @@
           <div class="hero-content">
             <div class="company-brand">
               <img
-                :src="job.companyLogo || '/default-company.png'"
+                :src="job.companyLogo || '/images/dashboard-default.svg'"
                 :alt="job.company"
                 class="company-logo"
                 loading="lazy"

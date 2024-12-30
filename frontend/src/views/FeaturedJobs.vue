@@ -30,7 +30,7 @@
             <div class="card-body">
               <div class="d-flex align-items-start gap-3">
                 <img
-                  :src="job.companyLogo || '/path/to/default-logo.png'"
+                  :src="job.companyLogo || '/images/dashboard-default.svg'"
                   :alt="job.company"
                   class="company-logo"
                   width="60"
