@@ -33,13 +33,22 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/categories" @click="closeNavbar">
+            <router-link
+              class="nav-link"
+              to="/categories"
+              @click="closeNavbar"
+            >
               <i class="fas fa-th-large me-1"></i>Categories
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/contact" @click="closeNavbar">
-              <i class="fas fa-headset me-1"></i>Support
+            <router-link class="nav-link" to="/post-job">
+              <i class="bi bi-plus-circle me-1"></i>Post a Job
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/support">
+              <i class="bi bi-headset me-1"></i>Support
             </router-link>
           </li>
         </ul>
@@ -197,6 +206,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  z-index: 2000;
 }
 
 .navbar-scrolled {

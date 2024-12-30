@@ -88,4 +88,62 @@ export default {
 .list-group-item:hover {
   background: #e9ecef;
 }
-</style> 
+
+@media (max-width: 767.98px) {
+  .sidebar {
+    margin-top: 0;
+    max-height: none;
+  }
+
+  .sidebar-widget {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-widget h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .list-group-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .list-group-item h6 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .list-group-item p,
+  .list-group-item small {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Make the list more compact */
+  .list-group {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Add a subtle scrollbar for the list */
+  .list-group::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .list-group::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .list-group::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+}
+</style>

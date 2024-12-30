@@ -6,6 +6,9 @@ import JobDetails from "@/views/JobDetails.vue";
 import EmployerSignup from "@/views/EmployerSignup.vue";
 import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
+import PostJob from '../views/PostJob.vue'
+import Support from '../views/Support.vue'
+import Categories from '../views/Categories.vue'
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -34,11 +37,6 @@ const router = createRouter({
       path: "/jobs",
       name: "Jobs",
       component: () => import("../views/JobListings.vue"),
-    },
-    {
-      // path: '/create-job',
-      // name: 'CreateJob',
-      // component: () => import('../views/CreateJob.vue')
     },
     {
       path: "/login",
@@ -71,16 +69,6 @@ const router = createRouter({
       component: JobSeekerDashboard,
     },
     {
-      // path: '/faq',
-      // name: 'FAQ',
-      // component: () => import('../views/FAQ.vue')
-    },
-    {
-      // path: '/contact',
-      // name: 'Contact',
-      // component: () => import('../views/Contact.vue')
-    },
-    {
       path: "/featured-jobs",
       name: "FeaturedJobs",
       component: () => import("../views/FeaturedJobs.vue"),
@@ -107,6 +95,21 @@ const router = createRouter({
       path: "/jobs/category/:category",
       name: "JobsByCategory",
       component: () => import("@/views/JobsByCategory.vue"),
+    },
+    {
+      path: '/post-job',
+      name: 'PostJob',
+      component: PostJob
+    },
+    {
+      path: '/support',
+      name: 'Support',
+      component: Support
+    },
+    {
+      path: '/categories',
+      name: 'Categories',
+      component: Categories
     },
   ],
   scrollBehavior(to, from, savedPosition) {

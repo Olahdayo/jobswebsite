@@ -15,37 +15,50 @@
             <div
               class="d-flex gap-3 justify-content-center justify-content-lg-start"
             >
-              <button @click="scrollToJobSection" class="btn btn-light btn-lg">
-                See Jobs
+              <button @click="scrollToJobSection" class="btn btn-primary btn-lg btn-glow">
+                <span class="btn-content">
+                  <i class="bi bi-search me-2"></i>See Jobs
+                  <span class="btn-shine"></span>
+                </span>
               </button>
               <Button
                 to="/signup"
                 label="Join Us"
                 buttonType="btn-outline-light"
                 size="btn-lg"
+                class="btn-hover-slide"
               >
                 <i class="bi bi-person-plus me-2"></i>
               </Button>
             </div>
           </div>
           <div class="col-lg-4 d-none d-lg-block">
-            <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow">
+            <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow-lg">
               <h4 class="mb-3">Quick Stats</h4>
               <div class="d-flex justify-content-between mb-3">
-                <div class="text-center">
-                  <h3 class="fw-bold text-success">
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-success-subtle mb-2">
+                    <i class="bi bi-briefcase"></i>
+                  </div>
+                  <h3 class="fw-bold text-success counter">
                     {{ jobsStore.activeJobs.length }}
                   </h3>
                   <p class="text-muted mb-0">Active Jobs</p>
                 </div>
-                <div class="text-center">
-                  <h3 class="fw-bold text-dark">
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-primary-subtle mb-2">
+                    <i class="bi bi-geo-alt"></i>
+                  </div>
+                  <h3 class="fw-bold text-primary counter">
                     {{ Object.keys(jobsByState).length }}
                   </h3>
                   <p class="text-muted mb-0">Locations</p>
                 </div>
-                <div class="text-center">
-                  <h3 class="fw-bold text-info">
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-info-subtle mb-2">
+                    <i class="bi bi-grid"></i>
+                  </div>
+                  <h3 class="fw-bold text-info counter">
                     {{ Object.keys(jobsByField).length }}
                   </h3>
                   <p class="text-muted mb-0">Categories</p>
@@ -64,14 +77,22 @@
           <section class="mb-5">
             <div
               id="featured-jobs"
-              class="featured-jobs-container border rounded-3 bg-white p-4"
+              class="featured-jobs-container border-0 rounded-4 bg-white p-4 shadow-hover"
             >
-              <div class="mb-4">
-                <h2 class="m-0">Featured Jobs</h2>
+              <div class="mb-4 d-flex justify-content-between align-items-center">
+                <h2 class="m-0 section-title">
+                  <span class="highlight-text">Featured</span> Jobs
+                  <div class="title-underline"></div>
+                </h2>
+                <div class="featured-badge">
+                  <span class="badge-dot"></span>
+                  <span class="ms-2">Live Updates</span>
+                </div>
               </div>
               <div class="row g-3">
                 <div class="col-md-6" v-for="job in featuredJobs" :key="job.id">
-                  <div class="job-card border-0 shadow-sm p-3 bg-white">
+                  <div class="job-card border-0 shadow-sm p-4 bg-white hover-card">
+                    <div class="card-shine"></div>
                     <router-link :to="'/jobs/' + job.id">
                       <div class="d-flex align-items-start gap-3">
                         <img
@@ -516,22 +537,214 @@ html {
   color: #000;
 }
 
-@media (max-width: 991.98px) {
-  .sticky-sidebar {
-    position: static;
-    max-height: none;
-    margin-top: 2rem;
+/* Enhanced button styles */
+.btn-glow {
+  position: relative;
+  background: linear-gradient(45deg, #4f46e5, #7c3aed);
+  border: none;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-glow .btn-content {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-glow .btn-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
   }
-  .search-section {
-    margin-top: 56px;
+  100% {
+    transform: translateX(100%) rotate(45deg);
   }
-  .search-section.sticky-top {
-    margin-top: 0;
-    transform: translateY(56px);
+}
+
+.btn-hover-slide {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid white;
+  transition: all 0.3s ease;
+}
+
+.btn-hover-slide:hover {
+  background: white;
+  color: #4f46e5;
+  transform: translateY(-2px);
+}
+
+/* Stats card animations */
+.stat-card {
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1);
+}
+
+.counter {
+  display: inline-block;
+  animation: countUp 2s ease-out forwards;
+  position: relative;
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  .search-section.search-scrolled {
-    transform: translateY(56px);
-    padding: 0.25rem 0;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Featured Jobs section */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+
+.highlight-text {
+  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.title-underline {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, #4f46e5, transparent);
+}
+
+.featured-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background: #4f46e5;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+
+.badge-dot::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: inherit;
+  animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.hover-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.hover-card:hover .card-shine {
+  left: 100%;
+}
+
+.shadow-hover {
+  transition: all 0.3s ease;
+}
+
+.shadow-hover:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stat-card {
+    padding: 0.5rem;
+  }
+  
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
   }
 }
 </style>
