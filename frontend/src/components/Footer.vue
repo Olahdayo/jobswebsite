@@ -5,7 +5,7 @@
         <!-- Company Info -->
         <div class="col-md-4 mb-4">
           <h5 class="mb-3">
-            <i class="bi bi-briefcase-fill me-2"></i>JobHunter
+            <i class="bi bi-briefcase-fill me-2"></i>Pinify
           </h5>
           <p class="mb-3">Connecting talented professionals with amazing opportunities worldwide.</p>
           <div class="social-links">

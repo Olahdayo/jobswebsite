@@ -6,7 +6,7 @@
     <div class="container">
       <router-link class="navbar-brand" to="/">
         <span class="brand-icon"><i class="bi bi-briefcase-fill"></i></span>
-        <span class="brand-text">JobiGrid</span>
+        <span class="brand-text">Pinify</span>
       </router-link>
 
       <button
@@ -28,16 +28,16 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/featured-jobs" @click="closeNavbar">
+            <router-link
+              class="nav-link"
+              to="/featured-jobs"
+              @click="closeNavbar"
+            >
               <i class="fas fa-star me-1"></i>Featured
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link
-              class="nav-link"
-              to="/categories"
-              @click="closeNavbar"
-            >
+            <router-link class="nav-link" to="/categories" @click="closeNavbar">
               <i class="fas fa-th-large me-1"></i>Categories
             </router-link>
           </li>
@@ -55,10 +55,18 @@
 
         <div class="nav-buttons d-flex align-items-center gap-2">
           <template v-if="!authStore?.user">
-            <router-link to="/login" class="btn btn-outline-primary" @click="closeNavbar">
+            <router-link
+              to="/login"
+              class="btn btn-outline-primary"
+              @click="closeNavbar"
+            >
               <i class="fas fa-sign-in-alt me-1"></i>Login
             </router-link>
-            <router-link to="/signup" class="btn btn-primary" @click="closeNavbar">
+            <router-link
+              to="/signup"
+              class="btn btn-primary"
+              @click="closeNavbar"
+            >
               <i class="fas fa-user-plus me-1"></i>Sign Up
             </router-link>
           </template>
@@ -74,24 +82,39 @@
                 <i class="fas fa-user-circle me-1"></i>
                 {{ authStore.user.name }}
               </button>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="userDropdown"
+              >
                 <li>
-                  <router-link 
-                    class="dropdown-item" 
-                    :to="authStore.user.type === 'employer' ? '/dashboard/employer' : '/dashboard/jobseeker'"
+                  <router-link
+                    class="dropdown-item"
+                    :to="
+                      authStore.user.type === 'employer'
+                        ? '/dashboard/employer'
+                        : '/dashboard/jobseeker'
+                    "
                     @click="closeNavbar"
                   >
                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                   </router-link>
                 </li>
                 <li>
-                  <router-link class="dropdown-item" to="/profile" @click="closeNavbar">
+                  <router-link
+                    class="dropdown-item"
+                    to="/profile"
+                    @click="closeNavbar"
+                  >
                     <i class="fas fa-user-cog me-2"></i>Profile
                   </router-link>
                 </li>
-                <li><hr class="dropdown-divider"></li>
+                <li><hr class="dropdown-divider" /></li>
                 <li>
-                  <a class="dropdown-item text-danger" href="#" @click.prevent="handleLogoutAndClose">
+                  <a
+                    class="dropdown-item text-danger"
+                    href="#"
+                    @click.prevent="handleLogoutAndClose"
+                  >
                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                   </a>
                 </li>
@@ -107,15 +130,15 @@
 <script>
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
-import { Collapse } from 'bootstrap';
+import { Collapse } from "bootstrap";
 
 export default {
   name: "Navbar",
-  
+
   data() {
     return {
       isScrolled: false,
-      navbarCollapse: null
+      navbarCollapse: null,
     };
   },
 
@@ -126,31 +149,33 @@ export default {
 
   mounted() {
     window.addEventListener("scroll", this.handleScroll);
-    
+
     // Initialize Bootstrap collapse
-    const navbarToggler = this.$el.querySelector('.navbar-toggler');
-    const navbarContent = this.$el.querySelector('#navbarContent');
-    
+    const navbarToggler = this.$el.querySelector(".navbar-toggler");
+    const navbarContent = this.$el.querySelector("#navbarContent");
+
     if (navbarToggler && navbarContent) {
       this.navbarCollapse = new Collapse(navbarContent, {
-        toggle: false
+        toggle: false,
       });
-      
+
       // Close navbar when clicking outside
-      document.addEventListener('click', (event) => {
-        const isClickInside = navbarToggler.contains(event.target) || 
-                            navbarContent.contains(event.target);
-        
-        if (!isClickInside && navbarContent.classList.contains('show')) {
+      document.addEventListener("click", (event) => {
+        const isClickInside =
+          navbarToggler.contains(event.target) ||
+          navbarContent.contains(event.target);
+
+        if (!isClickInside && navbarContent.classList.contains("show")) {
           this.navbarCollapse.hide();
         }
       });
 
       // Close navbar when clicking on a nav link
-      const navLinks = navbarContent.querySelectorAll('.nav-link');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          if (window.innerWidth < 992) { // Only on mobile
+      const navLinks = navbarContent.querySelectorAll(".nav-link");
+      navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          if (window.innerWidth < 992) {
+            // Only on mobile
             this.navbarCollapse.hide();
           }
         });
@@ -161,14 +186,14 @@ export default {
   unmounted() {
     window.removeEventListener("scroll", this.handleScroll);
     // Clean up event listeners
-    const navbarContent = this.$el.querySelector('#navbarContent');
+    const navbarContent = this.$el.querySelector("#navbarContent");
     if (navbarContent) {
-      const navLinks = navbarContent.querySelectorAll('.nav-link');
-      navLinks.forEach(link => {
-        link.removeEventListener('click', () => {});
+      const navLinks = navbarContent.querySelectorAll(".nav-link");
+      navLinks.forEach((link) => {
+        link.removeEventListener("click", () => {});
       });
     }
-    document.removeEventListener('click', () => {});
+    document.removeEventListener("click", () => {});
   },
 
   methods: {
@@ -183,7 +208,8 @@ export default {
     },
 
     closeNavbar() {
-      if (window.innerWidth < 992 && this.navbarCollapse) { // Only on mobile
+      if (window.innerWidth < 992 && this.navbarCollapse) {
+        // Only on mobile
         this.navbarCollapse.hide();
       }
     },
@@ -196,8 +222,8 @@ export default {
     handleLogout() {
       this.authStore.logout();
       this.router.push("/login");
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -236,8 +262,10 @@ export default {
 
 .brand-text {
   background: linear-gradient(45deg, #2563eb, #1d4ed8);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .navbar-toggler {
@@ -295,7 +323,8 @@ export default {
 
 .dropdown-menu {
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-radius: 8px;
   padding: 0.5rem;
 }

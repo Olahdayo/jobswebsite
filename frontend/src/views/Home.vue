@@ -6,7 +6,7 @@
       <div class="container position-relative">
         <div class="row min-vh-75 align-items-center py-5">
           <div class="col-lg-8 text-center text-lg-start">
-            <h1 class="display-4 fw-bold mb-4">Unlock Your Future</h1>
+            <h1 class="display-4 fw-bold mb-4">Pin down your next career move!</h1>
             <p class="lead mb-5">
               Dive into a world of opportunities and discover your perfect
               match! Easily browse, apply, and connect with top employers in
