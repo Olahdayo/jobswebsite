@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
+import Jobs from "../views/Jobs.vue";
 import JobSeekerSignup from "@/views/JobSeekerSignup.vue";
-// import JobListings from "@/views/JobListings.vue";
 import JobDetails from "@/views/JobDetails.vue";
 import EmployerSignup from "@/views/EmployerSignup.vue";
 import EmployerDashboard from "@/views/EmployerDashboard.vue";
@@ -36,7 +36,7 @@ const router = createRouter({
     {
       path: "/jobs",
       name: "Jobs",
-      component: () => import("../views/JobListings.vue"),
+      component: Jobs,
     },
     {
       path: "/login",

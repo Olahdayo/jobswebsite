@@ -456,9 +456,9 @@
 </style>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useJobsStore } from "@/stores/jobs";
+import { ref, computed, onMounted } from "vue";
 import SearchFilter from "@/components/SearchFilter.vue";
+import { jobService } from "@/services/jobService";
 
 export default {
   name: "JobListings",
@@ -466,148 +466,129 @@ export default {
     SearchFilter,
   },
 
-  setup() {
-    const jobsStore = useJobsStore();
-    const isLoading = ref(true);
-    const currentPage = ref(1);
-    const jobsPerPage = 20;
-    const showMobileSearch = ref(false);
+  data() {
+    return {
+      jobs: [],
+      isLoading: false,
+      currentPage: 1,
+      totalPages: 1,
+      showMobileSearch: false,
+      filters: {
+        keyword: "",
+        location: "",
+        type: "",
+        experience_level: "",
+      },
+    };
+  },
 
-    const jobs = computed(() => jobsStore?.filteredJobs || []);
+  computed: {
+    hasActiveFilters() {
+      return Object.values(this.filters).some((value) => value !== "");
+    },
 
-    const totalPages = computed(() =>
-      Math.ceil(jobs.value.length / jobsPerPage)
-    );
+    activeFilters() {
+      return Object.fromEntries(
+        Object.entries(this.filters).filter(([_, value]) => value !== "")
+      );
+    },
 
-    const paginatedJobs = computed(() => {
-      const startIndex = (currentPage.value - 1) * jobsPerPage;
-      const endIndex = startIndex + jobsPerPage;
-      return jobs.value.slice(startIndex, endIndex);
-    });
+    paginatedJobs() {
+      return this.jobs;
+    },
 
-    const displayedPages = computed(() => {
+    displayedPages() {
       const delta = 2;
       const range = [];
-      const rangeWithDots = [];
-      let l;
-
-      for (let i = 1; i <= totalPages.value; i++) {
-        if (
-          i === 1 ||
-          i === totalPages.value ||
-          (i >= currentPage.value - delta && i <= currentPage.value + delta)
-        ) {
-          range.push(i);
-        }
+      for (
+        let i = Math.max(2, this.currentPage - delta);
+        i <= Math.min(this.totalPages - 1, this.currentPage + delta);
+        i++
+      ) {
+        range.push(i);
       }
 
-      range.forEach((i) => {
-        if (l) {
-          if (i - l === 2) {
-            rangeWithDots.push(l + 1);
-          } else if (i - l !== 1) {
-            rangeWithDots.push("...");
-          }
-        }
-        rangeWithDots.push(i);
-        l = i;
-      });
-
-      return rangeWithDots;
-    });
-
-    const hasActiveFilters = computed(() => {
-      return Object.values(jobsStore?.searchFilters || {}).some(
-        (value) => value
-      );
-    });
-
-    const changePage = (page) => {
-      if (page >= 1 && page <= totalPages.value) {
-        currentPage.value = page;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      if (this.currentPage - delta > 2) {
+        range.unshift("...");
       }
-    };
-
-    const formatPostedDate = (date) => {
-      const days = Math.floor(
-        (new Date() - new Date(date)) / (1000 * 60 * 60 * 24)
-      );
-      if (days === 0) return "Today";
-      if (days === 1) return "Yesterday";
-      if (days < 7) return `${days} days ago`;
-      return new Date(date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    };
-
-    const applyFilters = (filters) => {
-      if (jobsStore) {
-        jobsStore.searchFilters = filters;
-        jobsStore.filterJobs();
-        currentPage.value = 1;
+      if (this.currentPage + delta < this.totalPages - 1) {
+        range.push("...");
       }
-    };
 
-    const removeFilter = (key) => {
-      if (jobsStore) {
-        jobsStore.searchFilters[key] = "";
-        jobsStore.filterJobs();
-        currentPage.value = 1;
+      range.unshift(1);
+      if (this.totalPages !== 1) {
+        range.push(this.totalPages);
       }
-    };
 
-    const clearAllFilters = () => {
-      if (jobsStore) {
-        jobsStore.searchFilters = {
-          query: "",
-          location: "",
-          field: "",
-          education: "",
-          jobType: "",
-        };
-        jobsStore.filterJobs();
-        currentPage.value = 1;
-      }
-    };
+      return range;
+    },
+  },
 
-    const toggleMobileSearch = () => {
-      showMobileSearch.value = !showMobileSearch.value;
-      document.body.classList.toggle("overflow-hidden", showMobileSearch.value);
-    };
-
-    onUnmounted(() => {
-      document.body.classList.remove("overflow-hidden");
-    });
-
-    onMounted(async () => {
+  methods: {
+    async loadJobs() {
+      this.isLoading = true;
       try {
-        await jobsStore.initializeJobs();
+        const response = await jobService.getAllJobs(this.currentPage);
+        this.jobs = response.data;
+        this.totalPages = Math.ceil(response.total / response.per_page);
       } catch (error) {
         console.error("Error loading jobs:", error);
       } finally {
-        isLoading.value = false;
+        this.isLoading = false;
       }
-    });
+    },
 
-    return {
-      jobs,
-      paginatedJobs,
-      isLoading,
-      currentPage,
-      totalPages,
-      displayedPages,
-      hasActiveFilters,
-      activeFilters: jobsStore?.searchFilters,
-      formatPostedDate,
-      changePage,
-      applyFilters,
-      removeFilter,
-      clearAllFilters,
-      showMobileSearch,
-      toggleMobileSearch,
-    };
+    async applyFilters(filters) {
+      this.isLoading = true;
+      try {
+        const response = await jobService.searchJobs(filters);
+        this.jobs = response.data;
+        this.totalPages = Math.ceil(response.total / response.per_page);
+        this.filters = { ...filters };
+      } catch (error) {
+        console.error("Error applying filters:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async changePage(page) {
+      if (page === this.currentPage || page === "...") return;
+      this.currentPage = page;
+      if (this.hasActiveFilters) {
+        await this.applyFilters({ ...this.filters, page });
+      } else {
+        await this.loadJobs();
+      }
+    },
+
+    removeFilter(key) {
+      this.filters[key] = "";
+      this.applyFilters(this.filters);
+    },
+
+    clearAllFilters() {
+      this.filters = {
+        keyword: "",
+        location: "",
+        type: "",
+        experience_level: "",
+      };
+      this.loadJobs();
+    },
+
+    toggleMobileSearch() {
+      this.showMobileSearch = !this.showMobileSearch;
+    },
+
+    formatPostedDate(date) {
+      const options = { year: "numeric", month: "short", day: "numeric" };
+      return new Date(date).toLocaleDateString("en-US", options);
+    },
+  },
+
+  mounted() {
+    this.loadJobs();
   },
 };
 </script>

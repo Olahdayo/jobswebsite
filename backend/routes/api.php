@@ -19,10 +19,12 @@ Route::post('/employers/login', [AuthController::class, 'employerLogin']);
 Route::post('/jobseekers/register', [AuthController::class, 'jobSeekerRegister']);
 Route::post('/jobseekers/login', [AuthController::class, 'jobSeekerLogin']);
 
-// Job routes
-Route::get('/jobs', [JobController::class, 'index']);
-Route::get('/jobs/search', [JobController::class, 'search']);
-Route::get('/jobs/{job}', [JobController::class, 'show']);
+// Job routes (public)
+Route::prefix('jobs')->group(function () {
+    Route::get('/', [JobController::class, 'index']);
+    Route::get('/search', [JobController::class, 'search']);
+    Route::get('/{job}', [JobController::class, 'show']);
+});
 
 // Protected routes for employers
 Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
@@ -51,13 +53,7 @@ Route::middleware(['auth:sanctum', 'ability:job_seeker'])->group(function () {
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
     
-    // Application management
+    // Job applications
+    Route::post('/jobs/{job}/apply', [JobSeekerController::class, 'applyForJob']);
     Route::get('/jobseeker/applications', [JobSeekerController::class, 'applications']);
-    Route::post('/jobs/{job}/apply', [JobSeekerController::class, 'apply']);
-    Route::delete('/applications/{application}', [JobSeekerController::class, 'withdrawApplication']);
-    
-    // Saved jobs
-    Route::get('/jobseeker/saved-jobs', [JobSeekerController::class, 'savedJobs']);
-    Route::post('/jobs/{job}/save', [JobSeekerController::class, 'saveJob']);
-    Route::delete('/jobs/{job}/save', [JobSeekerController::class, 'unsaveJob']);
 });

@@ -19,7 +19,13 @@ class JobController extends Controller
             ->latest()
             ->paginate(10);
             
-        return response()->json($jobs);
+        return response()->json([
+            'data' => $jobs->items(),
+            'total' => $jobs->total(),
+            'per_page' => $jobs->perPage(),
+            'current_page' => $jobs->currentPage(),
+            'last_page' => $jobs->lastPage()
+        ]);
     }
 
     /**
@@ -41,7 +47,9 @@ class JobController extends Controller
 
         $job = $request->user()->jobs()->create($validated);
 
-        return response()->json($job, 201);
+        return response()->json([
+            'data' => $job
+        ], 201);
     }
 
     /**
@@ -49,7 +57,9 @@ class JobController extends Controller
      */
     public function show(Job $job)
     {
-        return response()->json($job->load('employer'));
+        return response()->json([
+            'data' => $job->load('employer')
+        ]);
     }
 
     /**
@@ -70,11 +80,14 @@ class JobController extends Controller
             'responsibilities' => 'sometimes|array',
             'deadline' => 'sometimes|date|after:today',
             'is_active' => 'sometimes|boolean',
+            'is_featured' => 'sometimes|boolean',
         ]);
 
         $job->update($validated);
 
-        return response()->json($job);
+        return response()->json([
+            'data' => $job
+        ]);
     }
 
     /**
@@ -116,8 +129,18 @@ class JobController extends Controller
             $query->where('experience_level', $request->experience_level);
         }
 
+        if ($request->has('featured')) {
+            $query->where('is_featured', true);
+        }
+
         $jobs = $query->latest()->paginate(10);
 
-        return response()->json($jobs);
+        return response()->json([
+            'data' => $jobs->items(),
+            'total' => $jobs->total(),
+            'per_page' => $jobs->perPage(),
+            'current_page' => $jobs->currentPage(),
+            'last_page' => $jobs->lastPage()
+        ]);
     }
 }

@@ -37,34 +37,28 @@
         </div>
 
         <!-- Quick Info Bar -->
-        <div class="quick-info-bar">
-          <div class="info-item">
-            <i class="fas fa-calendar-alt"></i>
-            <div>
-              <span class="info-label">Posted</span>
-              <span class="info-value">{{ formatDate(job.postedDate) }}</span>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <div>
-              <span class="info-label">Location</span>
-              <span class="info-value">{{ job.location }}</span>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-money-bill-wave"></i>
-            <div>
-              <span class="info-label">Salary</span>
-              <span class="info-value highlight">{{ job.salary }}/month</span>
-            </div>
-          </div>
-          <div class="info-item">
-            <i class="fas fa-users"></i>
-            <div>
-              <span class="info-label">Applications</span>
-              <span class="info-value">Open</span>
-            </div>
+        <div class="job-meta mb-4">
+          <div class="d-flex flex-wrap gap-3">
+            <span class="meta-item">
+              <i class="bi bi-calendar3"></i>
+              Posted: {{ formatDate(job.postedDate) }}
+            </span>
+            <span class="meta-item">
+              <i class="bi bi-clock"></i>
+              Deadline: {{ formatDate(job.deadline) }}
+            </span>
+            <span class="meta-item">
+              <i class="bi bi-geo-alt"></i>
+              {{ job.location }}
+            </span>
+            <span class="meta-item">
+              <i class="bi bi-briefcase"></i>
+              {{ job.type }}
+            </span>
+            <span class="meta-item">
+              <i class="bi bi-cash"></i>
+              {{ job.salary }}/month
+            </span>
           </div>
         </div>
 
@@ -117,7 +111,7 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { useJobsStore } from "@/stores/jobs";
+import { jobService } from '@/services/jobService';
 
 export default {
   name: "JobDetails",
@@ -135,7 +129,6 @@ export default {
 
   created() {
     this.authStore = useAuthStore();
-    this.jobsStore = useJobsStore();
     this.loadJobDetails();
     if (this.authStore.user) {
       this.checkIfApplied();
@@ -152,7 +145,17 @@ export default {
   },
 
   methods: {
-    handleApply() {
+    async loadJobDetails() {
+      try {
+        const jobId = this.$route.params.id;
+        const jobData = await jobService.getJobById(jobId);
+        this.job = jobData;
+      } catch (error) {
+        console.error('Error loading job details:', error);
+      }
+    },
+
+    async handleApply() {
       if (!this.authStore.user) {
         this.$router.push("/login");
         return;
@@ -163,62 +166,42 @@ export default {
         return;
       }
 
-      const existingApplication = this.applications.find(
-        (app) =>
-          app.jobId === this.job.id && app.userId === this.authStore.user.id
-      );
-
-      if (existingApplication) {
+      if (this.hasApplied) {
         alert("You have already applied for this job");
         return;
       }
 
-      const newApplication = {
-        id: Date.now(),
-        jobId: this.job.id,
-        userId: this.authStore.user.id,
-        status: "pending",
-        appliedDate: new Date().toISOString(),
-      };
-
-      const existingApplications =
-        JSON.parse(localStorage.getItem("applications")) || [];
-      existingApplications.push(newApplication);
-      localStorage.setItem(
-        "applications",
-        JSON.stringify(existingApplications)
-      );
-
-      this.hasApplied = true;
-      alert("Application submitted successfully!");
-    },
-
-    formatDate(date) {
-      return new Date(date).toLocaleDateString("en-NG", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    },
-
-    loadJobDetails() {
-      const jobId = parseInt(this.$route.params.id);
-      this.job = this.jobsStore.jobs.find((j) => j.id === jobId);
-
-      if (!this.job) {
-        this.$router.push("/jobs");
+      this.isSubmitting = true;
+      try {
+        await jobService.applyForJob(this.job.id, this.authStore.user.id);
+        this.hasApplied = true;
+        alert("Application submitted successfully!");
+      } catch (error) {
+        console.error('Error applying for job:', error);
+        alert("Failed to submit application. Please try again.");
+      } finally {
+        this.isSubmitting = false;
       }
     },
 
     checkIfApplied() {
-      if (!this.authStore.user || !this.job) return;
-
-      const applications = JSON.parse(
-        localStorage.getItem("applications") || "[]"
-      );
+      // This will be replaced with an API call to check application status
+      const applications = JSON.parse(localStorage.getItem("applications")) || [];
       this.hasApplied = applications.some(
-        (app) => app.jobId === this.job.id && app.userId === this.authStore.user.id
+        (app) =>
+          app.jobId === this.$route.params.id &&
+          app.userId === this.authStore.user.id
       );
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     }
   }
 };
@@ -306,7 +289,7 @@ export default {
 }
 
 /* Quick Info Bar */
-.quick-info-bar {
+.job-meta {
   max-width: 1200px;
   margin: -2rem auto 2rem;
   padding: 1.5rem;
@@ -318,13 +301,13 @@ export default {
   gap: 1.5rem;
 }
 
-.info-item {
+.meta-item {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.info-item i {
+.meta-item i {
   font-size: 1.5rem;
   color: #3498db;
   width: 2.5rem;
@@ -441,13 +424,13 @@ export default {
     justify-content: center;
   }
 
-  .quick-info-bar {
+  .job-meta {
     margin: -1rem auto 2rem;
     grid-template-columns: 1fr;
     text-align: center;
   }
 
-  .info-item {
+  .meta-item {
     flex-direction: column;
   }
 }
