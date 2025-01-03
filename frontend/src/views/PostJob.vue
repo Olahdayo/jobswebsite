@@ -4,7 +4,7 @@
     <section class="hero-section text-center py-5">
       <div class="container">
         <h1 class="display-4 fw-bold mb-4 animate__animated animate__fadeInDown">
-          Post Your Job with JobHunter
+          Post Your Job with Pinify
         </h1>
         <p class="lead mb-4 animate__animated animate__fadeInUp">
           Connect with the best talent and grow your team with our powerful job posting platform
@@ -73,7 +73,7 @@
     <!-- Features Section -->
     <section class="features-section py-5 bg-light">
       <div class="container">
-        <h2 class="text-center mb-5">Why Choose JobHunter?</h2>
+        <h2 class="text-center mb-5">Why Choose Pinify?</h2>
         <div class="row g-4">
           <div class="col-md-6 animate__animated animate__fadeInLeft">
             <div class="feature-item d-flex align-items-start mb-4">
@@ -123,7 +123,7 @@
     <section class="cta-section py-5">
       <div class="container text-center">
         <h2 class="mb-4 animate__animated animate__pulse">Ready to Find Your Perfect Candidate?</h2>
-        <p class="lead mb-4">Join thousands of companies who trust JobHunter for their hiring needs</p>
+        <p class="lead mb-4">Join thousands of companies who trust Pinify for their hiring needs</p>
         <router-link to="/signup/employer" class="btn btn-primary btn-lg animate__animated animate__bounceIn">
           Get Started Now
         </router-link>
