@@ -8,7 +8,6 @@ use Database\Seeders\EmployerSeeder;
 use Database\Seeders\JobSeekerSeeder;
 use Database\Seeders\JobSeeder;
 use Database\Seeders\ApplicationSeeder;
-use Database\Seeders\JobListingsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,8 +16,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -29,7 +26,6 @@ class DatabaseSeeder extends Seeder
             JobSeekerSeeder::class,
             JobSeeder::class,
             ApplicationSeeder::class,
-            JobListingsSeeder::class,
         ]);
     }
 }

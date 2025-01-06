@@ -63,7 +63,7 @@ class Job extends Model
      */
     public function getCreatedDateAttribute()
     {
-        return Carbon::parse($this->created_at)->format('M d, Y');
+        return $this->created_at ? Carbon::parse($this->created_at)->format('M d, Y') : null;
     }
 
     /**
@@ -71,6 +71,6 @@ class Job extends Model
      */
     public function getDeadlineDateAttribute()
     {
-        return Carbon::parse($this->deadline)->format('M d, Y');
+        return $this->deadline ? Carbon::parse($this->deadline)->format('M d, Y') : null;
     }
 }

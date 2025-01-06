@@ -17,7 +17,9 @@ export const jobService = {
     getAllJobs: async (page = 1) => {
         try {
             const response = await api.get(`/jobs?page=${page}`);
-            return response.data;
+            // Extract jobs from the nested data structure
+            const { data: { data: jobs } } = response;
+            return { data: jobs };
         } catch (error) {
             console.error('Error fetching jobs:', error);
             throw error;
@@ -191,6 +193,40 @@ export const jobService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching stats:', error);
+            throw error;
+        }
+    },
+
+    // Get all filter options
+    getFilterOptions: async () => {
+        try {
+            const [locations, categories] = await Promise.all([
+                api.get('/jobs/locations'),
+                api.get('/jobs/categories')
+            ]);
+            
+            return {
+                locations: locations.data,
+                categories: categories.data,
+                jobTypes: [
+                    "Full-time",
+                    "Part-time",
+                    "Contract",
+                    "Remote",
+                    "Internship",
+                    "Graduate Trainee"
+                ],
+                experienceLevels: [
+                    "Entry Level",
+                    "Junior Level",
+                    "Mid Level",
+                    "Senior Level",
+                    "Lead/Manager",
+                    "Executive"
+                ]
+            };
+        } catch (error) {
+            console.error('Error fetching filter options:', error);
             throw error;
         }
     }

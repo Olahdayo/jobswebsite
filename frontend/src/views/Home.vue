@@ -98,28 +98,57 @@
                     class="text-decoration-none"
                   >
                     <div class="job-card" :class="{ 'featured-job': job.is_featured }">
-                      <h5 class="job-title">{{ job.title }}</h5>
-                      <p class="job-company">{{ job.employer?.company_name || 'Company' }}</p>
-                      
-                      <div class="job-meta">
-                        <span><i class="bi bi-calendar3"></i> {{ job.created_date }}</span>
-                        <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
-                        <span><i class="bi bi-briefcase"></i> {{ job.type }}</span>
+                      <div class="card-header">
+                        <div class="company-info">
+                          <img 
+                            :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                            :alt="job.employer?.company_name"
+                            class="company-logo"
+                          />
+                          <div>
+                            <h5 class="job-title">{{ job.title }}</h5>
+                            <p class="company-name">{{ job.employer?.company_name }}</p>
+                          </div>
+                        </div>
+                        <div class="featured-badge" v-if="job.is_featured">
+                          <i class="fas fa-star"></i>
+                          Featured
+                        </div>
                       </div>
                       
-                      <p class="job-description">{{ job.description.substring(0, 100) }}...</p>
-                      
-                      <div class="job-tags">
-                        <span class="job-tag">
-                          <i class="bi bi-cash"></i> {{ job.salary }}
-                        </span>
-                        <span class="job-tag">
-                          <i class="bi bi-person-workspace"></i> {{ job.experience_level }}
-                        </span>
+                      <div class="card-body">
+                        <div class="job-meta">
+                          <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Location: {{ job.location }}</span>
+                          </div>
+                          <div class="meta-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Job Type: {{ job.type }}</span>
+                          </div>
+                          <div class="meta-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                          </div>
+                        </div>
+                        
+                        <p class="job-description">Description: {{ job.description.substring(0, 100) }}...</p>
+                        
+                        <div class="job-tags">
+                          <span class="tag">Experience: {{ job.experience_level }}</span>
+                          <span class="tag">Category: {{ job.category }}</span>
+                        </div>
                       </div>
-                      
-                      <div class="job-deadline">
-                        <i class="bi bi-clock"></i> Deadline: {{ job.deadline_date }}
+
+                      <div class="card-footer">
+                        <div class="deadline">
+                          <i class="fas fa-clock"></i>
+                          <span>Deadline: {{ formatDate(job.deadline) }}</span>
+                        </div>
+                        <div class="posted-date">
+                          <i class="fas fa-calendar"></i>
+                          <span>Posted: {{ formatDate(job.created_at) }}</span>
+                        </div>
                       </div>
                     </div>
                   </router-link>
@@ -145,28 +174,57 @@
                   class="text-decoration-none"
                 >
                   <div class="job-card" :class="{ 'featured-job': job.is_featured }">
-                    <h5 class="job-title">{{ job.title }}</h5>
-                    <p class="job-company"> Posted By: {{ job.employer?.company_name || 'Company' }}</p>
-                    
-                    <div class="job-meta">
-                      <span><i class="bi bi-calendar3"></i> {{ job.created_date }}</span>
-                      <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
-                      <span><i class="bi bi-briefcase"></i> {{ job.type }}</span>
+                    <div class="card-header">
+                      <div class="company-info">
+                        <img 
+                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                          :alt="job.employer?.company_name"
+                          class="company-logo"
+                        />
+                        <div>
+                          <h5 class="job-title">{{ job.title }}</h5>
+                          <p class="company-name">{{ job.employer?.company_name }}</p>
+                        </div>
+                      </div>
+                      <div class="featured-badge" v-if="job.is_featured">
+                        <i class="fas fa-star"></i>
+                        Featured
+                      </div>
                     </div>
                     
-                    <p class="job-description">{{ job.description.substring(0, 100) }}...</p>
-                    
-                    <div class="job-tags">
-                      <span class="job-tag">
-                        <i class="bi bi-cash"></i>Pay: {{ job.salary }}
-                      </span>
-                      <span class="job-tag">
-                        <i class="bi bi-person-workspace"></i>Experience: {{ job.experience_level }}
-                      </span>
+                    <div class="card-body">
+                      <div class="job-meta">
+                        <div class="meta-item">
+                          <i class="fas fa-map-marker-alt"></i>
+                          <span>Job Location: {{ job.location }}</span>
+                        </div>
+                        <div class="meta-item">
+                          <i class="fas fa-briefcase"></i>
+                          <span>Job Type: {{ job.type }}</span>
+                        </div>
+                        <div class="meta-item">
+                          <i class="fas fa-money-bill-wave"></i>
+                          <span>Job Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                        </div>
+                      </div>
+                      
+                      <p class="job-description">Job Description: {{ job.description.substring(0, 100) }}...</p>
+                      
+                      <div class="job-tags">
+                        <span class="tag">Job Experience: {{ job.experience_level }}</span>
+                        <span class="tag">Job Category: {{ job.category }}</span>
+                      </div>
                     </div>
-                    
-                    <div class="job-deadline">
-                      <i class="bi bi-clock"></i> Deadline: {{ job.deadline_date }}
+
+                    <div class="card-footer">
+                      <div class="deadline">
+                        <i class="fas fa-clock"></i>
+                        <span>Job Deadline: {{ formatDate(job.deadline) }}</span>
+                      </div>
+                      <div class="posted-date">
+                        <i class="fas fa-calendar"></i>
+                        <span>Job Posted: {{ formatDate(job.created_at) }}</span>
+                      </div>
                     </div>
                   </div>
                 </router-link>
@@ -335,6 +393,13 @@ export default {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
+      });
+    },
+
+    formatSalary(salary) {
+      return salary.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
     },
 
@@ -769,7 +834,7 @@ html {
   height: 100%;
   background: inherit;
   border-radius: inherit;
-  animation: pulse 2s ease-out infinite;
+  animation: pulse 2s infinite;
 }
 
 @keyframes pulse {

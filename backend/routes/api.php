@@ -21,16 +21,16 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('jobs')->group(function () {
     Route::get('/', [JobController::class, 'index']);
     Route::get('/stats', [JobController::class, 'getStats']);
-    Route::get('/{id}', [JobController::class, 'show']);
-    Route::get('/location/{location}', [JobController::class, 'getJobsByLocation']);
-    Route::get('/locations', [JobController::class, 'getLocations']);
-    Route::get('/categories', [JobController::class, 'getCategories']);
-    Route::get('/category/{category}', [JobController::class, 'getJobsByCategory']);
-    Route::get('/featured', [JobController::class, 'getFeaturedJobs']);
     Route::get('/search', [JobController::class, 'search']);
     Route::get('/recent', [JobController::class, 'recent']);
+    Route::get('/featured', [JobController::class, 'getFeaturedJobs']);
     Route::get('/by-state', [JobController::class, 'byState']);
     Route::get('/by-category', [JobController::class, 'byCategory']);
+    Route::get('/locations', [JobController::class, 'getLocations']);
+    Route::get('/categories', [JobController::class, 'getCategories']);
+    Route::get('/location/{location}', [JobController::class, 'getJobsByLocation']);
+    Route::get('/category/{category}', [JobController::class, 'getJobsByCategory']);
+    Route::get('/{jobListing}', [JobController::class, 'show'])->where('jobListing', '[0-9]+');
 });
 
 // Protected routes for employers

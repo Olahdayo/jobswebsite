@@ -34,7 +34,7 @@
         </div>
 
         <!-- Quick Info Bar -->
-        <div class="job-meta mb-4">
+        <div class="job-meta">
           <div class="d-flex flex-wrap gap-3">
             <span class="meta-item">
               <i class="bi bi-calendar3"></i>
@@ -84,16 +84,16 @@
               </div>
 
               <div class="job-section">
-                <h2 class="section-title">
-                  <i class="fas fa-list-check"></i>
-                  Requirements
-                </h2>
-                <ul class="requirements-list">
-                  <li v-for="(req, index) in parseList(job.requirements)" :key="index">
-                    <i class="fas fa-check-circle"></i>
-                    <span>{{ req }}</span>
-                  </li>
-                </ul>
+                <h3>Requirements</h3>
+                <div v-if="job.requirements">
+                  <ul class="requirements-list">
+                    <li v-for="(req, index) in parseList(job.requirements)" :key="index">
+                      <i class="fas fa-check-circle"></i>
+                      <span>{{ req }}</span>
+                    </li>
+                  </ul>
+                </div>
+                <p v-else class="text-muted">No specific requirements listed.</p>
               </div>
             </div>
 
@@ -119,7 +119,7 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { jobService } from '@/services/jobService';
+import { jobService } from '@/services/jobService'
 
 export default {
   name: "JobDetails",
@@ -146,7 +146,7 @@ export default {
       try {
         const jobId = this.$route.params.id;
         const response = await jobService.getJob(jobId);
-        this.job = response;
+        this.job = response.data;
       } catch (error) {
         console.error('Error loading job details:', error);
       }
@@ -169,7 +169,17 @@ export default {
     parseList(text) {
       if (!text) return [];
       if (Array.isArray(text)) return text;
-      return text.split('\n').filter(item => item.trim());
+      
+      // Split by periods, semicolons, or newlines
+      const items = text.split(/[.;\n]+/)
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
+        .map(item => {
+          // Capitalize first letter if it's not already
+          return item.charAt(0).toUpperCase() + item.slice(1);
+        });
+      
+      return items;
     },
 
     async handleApply() {
@@ -211,20 +221,27 @@ export default {
 .job-details-page {
   background-color: #f8f9fa;
   min-height: 100vh;
+  padding: 2rem 0;
 }
 
-/* Hero Section */
+.job-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .job-hero {
-  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  background: linear-gradient(to right, #2563eb, #3b82f6);
   color: white;
-  padding: 3rem 0;
-  margin-bottom: 4rem;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 0 1.5rem;
 }
 
 .company-brand {
@@ -234,33 +251,32 @@ export default {
 }
 
 .company-logo {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 12px;
   object-fit: cover;
-  background: white;
+  background-color: white;
   padding: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.company-info {
+  flex: 1;
 }
 
 .job-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: white;
   margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: white;
 }
 
 .company-name {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
 }
 
-/* Tags */
 .job-tags {
   display: flex;
   gap: 1rem;
@@ -272,166 +288,158 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
   font-size: 0.875rem;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+}
+
+.tag i {
+  font-size: 0.875rem;
 }
 
 .tag-featured {
-  background: #ffc107;
-  color: #000;
+  background-color: #fbbf24;
+  color: #92400e;
 }
 
-.tag-type {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Quick Info Bar */
 .job-meta {
-  max-width: 1200px;
-  margin: -2rem auto 2rem;
+  background-color: white;
   padding: 1.5rem;
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .meta-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  color: #4b5563;
+  font-size: 0.875rem;
 }
 
 .meta-item i {
-  font-size: 1.5rem;
-  color: #3498db;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(52, 152, 219, 0.1);
-  border-radius: 50%;
+  color: #3b82f6;
 }
 
-.info-label {
-  display: block;
-  font-size: 0.875rem;
-  color: #6c757d;
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
-.info-value {
-  display: block;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.info-value.highlight {
-  color: #28a745;
+.main-content {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
 }
 
 .content-card {
-  background: white;
-  border-radius: 1rem;
-  padding: 0;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  background: #f8f9fa;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e9ecef;
 }
 
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.description-text {
-  line-height: 1.8;
-  color: #495057;
-  padding: 2rem;
+.section-title i {
+  color: #3b82f6;
+}
+
+.job-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.job-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.job-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.job-section p {
+  color: #4b5563;
+  line-height: 1.75;
 }
 
 .requirements-list {
   list-style: none;
-  padding: 2rem;
+  padding: 0;
   margin: 0;
 }
 
-.apply-button-container {
-  margin-top: 2rem;
-  text-align: center;
+.requirements-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.requirements-list li i {
+  color: #3b82f6;
+  margin-top: 0.25rem;
 }
 
 .apply-button {
-  background-color: #007bff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background-color: #3b82f6;
   color: white;
-  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.2s;
+  width: 100%;
 }
 
 .apply-button:hover {
-  background-color: #0056b3;
+  background-color: #2563eb;
 }
 
-.loading-container {
-  text-align: center;
-  margin-top: 2rem;
+.apply-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
 
-.modal-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #343a40;
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
 }
 
-.modal {
-  background-color: rgba(0, 0, 0, 0.5);
+.alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
 }
 
-.fa-user-lock {
-  color: #0d6efd;
-}
-
-@media (max-width: 768px) {
-  .job-hero {
-    padding: 2rem 0;
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: 2fr 1fr;
   }
-
-  .company-brand {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .job-tags {
-    justify-content: center;
-  }
-
-  .job-meta {
-    margin: -1rem auto 2rem;
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .meta-item {
-    flex-direction: column;
+  
+  .apply-button {
+    width: auto;
   }
 }
 </style>

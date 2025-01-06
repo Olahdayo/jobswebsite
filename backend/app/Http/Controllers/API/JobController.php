@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Job;
+use App\Models\JobListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +20,7 @@ class JobController extends Controller
      */
     public function index()
     {
-        $jobs = Job::with('employer')
+        $jobs = JobListing::with('employer')
             ->where('is_active', true)
             ->latest()
             ->paginate(10);
@@ -51,7 +51,7 @@ class JobController extends Controller
             'deadline' => 'required|date|after:today',
         ]);
 
-        $job = $request->user()->jobs()->create($validated);
+        $job = $request->user()->jobListings()->create($validated);
 
         return response()->json([
             'data' => $job
@@ -61,17 +61,49 @@ class JobController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Job $job)
+    public function show(JobListing $jobListing)
     {
+        $jobListing->load('employer');
+        
         return response()->json([
-            'data' => $job->load('employer')
+            'data' => [
+                'id' => $jobListing->id,
+                'title' => $jobListing->title,
+                'description' => $jobListing->description,
+                'location' => $jobListing->location,
+                'type' => $jobListing->type,
+                'min_salary' => $jobListing->min_salary,
+                'max_salary' => $jobListing->max_salary,
+                'experience_level' => $jobListing->experience_level,
+                'requirements' => $jobListing->requirements,
+                'responsibilities' => $jobListing->responsibilities,
+                'is_active' => $jobListing->is_active,
+                'is_featured' => $jobListing->is_featured,
+                'category' => $jobListing->category,
+                'deadline' => $jobListing->deadline,
+                'created_at' => $jobListing->created_at,
+                'updated_at' => $jobListing->updated_at,
+                'created_date' => $jobListing->created_at ? $jobListing->created_at->format('M d, Y') : null,
+                'deadline_date' => $jobListing->deadline ? $jobListing->deadline->format('M d, Y') : null,
+                'employer' => $jobListing->employer ? [
+                    'id' => $jobListing->employer->id,
+                    'name' => $jobListing->employer->name,
+                    'email' => $jobListing->employer->email,
+                    'company_name' => $jobListing->employer->company_name,
+                    'company_description' => $jobListing->employer->company_description,
+                    'website' => $jobListing->employer->website,
+                    'industry' => $jobListing->employer->industry,
+                    'location' => $jobListing->employer->location,
+                    'logo_url' => $jobListing->employer->logo_url,
+                ] : null
+            ]
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Job $job)
+    public function update(Request $request, JobListing $job)
     {
         $this->authorize('update', $job);
 
@@ -99,7 +131,7 @@ class JobController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Job $job)
+    public function destroy(JobListing $job)
     {
         $this->authorize('delete', $job);
         
@@ -113,7 +145,7 @@ class JobController extends Controller
      */
     public function search(Request $request)
     {
-        $query = Job::with('employer');
+        $query = JobListing::with('employer');
 
         // Filter by category
         if ($request->has('category')) {
@@ -150,7 +182,7 @@ class JobController extends Controller
      */
     public function recent()
     {
-        $jobs = Job::with('employer')
+        $jobs = JobListing::with('employer')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get()
@@ -166,7 +198,7 @@ class JobController extends Controller
      */
     public function byState()
     {
-        $states = Job::select('location')
+        $states = JobListing::select('location')
             ->selectRaw('COUNT(*) as count')
             ->groupBy('location')
             ->orderBy('count', 'desc')
@@ -183,7 +215,7 @@ class JobController extends Controller
      */
     public function byCategory()
     {
-        $categories = Job::select('category')
+        $categories = JobListing::select('category')
             ->selectRaw('COUNT(*) as count')
             ->groupBy('category')
             ->orderBy('count', 'desc')
@@ -206,7 +238,7 @@ class JobController extends Controller
      */
     public function getJobsByLocation($location)
     {
-        $jobs = Job::with('employer')
+        $jobs = JobListing::with('employer')
             ->where('location', 'LIKE', '%' . $location . '%')
             ->where('is_active', true)
             ->latest()
@@ -222,7 +254,7 @@ class JobController extends Controller
      */
     public function getLocations()
     {
-        $locations = Job::select('location')
+        $locations = JobListing::select('location')
             ->where('is_active', true)
             ->distinct()
             ->pluck('location');
@@ -234,7 +266,7 @@ class JobController extends Controller
      */
     public function getCategories()
     {
-        $categories = Job::select('category')
+        $categories = JobListing::select('category')
             ->where('is_active', true)
             ->distinct()
             ->pluck('category');
@@ -246,7 +278,7 @@ class JobController extends Controller
      */
     public function getJobsByCategory($category)
     {
-        $jobs = Job::with('employer')
+        $jobs = JobListing::with('employer')
             ->where('category', $category)
             ->where('is_active', true)
             ->latest()
@@ -259,7 +291,7 @@ class JobController extends Controller
      */
     public function getFeaturedJobs()
     {
-        $jobs = Job::with('employer')
+        $jobs = JobListing::with('employer')
             ->where('is_active', true)
             ->where('is_featured', true)
             ->latest()
@@ -278,10 +310,10 @@ class JobController extends Controller
     {
         try {
             $stats = [
-                'activeJobs' => Job::where('is_active', true)->count(),
-                'totalLocations' => Job::where('is_active', true)->distinct('location')->count('location'),
-                'totalCategories' => Job::where('is_active', true)->distinct('category')->count('category'),
-                'featuredJobs' => Job::where('is_active', true)->where('is_featured', true)->count()
+                'activeJobs' => JobListing::where('is_active', true)->count(),
+                'totalLocations' => JobListing::where('is_active', true)->distinct('location')->count('location'),
+                'totalCategories' => JobListing::where('is_active', true)->distinct('category')->count('category'),
+                'featuredJobs' => JobListing::where('is_active', true)->where('is_featured', true)->count()
             ];
 
             return response()->json($stats);
