@@ -100,7 +100,7 @@
                       <p class="job-company">{{ job.employer?.company_name || 'Company' }}</p>
                       
                       <div class="job-meta">
-                        <span><i class="bi bi-calendar3"></i> {{ formatDate(job.created_at) }}</span>
+                        <span><i class="bi bi-calendar3"></i> {{ job.created_date }}</span>
                         <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
                         <span><i class="bi bi-briefcase"></i> {{ job.type }}</span>
                       </div>
@@ -117,7 +117,7 @@
                       </div>
                       
                       <div class="job-deadline">
-                        <i class="bi bi-clock"></i> Deadline: {{ formatDate(job.deadline) }}
+                        <i class="bi bi-clock"></i> Deadline: {{ job.deadline_date }}
                       </div>
                     </div>
                   </router-link>
@@ -144,10 +144,10 @@
                 >
                   <div class="job-card" :class="{ 'featured-job': job.is_featured }">
                     <h5 class="job-title">{{ job.title }}</h5>
-                    <p class="job-company">{{ job.employer?.company_name || 'Company' }}</p>
+                    <p class="job-company"> Posted By: {{ job.employer?.company_name || 'Company' }}</p>
                     
                     <div class="job-meta">
-                      <span><i class="bi bi-calendar3"></i> {{ formatDate(job.created_at) }}</span>
+                      <span><i class="bi bi-calendar3"></i> {{ job.created_date }}</span>
                       <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
                       <span><i class="bi bi-briefcase"></i> {{ job.type }}</span>
                     </div>
@@ -156,15 +156,15 @@
                     
                     <div class="job-tags">
                       <span class="job-tag">
-                        <i class="bi bi-cash"></i> {{ job.salary }}
+                        <i class="bi bi-cash"></i>Pay: {{ job.salary }}
                       </span>
                       <span class="job-tag">
-                        <i class="bi bi-person-workspace"></i> {{ job.experience_level }}
+                        <i class="bi bi-person-workspace"></i>Experience: {{ job.experience_level }}
                       </span>
                     </div>
                     
                     <div class="job-deadline">
-                      <i class="bi bi-clock"></i> Deadline: {{ formatDate(job.deadline) }}
+                      <i class="bi bi-clock"></i> Deadline: {{ job.deadline_date }}
                     </div>
                   </div>
                 </router-link>
@@ -186,7 +186,6 @@
             :recentPostings="recentPostings"
             :jobsByState="jobsByState"
             :jobsByField="jobsByField"
-            :formatDate="formatDate"
           />
         </div>
       </div>
@@ -449,6 +448,7 @@ html {
   margin-bottom: 1rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

@@ -12,7 +12,7 @@
         >
           <h6 class="mb-1">{{ job.title }}</h6>
           <p class="mb-1 small text-muted">{{ job.company }}</p>
-          <small class="text-muted">Posted {{ formatDate(job.postedDate) }}</small>
+          <small class="text-muted">Posted {{ job.created_date }}</small>
         </router-link>
       </div>
     </div>
@@ -57,7 +57,7 @@ export default {
     recentPostings: Array,
     jobsByState: Object,
     jobsByField: Object,
-    formatDate: Function,
+    // formatDate: Function, 
   },
 };
 </script>

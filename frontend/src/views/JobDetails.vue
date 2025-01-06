@@ -41,23 +41,19 @@
           <div class="d-flex flex-wrap gap-3">
             <span class="meta-item">
               <i class="bi bi-calendar3"></i>
-              Posted: {{ formatDate(job.postedDate) }}
+              Posted: {{ job.created_date }}
             </span>
             <span class="meta-item">
               <i class="bi bi-clock"></i>
-              Deadline: {{ formatDate(job.deadline) }}
+              Deadline: {{ job.deadline_date }}
             </span>
             <span class="meta-item">
               <i class="bi bi-geo-alt"></i>
               {{ job.location }}
             </span>
             <span class="meta-item">
-              <i class="bi bi-briefcase"></i>
-              {{ job.type }}
-            </span>
-            <span class="meta-item">
               <i class="bi bi-cash"></i>
-              {{ job.salary }}/month
+              {{ job.salary }}
             </span>
           </div>
         </div>

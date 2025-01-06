@@ -18,7 +18,7 @@
             <p class="job-company">{{ job.employer?.company_name || 'Company' }}</p>
             
             <div class="job-meta">
-              <span><i class="bi bi-calendar3"></i> {{ formatDate(job.created_at) }}</span>
+              <span><i class="bi bi-calendar3"></i> {{ job.created_date }}</span>
               <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
               <span><i class="bi bi-briefcase"></i> {{ job.type }}</span>
             </div>
@@ -35,7 +35,7 @@
             </div>
             
             <div class="job-deadline">
-              <i class="bi bi-clock"></i> Deadline: {{ formatDate(job.deadline) }}
+              <i class="bi bi-clock"></i> Deadline: {{ job.deadline_date }}
             </div>
           </div>
         </router-link>
@@ -71,16 +71,6 @@ export default {
     const jobs = ref([]);
     const loading = ref(false);
     const error = ref(null);
-
-    const formatDate = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
 
     const loadJobs = async () => {
       loading.value = true;
@@ -118,8 +108,7 @@ export default {
       jobs,
       loading,
       error,
-      categoryName,
-      formatDate
+      categoryName
     };
   }
 };

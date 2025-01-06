@@ -17,7 +17,7 @@ class JobFactory extends Factory
      */
     public function definition(): array
     {
-        $jobTypes = ['full-time', 'part-time', 'contract'];
+        $jobTypes = ['Full-time', 'Part-time', 'Contract'];
         $experienceLevels = ['Entry Level', 'Mid Level', 'Senior Level', 'Executive'];
 
         $requirements = [

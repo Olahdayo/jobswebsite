@@ -114,7 +114,7 @@
                           >
                             <span class="posted-date">
                               <i class="fas fa-clock"></i>
-                              {{ formatPostedDate(job.postedDate) }}
+                              {{ formatPostedDate(job.created_date) }}
                             </span>
                             <button class="btn btn-outline-primary btn-sm">
                               View Details
