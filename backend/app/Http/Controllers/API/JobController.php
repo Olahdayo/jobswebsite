@@ -5,7 +5,14 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
+/**
+ * Class JobController
+ * @package App\Http\Controllers\API
+ */
 class JobController extends Controller
 {
     /**
@@ -15,7 +22,6 @@ class JobController extends Controller
     {
         $jobs = Job::with('employer')
             ->where('is_active', true)
-            ->where('deadline', '>=', now())
             ->latest()
             ->paginate(10);
             
@@ -103,44 +109,215 @@ class JobController extends Controller
     }
 
     /**
-     * Search for jobs based on keyword, location, type, and experience level.
+     * Search jobs
      */
     public function search(Request $request)
     {
-        $query = Job::with('employer')->where('is_active', true);
+        $query = Job::with('employer');
 
-        if ($request->has('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                  ->orWhere('description', 'like', "%{$keyword}%");
-            });
+        // Filter by category
+        if ($request->has('category')) {
+            $category = str_replace('-', ' ', $request->category);
+            $query->where('category', 'LIKE', '%' . $category . '%');
         }
 
-        if ($request->has('location')) {
-            $query->where('location', 'like', "%{$request->location}%");
+        // Filter by state/location
+        if ($request->has('state')) {
+            $query->where('location', 'LIKE', '%' . $request->state . '%');
         }
 
-        if ($request->has('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->has('experience_level')) {
-            $query->where('experience_level', $request->experience_level);
-        }
-
-        if ($request->has('featured')) {
-            $query->where('is_featured', true);
-        }
-
+        // Get paginated results
         $jobs = $query->latest()->paginate(10);
 
+        // Format each job
+        $formattedJobs = collect($jobs->items())->map(function ($job) {
+            return $this->formatJob($job);
+        });
+
         return response()->json([
-            'data' => $jobs->items(),
-            'total' => $jobs->total(),
-            'per_page' => $jobs->perPage(),
-            'current_page' => $jobs->currentPage(),
-            'last_page' => $jobs->lastPage()
+            'data' => $formattedJobs,
+            'meta' => [
+                'total' => $jobs->total(),
+                'current_page' => $jobs->currentPage(),
+                'last_page' => $jobs->lastPage(),
+                'per_page' => $jobs->perPage()
+            ]
         ]);
+    }
+
+    /**
+     * Get recent jobs
+     */
+    public function recent()
+    {
+        $jobs = Job::with('employer')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($job) {
+                return $this->formatJob($job);
+            });
+
+        return response()->json(['data' => $jobs]);
+    }
+
+    /**
+     * Get job counts by state
+     */
+    public function byState()
+    {
+        $states = Job::select('location')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('location')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->location => $item->count];
+            });
+
+        return response()->json(['data' => $states]);
+    }
+
+    /**
+     * Get job counts by category
+     */
+    public function byCategory()
+    {
+        $categories = Job::select('category')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('category')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->category,
+                    'count' => $item->count,
+                    'slug' => Str::slug($item->category)
+                ];
+            });
+
+        return response()->json([
+            'data' => $categories
+        ]);
+    }
+
+    /**
+     * Get jobs by location
+     */
+    public function getJobsByLocation($location)
+    {
+        $jobs = Job::with('employer')
+            ->where('location', 'LIKE', '%' . $location . '%')
+            ->where('is_active', true)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $jobs
+        ]);
+    }
+
+    /**
+     * Get locations
+     */
+    public function getLocations()
+    {
+        $locations = Job::select('location')
+            ->where('is_active', true)
+            ->distinct()
+            ->pluck('location');
+        return response()->json($locations);
+    }
+
+    /**
+     * Get categories
+     */
+    public function getCategories()
+    {
+        $categories = Job::select('category')
+            ->where('is_active', true)
+            ->distinct()
+            ->pluck('category');
+        return response()->json($categories);
+    }
+
+    /**
+     * Get jobs by category
+     */
+    public function getJobsByCategory($category)
+    {
+        $jobs = Job::with('employer')
+            ->where('category', $category)
+            ->where('is_active', true)
+            ->latest()
+            ->get();
+        return response()->json($jobs);
+    }
+
+    /**
+     * Get featured jobs
+     */
+    public function getFeaturedJobs()
+    {
+        $jobs = Job::with('employer')
+            ->where('is_active', true)
+            ->where('is_featured', true)
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return response()->json([
+            'data' => $jobs
+        ]);
+    }
+
+    /**
+     * Get job statistics
+     */
+    public function getStats()
+    {
+        try {
+            $stats = [
+                'activeJobs' => Job::where('is_active', true)->count(),
+                'totalLocations' => Job::where('is_active', true)->distinct('location')->count('location'),
+                'totalCategories' => Job::where('is_active', true)->distinct('category')->count('category'),
+                'featuredJobs' => Job::where('is_active', true)->where('is_featured', true)->count()
+            ];
+
+            return response()->json($stats);
+        } catch (\Exception $e) {
+            Log::error('Error getting job stats: ' . $e->getMessage());
+            return response()->json([
+                'activeJobs' => 0,
+                'totalLocations' => 0,
+                'totalCategories' => 0,
+                'featuredJobs' => 0
+            ]);
+        }
+    }
+
+    /**
+     * Format job data consistently
+     */
+    private function formatJob($job)
+    {
+        return [
+            'id' => $job->id,
+            'title' => $job->title,
+            'description' => $job->description,
+            'responsibilities' => $job->responsibilities,
+            'location' => $job->location,
+            'salary' => $job->salary,
+            'type' => $job->type,
+            'experience_level' => $job->experience_level,
+            'category' => $job->category,
+            'is_featured' => $job->is_featured,
+            'created_date' => $job->created_at->format('M d, Y'),
+            'deadline_date' => $job->deadline ? $job->deadline->format('M d, Y') : null,
+            'employer' => $job->employer ? [
+                'id' => $job->employer->id,
+                'company_name' => $job->employer->company_name,
+            ] : null,
+        ];
     }
 }

@@ -14,16 +14,23 @@ use App\Http\Controllers\API\JobSeekerController;
 */
 
 // Public routes
-Route::post('/employers/register', [AuthController::class, 'employerRegister']);
-Route::post('/employers/login', [AuthController::class, 'employerLogin']);
-Route::post('/jobseekers/register', [AuthController::class, 'jobSeekerRegister']);
-Route::post('/jobseekers/login', [AuthController::class, 'jobSeekerLogin']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 // Job routes (public)
 Route::prefix('jobs')->group(function () {
     Route::get('/', [JobController::class, 'index']);
+    Route::get('/stats', [JobController::class, 'getStats']);
+    Route::get('/{id}', [JobController::class, 'show']);
+    Route::get('/location/{location}', [JobController::class, 'getJobsByLocation']);
+    Route::get('/locations', [JobController::class, 'getLocations']);
+    Route::get('/categories', [JobController::class, 'getCategories']);
+    Route::get('/category/{category}', [JobController::class, 'getJobsByCategory']);
+    Route::get('/featured', [JobController::class, 'getFeaturedJobs']);
     Route::get('/search', [JobController::class, 'search']);
-    Route::get('/{job}', [JobController::class, 'show']);
+    Route::get('/recent', [JobController::class, 'recent']);
+    Route::get('/by-state', [JobController::class, 'byState']);
+    Route::get('/by-category', [JobController::class, 'byCategory']);
 });
 
 // Protected routes for employers

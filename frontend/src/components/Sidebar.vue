@@ -18,13 +18,21 @@
     </div>
 
     <!-- Jobs by State -->
-    <div class="sidebar-widget mb-4">
-      <h4 class="mb-3">Jobs by State</h4>
-      <div class="list-group">
+    <div class="sidebar-section mb-4">
+      <h5 class="section-title mb-3">Jobs by State</h5>
+      <div v-if="loading.states" class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <div v-else-if="Object.keys(jobsByState).length === 0" class="text-center text-muted">
+        No locations available
+      </div>
+      <div v-else class="list-group">
         <router-link
           v-for="(count, state) in jobsByState"
           :key="state"
-          :to="'/jobs/state/' + state"
+          :to="'/jobs/state/' + state.toLowerCase().replace(/ /g, '-')"
           class="list-group-item list-group-item-action border-0 d-flex justify-content-between align-items-center mb-2 rounded"
         >
           {{ state }}
@@ -33,18 +41,26 @@
       </div>
     </div>
 
-    <!-- Popular Categories -->
-    <div class="sidebar-widget">
-      <h4 class="mb-3">Popular Categories</h4>
-      <div class="list-group">
+    <!-- Jobs by Category -->
+    <div class="sidebar-section">
+      <h5 class="section-title mb-3">Jobs by Category</h5>
+      <div v-if="loading.categories" class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <div v-else-if="!jobsByCategory.length" class="text-center text-muted">
+        No categories available
+      </div>
+      <div v-else class="list-group">
         <router-link
-          v-for="(count, category) in jobsByField"
-          :key="category"
-          :to="'/jobs/category/' + category"
+          v-for="category in jobsByCategory"
+          :key="category.name"
+          :to="'/jobs/category/' + category.slug"
           class="list-group-item list-group-item-action border-0 d-flex justify-content-between align-items-center mb-2 rounded"
         >
-          {{ category }}
-          <span class="badge bg-primary rounded-pill">{{ count }}</span>
+          {{ category.name }}
+          <span class="badge bg-primary rounded-pill">{{ category.count }}</span>
         </router-link>
       </div>
     </div>
@@ -53,12 +69,48 @@
 
 <script>
 export default {
+  name: 'Sidebar',
   props: {
     recentPostings: Array,
     jobsByState: Object,
-    jobsByField: Object,
-    // formatDate: Function, 
   },
+  data() {
+    return {
+      loading: {
+        states: false,
+        categories: false,
+        recent: false
+      },
+      jobsByCategory: [],
+      recentJobs: [],
+      error: null
+    };
+  },
+  methods: {
+    async loadJobsByState() {
+      this.loading.states = true;
+      try {
+        const response = await jobService.getJobCountsByState();
+        this.jobsByState = response.data.data; // Access the data property of the response
+      } catch (err) {
+        console.error('Error loading jobs by state:', err);
+      } finally {
+        this.loading.states = false;
+      }
+    },
+
+    async loadJobsByCategory() {
+      this.loading.categories = true;
+      try {
+        const response = await jobService.getJobCountsByCategory();
+        this.jobsByCategory = response.data;
+      } catch (err) {
+        console.error('Error loading jobs by category:', err);
+      } finally {
+        this.loading.categories = false;
+      }
+    }
+  }
 };
 </script>
 

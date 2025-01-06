@@ -7,8 +7,8 @@
           <div class="hero-content">
             <div class="company-brand">
               <img
-                :src="job.companyLogo || '/images/dashboard-default.svg'"
-                :alt="job.company"
+                :src="job.employer?.logo || defaultCompanyLogo"
+                :alt="job.employer?.company_name"
                 class="company-logo"
                 loading="lazy"
               />
@@ -16,15 +16,12 @@
                 <h1 class="job-title">{{ job.title }}</h1>
                 <p class="company-name">
                   <i class="fas fa-building"></i>
-                  {{ job.company }}
+                  {{ job.employer?.company_name }}
                 </p>
                 <div class="job-tags">
-                  <span class="tag" :class="{ 'tag-featured': job.featured }">
-                    <i
-                      class="fas"
-                      :class="job.featured ? 'fa-star' : 'fa-briefcase'"
-                    ></i>
-                    {{ job.featured ? "Featured" : "Active" }}
+                  <span class="tag" :class="{ 'tag-featured': job.is_featured }">
+                    <i class="fas" :class="job.is_featured ? 'fa-star' : 'fa-briefcase'"></i>
+                    {{ job.is_featured ? "Featured" : "Active" }}
                   </span>
                   <span class="tag tag-type">
                     <i class="fas fa-clock"></i>
@@ -41,11 +38,11 @@
           <div class="d-flex flex-wrap gap-3">
             <span class="meta-item">
               <i class="bi bi-calendar3"></i>
-              Posted: {{ job.created_date }}
+              Posted: {{ formatDate(job.created_at) }}
             </span>
             <span class="meta-item">
               <i class="bi bi-clock"></i>
-              Deadline: {{ job.deadline_date }}
+              Deadline: {{ formatDate(job.deadline) }}
             </span>
             <span class="meta-item">
               <i class="bi bi-geo-alt"></i>
@@ -53,7 +50,7 @@
             </span>
             <span class="meta-item">
               <i class="bi bi-cash"></i>
-              {{ job.salary }}
+              ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}
             </span>
           </div>
         </div>
@@ -67,36 +64,51 @@
                   Job Description
                 </h2>
               </div>
-              <p class="description-text">{{ job.description }}</p>
-            </div>
 
-            <div class="content-card">
-              <div class="card-header">
+              <div class="job-section">
+                <h3>Job Description</h3>
+                <p>{{ job.description }}</p>
+              </div>
+
+              <div class="job-section">
+                <h3>Responsibilities</h3>
+                <div v-if="job.responsibilities">
+                  <ul class="requirements-list">
+                    <li v-for="(resp, index) in parseList(job.responsibilities)" :key="index">
+                      <i class="fas fa-check-circle"></i>
+                      <span>{{ resp }}</span>
+                    </li>
+                  </ul>
+                </div>
+                <p v-else class="text-muted">No specific responsibilities listed.</p>
+              </div>
+
+              <div class="job-section">
                 <h2 class="section-title">
                   <i class="fas fa-list-check"></i>
                   Requirements
                 </h2>
+                <ul class="requirements-list">
+                  <li v-for="(req, index) in parseList(job.requirements)" :key="index">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ req }}</span>
+                  </li>
+                </ul>
               </div>
-              <ul class="requirements-list">
-                <li v-for="(req, index) in job.requirements" :key="index">
-                  <i class="fas fa-check-circle"></i>
-                  <span>{{ req }}</span>
-                </li>
-              </ul>
             </div>
-          </div>
 
-          <div class="mt-4">
-            <button
-              v-if="!hasApplied"
-              @click="handleApply"
-              class="apply-button"
-              :disabled="isSubmitting"
-            >
-              {{ isSubmitting ? "Submitting..." : "Apply Now" }}
-            </button>
-            <div v-else class="alert alert-success">
-              You have already applied for this job
+            <div class="mt-4">
+              <button
+                v-if="!hasApplied"
+                @click="handleApply"
+                class="apply-button"
+                :disabled="isSubmitting"
+              >
+                {{ isSubmitting ? "Submitting..." : "Apply Now" }}
+              </button>
+              <div v-else class="alert alert-success">
+                You have already applied for this job
+              </div>
             </div>
           </div>
         </div>
@@ -116,27 +128,16 @@ export default {
     return {
       job: null,
       isSubmitting: false,
-      showLoginModal: false,
       hasApplied: false,
-      showSuccessModal: false,
-      applications: []
+      defaultCompanyLogo: '/images/dashboard-default.svg'
     };
   },
 
-  created() {
+  async created() {
     this.authStore = useAuthStore();
-    this.loadJobDetails();
+    await this.loadJobDetails();
     if (this.authStore.user) {
       this.checkIfApplied();
-    }
-  },
-
-  watch: {
-    '$route.params.id': function() {
-      this.loadJobDetails();
-      if (this.authStore.user) {
-        this.checkIfApplied();
-      }
     }
   },
 
@@ -144,60 +145,63 @@ export default {
     async loadJobDetails() {
       try {
         const jobId = this.$route.params.id;
-        const jobData = await jobService.getJobById(jobId);
-        this.job = jobData;
+        const response = await jobService.getJob(jobId);
+        this.job = response;
       } catch (error) {
         console.error('Error loading job details:', error);
       }
     },
 
+    formatSalary(amount) {
+      if (!amount) return 'Not specified';
+      return new Intl.NumberFormat('en-NG').format(amount);
+    },
+
+    formatDate(date) {
+      if (!date) return '';
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
+
+    parseList(text) {
+      if (!text) return [];
+      if (Array.isArray(text)) return text;
+      return text.split('\n').filter(item => item.trim());
+    },
+
     async handleApply() {
       if (!this.authStore.user) {
-        this.$router.push("/login");
+        this.$router.push('/login');
         return;
       }
 
-      if (this.authStore.user.type !== "jobseeker") {
-        alert("Only job seekers can apply for jobs");
-        return;
-      }
-
-      if (this.hasApplied) {
-        alert("You have already applied for this job");
+      if (this.authStore.user.type !== 'jobseeker') {
+        alert('Only job seekers can apply for jobs');
         return;
       }
 
       this.isSubmitting = true;
       try {
-        await jobService.applyForJob(this.job.id, this.authStore.user.id);
+        await jobService.applyForJob(this.job.id);
         this.hasApplied = true;
-        alert("Application submitted successfully!");
+        alert('Application submitted successfully!');
       } catch (error) {
         console.error('Error applying for job:', error);
-        alert("Failed to submit application. Please try again.");
+        alert('Failed to submit application. Please try again.');
       } finally {
         this.isSubmitting = false;
       }
     },
 
     checkIfApplied() {
-      // This will be replaced with an API call to check application status
-      const applications = JSON.parse(localStorage.getItem("applications")) || [];
+      // This should be replaced with an actual API call to check application status
+      const applications = JSON.parse(localStorage.getItem('applications')) || [];
       this.hasApplied = applications.some(
-        (app) =>
-          app.jobId === this.$route.params.id &&
-          app.userId === this.authStore.user.id
+        app => app.jobId === this.$route.params.id && app.userId === this.authStore.user.id
       );
-    },
-
-    formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
     }
   }
 };

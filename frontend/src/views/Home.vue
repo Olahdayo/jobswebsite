@@ -34,14 +34,16 @@
           </div>
           <div class="col-lg-4 d-none d-lg-block">
             <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow-lg">
-              <h4 class="mb-3">Quick Stats</h4>
+              <div class="mb-4 d-flex justify-content-between align-items-center">
+                <h4 class="m-0">Quick Stats</h4>
+              </div>
               <div class="d-flex justify-content-between mb-3">
                 <div class="text-center stat-card">
                   <div class="stat-icon bg-success-subtle mb-2">
                     <i class="bi bi-briefcase"></i>
                   </div>
                   <h3 class="fw-bold text-success counter">
-                    {{ Object.keys(jobsByState).length }}
+                    {{ stats.activeJobs }}
                   </h3>
                   <p class="text-muted mb-0">Active Jobs</p>
                 </div>
@@ -50,7 +52,7 @@
                     <i class="bi bi-geo-alt"></i>
                   </div>
                   <h3 class="fw-bold text-primary counter">
-                    {{ Object.keys(jobsByState).length }}
+                    {{ stats.totalLocations }}
                   </h3>
                   <p class="text-muted mb-0">Locations</p>
                 </div>
@@ -59,7 +61,7 @@
                     <i class="bi bi-grid"></i>
                   </div>
                   <h3 class="fw-bold text-info counter">
-                    {{ Object.keys(jobsByField).length }}
+                    {{ stats.totalCategories }}
                   </h3>
                   <p class="text-muted mb-0">Categories</p>
                 </div>
@@ -211,6 +213,12 @@ export default {
       featuredJobs: [],
       latestJobs: [],
       isLoading: false,
+      stats: {
+        activeJobs: 0,
+        totalLocations: 0,
+        totalCategories: 0,
+        featuredJobs: 0
+      },
       jobsByState: {},
       jobsByField: {},
       recentPostings: [],
@@ -219,52 +227,97 @@ export default {
   },
 
   async created() {
-    this.loadJobs();
+    try {
+      await Promise.all([
+        this.loadJobs(),
+        this.loadStats()
+      ]);
+    } catch (error) {
+      console.error('Error initializing home page:', error);
+    }
   },
 
   methods: {
+    async loadStats() {
+      try {
+        const response = await jobService.getStats();
+        if (response) {
+          this.stats = {
+            activeJobs: response.activeJobs || 0,
+            totalLocations: response.totalLocations || 0,
+            totalCategories: response.totalCategories || 0,
+            featuredJobs: response.featuredJobs || 0
+          };
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    },
+
     async loadJobs() {
       this.isLoading = true;
       try {
         // Load latest jobs first
         const latestResponse = await jobService.getAllJobs();
-        this.latestJobs = latestResponse.data.slice(0, 5); // Show top 5 latest jobs
+        this.latestJobs = latestResponse.data ? latestResponse.data.slice(0, 5) : []; // Show top 5 latest jobs
 
-        // Try to load featured jobs, if fails, use latest jobs as featured
+        // Try to load featured jobs
         try {
-          const featuredResponse = await jobService.searchJobs({ featured: true });
-          this.featuredJobs = featuredResponse.data.slice(0, 6); // Show top 6 featured jobs
+          const featuredResponse = await jobService.getFeaturedJobs();
+          // Check if featuredResponse has data property and it's an array
+          if (featuredResponse && featuredResponse.data && Array.isArray(featuredResponse.data)) {
+            this.featuredJobs = featuredResponse.data.slice(0, 6);
+          } else if (Array.isArray(featuredResponse)) {
+            this.featuredJobs = featuredResponse.slice(0, 6);
+          } else {
+            console.warn('Featured jobs response is not in expected format');
+            this.featuredJobs = [];
+          }
         } catch (error) {
-          console.log('No featured jobs found, using latest jobs instead');
-          this.featuredJobs = latestResponse.data.slice(0, 6);
+          console.error('Error loading featured jobs:', error);
+          // Use latest jobs as fallback for featured
+          this.featuredJobs = this.latestJobs.slice(0, 6);
         }
 
         // Process jobs for sidebar stats
-        this.processJobStats(latestResponse.data);
+        if (latestResponse.data && Array.isArray(latestResponse.data)) {
+          this.processJobStats(latestResponse.data);
+        }
       } catch (error) {
         console.error('Error loading jobs:', error);
+        this.latestJobs = [];
+        this.featuredJobs = [];
       } finally {
         this.isLoading = false;
       }
     },
 
     processJobStats(jobs) {
+      if (!Array.isArray(jobs)) {
+        console.warn('Jobs data is not an array');
+        return;
+      }
+
       // Process jobs by state
       this.jobsByState = jobs.reduce((acc, job) => {
-        const state = job.location.split(',').pop().trim();
-        acc[state] = (acc[state] || 0) + 1;
+        if (job && job.location) {
+          const state = job.location.split(',').pop()?.trim() || 'Unknown';
+          acc[state] = (acc[state] || 0) + 1;
+        }
         return acc;
       }, {});
 
       // Process jobs by field
       this.jobsByField = jobs.reduce((acc, job) => {
-        const field = job.category || 'Other';
-        acc[field] = (acc[field] || 0) + 1;
+        if (job) {
+          const field = job.category || 'Other';
+          acc[field] = (acc[field] || 0) + 1;
+        }
         return acc;
       }, {});
 
       // Get recent postings
-      this.recentPostings = jobs
+      this.recentPostings = [...jobs]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
     },

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Employer;
-use App\Models\Job;
+use App\Models\JobListing;
 use Illuminate\Database\Seeder;
 
 class JobSeeder extends Seeder
@@ -15,7 +15,7 @@ class JobSeeder extends Seeder
     {
         // Each employer creates 1-5 jobs
         Employer::all()->each(function ($employer) {
-            Job::factory()
+            JobListing::factory()
                 ->count(rand(1, 5))
                 ->create([
                     'employer_id' => $employer->id
