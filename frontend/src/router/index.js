@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
-import Jobs from "../views/Jobs.vue";
 import JobSeekerSignup from "@/views/JobSeekerSignup.vue";
 import JobDetails from "@/views/JobDetails.vue";
 import EmployerSignup from "@/views/EmployerSignup.vue";
@@ -32,11 +31,6 @@ const router = createRouter({
       path: "/",
       name: "Home",
       component: Home,
-    },
-    {
-      path: "/jobs",
-      name: "Jobs",
-      component: Jobs,
     },
     {
       path: "/login",

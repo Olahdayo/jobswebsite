@@ -24,7 +24,7 @@ class JobController extends Controller
             ->where('is_active', true)
             ->latest()
             ->paginate(10);
-            
+        
         return response()->json([
             'data' => $jobs->items(),
             'total' => $jobs->total(),

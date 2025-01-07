@@ -23,7 +23,7 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <router-link class="nav-link" to="/jobs" @click="closeNavbar">
+            <router-link class="nav-link" to="/joblistings" @click="closeNavbar">
               <i class="fas fa-search me-1"></i>Find Jobs
             </router-link>
           </li>

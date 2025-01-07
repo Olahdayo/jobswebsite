@@ -216,6 +216,175 @@
   </div>
 </template>
 
+<script>
+import SearchFilter from "@/components/SearchFilter.vue";
+import { jobService } from "@/services/jobService";
+
+export default {
+  name: "JobListings",
+  components: {
+    SearchFilter,
+  },
+
+  data() {
+    return {
+      jobs: [],
+      isLoading: false,
+      currentPage: 1,
+      itemsPerPage: 10,
+      showMobileSearch: false,
+      filters: {
+        keyword: "",
+        location: "",
+        category: "",
+        type: "",
+        experience_level: "",
+        min_salary: "",
+        max_salary: "",
+        is_featured: false
+      }
+    };
+  },
+
+  computed: {
+    hasActiveFilters() {
+      return Object.values(this.filters).some(value => 
+        value !== "" && value !== false && value !== null
+      );
+    },
+
+    activeFilters() {
+      return Object.entries(this.filters)
+        .filter(([_, value]) => value !== "" && value !== false && value !== null)
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {});
+    },
+
+    totalPages() {
+      return Math.ceil(this.jobs.length / this.itemsPerPage);
+    },
+
+    paginatedJobs() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.jobs.slice(start, end);
+    },
+
+    displayedPages() {
+      if (this.totalPages <= 7) {
+        return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+      }
+
+      const pages = [];
+      if (this.currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(this.totalPages);
+      } else if (this.currentPage >= this.totalPages - 3) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = this.totalPages - 4; i <= this.totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(this.totalPages);
+      }
+      return pages;
+    }
+  },
+
+  methods: {
+    async loadJobs() {
+      this.isLoading = true;
+      try {
+        const response = await jobService.getAllJobs();
+        this.jobs = response.data;
+        // Reset to first page when loading new jobs
+        this.currentPage = 1;
+      } catch (error) {
+        console.error("Error loading jobs:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async applyFilters(filters) {
+      this.isLoading = true;
+      try {
+        const response = await jobService.searchJobs(filters);
+        this.jobs = response.data;
+        this.filters = { ...filters };
+        // Reset to first page when applying filters
+        this.currentPage = 1;
+      } catch (error) {
+        console.error("Error applying filters:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    changePage(page) {
+      if (page === "..." || page === this.currentPage) return;
+      this.currentPage = page;
+      window.scrollTo(0, 0);
+    },
+
+    removeFilter(key) {
+      const newFilters = { ...this.filters };
+      newFilters[key] = "";
+      this.applyFilters(newFilters);
+    },
+
+    clearAllFilters() {
+      this.filters = {
+        keyword: "",
+        location: "",
+        category: "",
+        type: "",
+        experience_level: "",
+        min_salary: "",
+        max_salary: "",
+        is_featured: false
+      };
+      this.loadJobs();
+    },
+
+    toggleMobileSearch() {
+      this.showMobileSearch = !this.showMobileSearch;
+    },
+
+    formatDate(date) {
+      if (!date) return "";
+      const options = { year: "numeric", month: "short", day: "numeric" };
+      return new Date(date).toLocaleDateString("en-US", options);
+    },
+
+    formatSalary(salary) {
+      if (!salary) return "0.00";
+      return Number(salary).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+  },
+  
+  mounted() {
+    this.loadJobs();
+  }
+};
+</script>
+
+
 <style scoped>
 .job-listings-container {
   background-color: #f8f9fa;
@@ -526,171 +695,3 @@
   }
 }
 </style>
-
-<script>
-import SearchFilter from "@/components/SearchFilter.vue";
-import { jobService } from "@/services/jobService";
-
-export default {
-  name: "JobListings",
-  components: {
-    SearchFilter,
-  },
-
-  data() {
-    return {
-      jobs: [],
-      isLoading: false,
-      currentPage: 1,
-      itemsPerPage: 10,
-      showMobileSearch: false,
-      filters: {
-        keyword: "",
-        location: "",
-        category: "",
-        type: "",
-        experience_level: "",
-        min_salary: "",
-        max_salary: "",
-        is_featured: false
-      }
-    };
-  },
-
-  computed: {
-    hasActiveFilters() {
-      return Object.values(this.filters).some(value => 
-        value !== "" && value !== false && value !== null
-      );
-    },
-
-    activeFilters() {
-      return Object.entries(this.filters)
-        .filter(([_, value]) => value !== "" && value !== false && value !== null)
-        .reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {});
-    },
-
-    totalPages() {
-      return Math.ceil(this.jobs.length / this.itemsPerPage);
-    },
-
-    paginatedJobs() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.jobs.slice(start, end);
-    },
-
-    displayedPages() {
-      if (this.totalPages <= 7) {
-        return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-      }
-
-      const pages = [];
-      if (this.currentPage <= 4) {
-        for (let i = 1; i <= 5; i++) {
-          pages.push(i);
-        }
-        pages.push("...");
-        pages.push(this.totalPages);
-      } else if (this.currentPage >= this.totalPages - 3) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = this.totalPages - 4; i <= this.totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push("...");
-        pages.push(this.totalPages);
-      }
-      return pages;
-    }
-  },
-
-  methods: {
-    async loadJobs() {
-      this.isLoading = true;
-      try {
-        const response = await jobService.getAllJobs();
-        this.jobs = response.data;
-        // Reset to first page when loading new jobs
-        this.currentPage = 1;
-      } catch (error) {
-        console.error("Error loading jobs:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    async applyFilters(filters) {
-      this.isLoading = true;
-      try {
-        const response = await jobService.searchJobs(filters);
-        this.jobs = response.data;
-        this.filters = { ...filters };
-        // Reset to first page when applying filters
-        this.currentPage = 1;
-      } catch (error) {
-        console.error("Error applying filters:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    changePage(page) {
-      if (page === "..." || page === this.currentPage) return;
-      this.currentPage = page;
-      window.scrollTo(0, 0);
-    },
-
-    removeFilter(key) {
-      const newFilters = { ...this.filters };
-      newFilters[key] = "";
-      this.applyFilters(newFilters);
-    },
-
-    clearAllFilters() {
-      this.filters = {
-        keyword: "",
-        location: "",
-        category: "",
-        type: "",
-        experience_level: "",
-        min_salary: "",
-        max_salary: "",
-        is_featured: false
-      };
-      this.loadJobs();
-    },
-
-    toggleMobileSearch() {
-      this.showMobileSearch = !this.showMobileSearch;
-    },
-
-    formatDate(date) {
-      if (!date) return "";
-      const options = { year: "numeric", month: "short", day: "numeric" };
-      return new Date(date).toLocaleDateString("en-US", options);
-    },
-
-    formatSalary(salary) {
-      if (!salary) return "0.00";
-      return Number(salary).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
-  },
-  
-  mounted() {
-    this.loadJobs();
-  }
-};
-</script>
