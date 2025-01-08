@@ -7,7 +7,6 @@ import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import PostJob from '../views/PostJob.vue'
 import Support from '../views/Support.vue'
-import Categories from '../views/Categories.vue'
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -86,7 +85,7 @@ const router = createRouter({
       component: () => import("@/views/JobsByState.vue"),
     },
     {
-      path: "/jobs/category/:category",
+      path: "/jobs/category/:category?",
       name: "JobsByCategory",
       component: () => import("@/views/JobsByCategory.vue"),
     },
@@ -99,11 +98,6 @@ const router = createRouter({
       path: '/support',
       name: 'Support',
       component: Support
-    },
-    {
-      path: '/categories',
-      name: 'Categories',
-      component: Categories
     },
   ],
   scrollBehavior(to, from, savedPosition) {

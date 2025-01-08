@@ -37,7 +37,7 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/categories" @click="closeNavbar">
+            <router-link class="nav-link" to="/jobs/category" @click="closeNavbar">
               <i class="fas fa-th-large me-1"></i>Categories
             </router-link>
           </li>

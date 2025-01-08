@@ -9,9 +9,9 @@
 
     <div class="container main-content">
       <div class="current-category">
-  <h2>{{ selectedCategory || 'All Categories' }}</h2>
-  <span class="job-count">{{ jobs.length }} {{ jobs.length === 1 ? 'Job' : 'Jobs' }} Available</span>
-</div>
+        <h2>{{ selectedCategory || 'All Categories' }}</h2>
+        <span class="job-count">{{ jobs.length }} {{ jobs.length === 1 ? 'Job' : 'Jobs' }} Available</span>
+      </div>
       <!-- Category Selection -->
       <div class="category-selector">
         <label>Select Category:</label>
@@ -48,49 +48,82 @@
  
       
       <!-- Jobs Grid -->
-      <div v-else class="jobs-grid">
-        <!-- Current Category Display -->
-        <div v-for="job in jobs" :key="job.id" class="job-card">
-          <div class="job-card-header">
-            <h2>{{ job.title }}</h2>
-            <span class="job-type" :class="job.type">{{ job.type }}</span>
-          </div>
-          
-          <div class="company-info">
-            <img 
-              :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
-              :alt="job.employer?.company_name"
-              class="company-logo"
+      <div v-else>
+        <div class="jobs-grid">
+          <div v-for="job in paginatedJobs" :key="job.id" class="job-card">
+            <div class="job-card-header">
+              <h2>{{ job.title }}</h2>
+              <span class="job-type" :class="job.type">{{ job.type }}</span>
+            </div>
+            
+            <div class="company-info">
+              <img 
+                :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                :alt="job.employer?.company_name"
+                class="company-logo"
+              >
+              <div>
+                <h3>{{ job.employer?.company_name }}</h3>
+                <p class="location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ job.location }}
+                </p>
+              </div>
+            </div>
+
+            <div class="job-description">{{ job.description }}</div>
+
+            <div class="job-meta">
+              <div class="salary">
+                <i class="fas fa-money-bill-wave"></i>
+                {{ formatSalary(job.min_salary) }} - {{ formatSalary(job.max_salary) }}
+              </div>
+              <div class="experience">
+                <i class="fas fa-briefcase"></i>
+                {{ job.experience_level }}
+              </div>
+            </div>
+
+            <router-link 
+              :to="{ name: 'JobDetails', params: { id: job.id }}"
+              class="view-details-btn"
             >
-            <div>
-              <h3>{{ job.employer?.company_name }}</h3>
-              <p class="location">
-                <i class="fas fa-map-marker-alt"></i>
-                {{ job.location }}
-              </p>
-            </div>
+              View Details
+              <i class="fas fa-arrow-right"></i>
+            </router-link>
           </div>
+        </div>
 
-          <div class="job-description">{{ job.description }}</div>
-
-          <div class="job-meta">
-            <div class="salary">
-              <i class="fas fa-money-bill-wave"></i>
-              {{ formatSalary(job.min_salary) }} - {{ formatSalary(job.max_salary) }}
-            </div>
-            <div class="experience">
-              <i class="fas fa-briefcase"></i>
-              {{ job.experience_level }}
-            </div>
-          </div>
-
-          <router-link 
-            :to="{ name: 'JobDetails', params: { id: job.id }}"
-            class="view-details-btn"
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="pagination">
+          <button 
+            :disabled="currentPage === 1" 
+            @click="changePage(currentPage - 1)"
+            class="pagination-btn"
           >
-            View Details
-            <i class="fas fa-arrow-right"></i>
-          </router-link>
+            <i class="fas fa-chevron-left"></i>
+            Previous
+          </button>
+          
+          <div class="page-numbers">
+            <button 
+              v-for="page in displayedPages" 
+              :key="page"
+              @click="changePage(page)"
+              :class="['page-number', { active: currentPage === page }]"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button 
+            :disabled="currentPage === totalPages" 
+            @click="changePage(currentPage + 1)"
+            class="pagination-btn"
+          >
+            Next
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -108,17 +141,49 @@ export default {
       selectedCategory: '',
       jobs: [],
       loading: false,
-      error: null
+      error: null,
+      currentPage: 1,
+      itemsPerPage: 10
     }
   },
-  async created() {
-    await this.loadCategories();
-    if (this.$route.params.category) {
-      this.selectedCategory = this.$route.params.category.replace(/-/g, ' ');
-      await this.loadJobsByCategory();
+  computed: {
+    totalPages() {
+      return Math.ceil(this.jobs.length / this.itemsPerPage)
+    },
+    paginatedJobs() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      const end = start + this.itemsPerPage
+      return this.jobs.slice(start, end)
+    },
+    displayedPages() {
+      const pages = []
+      const maxVisiblePages = 5
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2))
+      let end = Math.min(this.totalPages, start + maxVisiblePages - 1)
+      
+      if (end - start + 1 < maxVisiblePages) {
+        start = Math.max(1, end - maxVisiblePages + 1)
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+      return pages
     }
   },
   methods: {
+    scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    },
+    
+    changePage(newPage) {
+      this.currentPage = newPage;
+      this.scrollToTop();
+    },
+    
     async loadCategories() {
       try {
         this.loading = true;
@@ -169,6 +234,14 @@ export default {
     }
   },
   
+  async created() {
+    await this.loadCategories();
+    if (this.$route.params.category) {
+      this.selectedCategory = this.$route.params.category.replace(/-/g, ' ');
+      await this.loadJobsByCategory();
+    }
+  },
+  
   watch: {
     // Watch for route changes
     '$route.params.category': {
@@ -177,6 +250,9 @@ export default {
         this.loadJobsByCategory();
       },
       immediate: true
+    },
+    selectedCategory() {
+      this.currentPage = 1 // Reset to first page when category changes
     }
   }
 }
@@ -209,6 +285,8 @@ export default {
 
 .main-content {
   padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .category-selector {
@@ -289,12 +367,17 @@ export default {
 
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   padding: 1rem 0;
+  max-width: 800px;
+  margin: 0;
 }
 
 .job-card {
+  width: 100%;
+  max-width: 800px;
+  margin: 0;
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -437,9 +520,78 @@ export default {
   font-weight: 500;
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 1rem;
+}
 
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #4a5568;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.page-number {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.page-number:hover:not(.active) {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.page-number.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.container {
+  padding-left: 2rem;
+  padding-right: 2rem;
+  margin: 0 auto;
+}
 
 @media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
   .category-header {
     padding: 2rem 0;
   }
@@ -448,21 +600,13 @@ export default {
     font-size: 2rem;
   }
 
-  .jobs-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .job-card {
-    margin-bottom: 1rem;
-  }
-  .current-category {
+  .pagination {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    gap: 1rem;
   }
 
-  .job-count {
-    align-self: flex-start;
+  .page-numbers {
+    order: -1;
   }
 }
 </style>
