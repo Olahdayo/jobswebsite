@@ -1,11 +1,10 @@
 <template>
   <div class="search-filter">
-    <div class="filter-header" @click="toggleFilters">
+    <div class="filter-header">
       <h4 class="mb-0">Search Filters</h4>
-      <i class="fas" :class="isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
     </div>
 
-    <div class="filter-content" :class="{ show: isOpen }">
+    <div class="filter-content">
       <div v-if="activeFilters.length" class="active-filters p-3">
         <h5>Active Filters:</h5>
         <div class="d-flex flex-wrap gap-2">
@@ -142,13 +141,6 @@
           <button type="submit" class="btn btn-primary" :disabled="isLoading">
             <i class="fas fa-search me-2"></i>Apply Filters
           </button>
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            @click="clearAllFilters"
-          >
-            <i class="fas fa-times me-2"></i>Clear All
-          </button>
         </div>
       </form>
     </div>
@@ -199,90 +191,74 @@ export default {
         ]
       },
       activeFilters: [],
-      isOpen: true,
       isLoading: false
     };
   },
 
   methods: {
     async loadFilterOptions() {
-      this.isLoading = true;
       try {
-        const options = await jobService.getFilterOptions();
-        this.filterOptions = {
-          ...this.filterOptions,
-          locations: options.locations || [],
-          categories: options.categories || []
-        };
+        const [locations, categories] = await Promise.all([
+          jobService.getLocations(),
+          jobService.getCategories()
+        ]);
+        this.filterOptions.locations = locations;
+        this.filterOptions.categories = categories;
       } catch (error) {
         console.error("Error loading filter options:", error);
-      } finally {
-        this.isLoading = false;
       }
     },
 
-    applyFilters() {
-      const filters = { ...this.filters };
-      if (filters.min_salary) filters.min_salary = Number(filters.min_salary);
-      if (filters.max_salary) filters.max_salary = Number(filters.max_salary);
-      
-      this.$emit("filter-applied", filters);
+    async applyFilters() {
+      this.isLoading = true;
       this.updateActiveFilters();
+      const filters = Object.fromEntries(
+        Object.entries(this.filters).filter(([_, value]) => value !== "" && value !== null)
+      );
+      this.$emit("filter-change", filters);
+      this.isLoading = false;
     },
 
     removeFilter(key) {
-      this.filters[key] = key === "is_featured" ? false : "";
+      this.filters[key] = "";
       this.applyFilters();
     },
 
     clearAllFilters() {
-      this.filters = {
-        keyword: "",
-        location: "",
-        category: "",
-        type: "",
-        experience_level: "",
-        min_salary: "",
-        max_salary: "",
-        is_featured: false
-      };
+      Object.keys(this.filters).forEach(key => {
+        if (typeof this.filters[key] === "boolean") {
+          this.filters[key] = false;
+        } else {
+          this.filters[key] = "";
+        }
+      });
+      this.activeFilters = [];
       this.applyFilters();
     },
 
     updateActiveFilters() {
-      this.activeFilters = [];
-      for (const [key, value] of Object.entries(this.filters)) {
-        if (value && value !== "" && value !== false) {
-          this.activeFilters.push({
-            key,
-            label: this.formatFilterLabel(key, value)
-          });
-        }
-      }
+      this.activeFilters = Object.entries(this.filters)
+        .filter(([key, value]) => value !== "" && value !== null && value !== false)
+        .map(([key, value]) => ({
+          key,
+          value,
+          label: this.formatFilterLabel(key, value)
+        }));
     },
 
     formatFilterLabel(key, value) {
-      const keyLabel = key.split('_').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ');
-      
-      if (key === 'is_featured') {
-        return 'Featured Jobs';
+      switch (key) {
+        case "keyword":
+          return `Search: ${value}`;
+        case "min_salary":
+          return `Min Salary: $${value}`;
+        case "max_salary":
+          return `Max Salary: $${value}`;
+        case "is_featured":
+          return "Featured Jobs";
+        default:
+          return `${key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}: ${value}`;
       }
-      
-      if (key === 'min_salary') {
-        return `Min Salary: $${Number(value).toLocaleString()}`;
-      }
-      
-      if (key === 'max_salary') {
-        return `Max Salary: $${Number(value).toLocaleString()}`;
-      }
-      
-      return `${keyLabel}: ${value}`;
-    },
-
-    toggleFilters() {
-      this.isOpen = !this.isOpen;
     }
   },
 
@@ -296,10 +272,9 @@ export default {
     }
   },
 
-  async mounted() {
-    this.isOpen = window.innerWidth >= 992;
-    await this.loadFilterOptions();
-    if (Object.values(this.initialFilters).some(value => value !== "" && value !== false)) {
+  mounted() {
+    this.loadFilterOptions();
+    if (Object.values(this.filters).some(value => value !== "" && value !== false)) {
       this.updateActiveFilters();
     }
   }
@@ -309,75 +284,109 @@ export default {
 <style scoped>
 .search-filter {
   background: white;
-  border-radius: 1rem;
-  overflow: hidden;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  max-height: calc(100vh - 100px);
+  position: sticky;
+  top: 20px;
 }
 
 .filter-header {
-  padding: 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  border-bottom: 1px solid #e9ecef;
-  background: white;
-  transition: background-color 0.2s;
-}
-
-.filter-header:hover {
-  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .filter-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease-out;
-  background-color: white;
+  padding: 1.5rem;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8fafc;
 }
 
-.filter-content.show {
-  max-height: 2000px;
+.filter-content::-webkit-scrollbar {
+  width: 6px;
 }
 
-.filter-form {
-  padding: 1.25rem;
+.filter-content::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.filter-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
 }
 
 .active-filters {
-  border-bottom: 1px solid #e9ecef;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.badge {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-close {
+  font-size: 0.75rem;
+  padding: 0.25rem;
+}
+
+.filter-form label {
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
 }
 
 .form-control,
 .form-select {
-  font-size: 0.875rem;
-  border-radius: 0.5rem;
+  border-color: #e2e8f0;
+  padding: 0.625rem;
 }
 
-@media (max-width: 991px) {
+.form-control:focus,
+.form-select:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.btn-primary {
+  background-color: #3182ce;
+  border-color: #3182ce;
+  padding: 0.625rem 1rem;
+}
+
+.btn-primary:hover {
+  background-color: #2c5282;
+  border-color: #2c5282;
+}
+
+.btn-outline-secondary {
+  color: #4a5568;
+  border-color: #e2e8f0;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f8fafc;
+  color: #2d3748;
+}
+
+.form-check-input:checked {
+  background-color: #3182ce;
+  border-color: #3182ce;
+}
+
+@media (max-width: 768px) {
   .search-filter {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    top: 0;
+    max-height: none;
   }
 
   .filter-content {
-    flex: 1;
-    overflow-y: auto;
-  }
-}
-
-@media (max-width: 576px) {
-  .form-control,
-  .form-select {
-    font-size: 1rem;
-    padding: 0.75rem;
-  }
-
-  .filter-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    max-height: 400px;
   }
 }
 </style>
