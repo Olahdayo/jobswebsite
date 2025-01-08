@@ -15,23 +15,29 @@ use Illuminate\Support\Str;
  */
 class JobController extends Controller
 {
-    /**
+    /**log
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $jobs = JobListing::with('employer')
-            ->where('is_active', true)
-            ->latest()
-            ->paginate(10);
-        
-        return response()->json([
-            'data' => $jobs->items(),
-            'total' => $jobs->total(),
-            'per_page' => $jobs->perPage(),
-            'current_page' => $jobs->currentPage(),
-            'last_page' => $jobs->lastPage()
-        ]);
+        try {
+            $jobs = JobListing::with('employer')
+                ->where('is_active', true)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'data' => $jobs,
+                'total' => $jobs->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching jobs: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to fetch jobs',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

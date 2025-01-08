@@ -33,7 +33,7 @@
               class="results-summary mb-4 d-flex justify-content-between align-items-center"
             >
               <p class="text-muted mb-0">
-                Showing {{ paginatedJobs.length }} of {{ jobs.length }} jobs
+                Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of {{ paginationInfo.total }} jobs
               </p>
               <div class="sort-options">
                 <select class="form-select form-select-sm">
@@ -151,47 +151,87 @@
             </div>
 
             <!-- Pagination -->
-            <nav
-              v-if="totalPages > 1"
-              class="mt-5"
-              aria-label="Job listings pagination"
-            >
-              <ul class="pagination justify-content-center">
-                <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                  <button
-                    class="page-link"
-                    @click="changePage(currentPage - 1)"
-                    :disabled="currentPage === 1"
-                  >
-                    <i class="fas fa-chevron-left"></i>
-                  </button>
-                </li>
+            <div v-if="totalPages > 1" class="pagination-wrapper mt-4">
+              <nav aria-label="Job listings pagination">
+                <ul class="pagination justify-content-center">
+                  <!-- First Page -->
+                  <li :class="['page-item', { disabled: pagination.currentPage === 1 }]">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="changePage(1)"
+                      aria-label="First page"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
 
-                <li
-                  v-for="page in displayedPages"
-                  :key="page"
-                  class="page-item"
-                  :class="{ active: currentPage === page }"
-                >
-                  <button class="page-link" @click="changePage(page)">
-                    {{ page }}
-                  </button>
-                </li>
+                  <!-- Previous Page -->
+                  <li :class="['page-item', { disabled: pagination.currentPage === 1 }]">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="changePage(pagination.currentPage - 1)"
+                      aria-label="Previous page"
+                    >
+                      <span aria-hidden="true">&lsaquo;</span>
+                    </a>
+                  </li>
 
-                <li
-                  class="page-item"
-                  :class="{ disabled: currentPage === totalPages }"
-                >
-                  <button
-                    class="page-link"
-                    @click="changePage(currentPage + 1)"
-                    :disabled="currentPage === totalPages"
+                  <!-- Page Numbers -->
+                  <li
+                    v-for="page in totalPages"
+                    :key="page"
+                    :class="[
+                      'page-item',
+                      {
+                        active: pagination.currentPage === page,
+                      }
+                    ]"
                   >
-                    <i class="fas fa-chevron-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </nav>
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="changePage(page)"
+                    >
+                      {{ page }}
+                    </a>
+                  </li>
+
+                  <!-- Next Page -->
+                  <li :class="['page-item', { disabled: pagination.currentPage === totalPages }]">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="changePage(pagination.currentPage + 1)"
+                      aria-label="Next page"
+                    >
+                      <span aria-hidden="true">&rsaquo;</span>
+                    </a>
+                  </li>
+
+                  <!-- Last Page -->
+                  <li :class="['page-item', { disabled: pagination.currentPage === totalPages }]">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="changePage(totalPages)"
+                      aria-label="Last page"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+              
+              <!-- Pagination Info -->
+              <div class="text-center mt-2">
+                <small class="text-muted">
+                  Page {{ paginationInfo.currentPage }} of {{ paginationInfo.lastPage }}
+                  (Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of {{ paginationInfo.total }} jobs)
+                </small>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -228,10 +268,13 @@ export default {
 
   data() {
     return {
-      jobs: [],
+      allJobs: [], // Store all jobs
+      pagination: {
+        currentPage: 1,
+        perPage: 10,
+        total: 0
+      },
       isLoading: false,
-      currentPage: 1,
-      itemsPerPage: 10,
       showMobileSearch: false,
       filters: {
         keyword: "",
@@ -247,116 +290,77 @@ export default {
   },
 
   computed: {
-    hasActiveFilters() {
-      return Object.values(this.filters).some(value => 
-        value !== "" && value !== false && value !== null
-      );
-    },
-
-    activeFilters() {
-      return Object.entries(this.filters)
-        .filter(([_, value]) => value !== "" && value !== false && value !== null)
-        .reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {});
-    },
-
-    totalPages() {
-      return Math.ceil(this.jobs.length / this.itemsPerPage);
-    },
-
+    // Calculate pagination values
     paginatedJobs() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.jobs.slice(start, end);
+      const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
+      const end = start + this.pagination.perPage;
+      return this.allJobs.slice(start, end);
+    },
+    
+    totalPages() {
+      return Math.ceil(this.allJobs.length / this.pagination.perPage);
     },
 
-    displayedPages() {
-      if (this.totalPages <= 7) {
-        return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-      }
+    paginationInfo() {
+      const start = (this.pagination.currentPage - 1) * this.pagination.perPage + 1;
+      const end = Math.min(start + this.pagination.perPage - 1, this.allJobs.length);
+      return {
+        currentPage: this.pagination.currentPage,
+        lastPage: this.totalPages,
+        total: this.allJobs.length,
+        from: start,
+        to: end
+      };
+    },
 
-      const pages = [];
-      if (this.currentPage <= 4) {
-        for (let i = 1; i <= 5; i++) {
-          pages.push(i);
+    hasActiveFilters() {
+      return Object.values(this.filters).some(value => {
+        if (typeof value === 'boolean') {
+          return value;
         }
-        pages.push("...");
-        pages.push(this.totalPages);
-      } else if (this.currentPage >= this.totalPages - 3) {
-        pages.push(1);
-        pages.push("...");
-        for (let i = this.totalPages - 4; i <= this.totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push("...");
-        for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push("...");
-        pages.push(this.totalPages);
-      }
-      return pages;
+        return value && value.length > 0;
+      });
     }
   },
 
   methods: {
     async loadJobs() {
-      this.isLoading = true;
       try {
+        this.isLoading = true;
         const response = await jobService.getAllJobs();
-        this.jobs = response.data;
-        // Reset to first page when loading new jobs
-        this.currentPage = 1;
+        
+        // Store all jobs
+        this.allJobs = response.data;
+        this.pagination.total = response.total;
+
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('page', this.pagination.currentPage);
+        window.history.replaceState({}, '', url);
+
       } catch (error) {
-        console.error("Error loading jobs:", error);
+        console.error('Error loading jobs:', error);
+        this.allJobs = [];
       } finally {
         this.isLoading = false;
       }
     },
 
-    async applyFilters(filters) {
-      this.isLoading = true;
-      try {
-        const response = await jobService.searchJobs(filters);
-        this.jobs = response.data;
-        this.filters = { ...filters };
-        // Reset to first page when applying filters
-        this.currentPage = 1;
-      } catch (error) {
-        console.error("Error applying filters:", error);
-      } finally {
-        this.isLoading = false;
+    changePage(newPage) {
+      if (newPage >= 1 && newPage <= this.totalPages && newPage !== this.pagination.currentPage) {
+        this.pagination.currentPage = newPage;
+        
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('page', newPage);
+        window.history.replaceState({}, '', url);
+        
+        // Scroll to top
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
       }
-    },
-
-    changePage(page) {
-      if (page === "..." || page === this.currentPage) return;
-      this.currentPage = page;
-      window.scrollTo(0, 0);
-    },
-
-    removeFilter(key) {
-      const newFilters = { ...this.filters };
-      newFilters[key] = "";
-      this.applyFilters(newFilters);
-    },
-
-    clearAllFilters() {
-      this.filters = {
-        keyword: "",
-        location: "",
-        category: "",
-        type: "",
-        experience_level: "",
-        min_salary: "",
-        max_salary: "",
-        is_featured: false
-      };
-      this.loadJobs();
     },
 
     toggleMobileSearch() {
@@ -373,17 +377,39 @@ export default {
       if (!salary) return "0.00";
       return Number(salary).toLocaleString("en-US", {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
+        style: 'currency',
+        currency: 'NGN'
       });
+    },
+
+    async applyFilters(filters) {
+      this.isLoading = true;
+      try {
+        const response = await jobService.searchJobs(filters, 1); // Reset to first page
+        if (response && Array.isArray(response.data)) {
+          this.allJobs = response.data;
+          this.filters = { ...filters };
+          this.pagination.currentPage = 1;
+        }
+      } catch (error) {
+        console.error("Error applying filters:", error);
+        this.allJobs = [];
+        this.pagination.total = 0;
+      } finally {
+        this.isLoading = false;
+      }
     }
   },
   
   mounted() {
+    // Get initial page from URL
+    const page = parseInt(new URLSearchParams(window.location.search).get('page')) || 1;
+    this.pagination.currentPage = page;
     this.loadJobs();
   }
 };
 </script>
-
 
 <style scoped>
 .job-listings-container {
