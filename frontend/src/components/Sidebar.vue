@@ -68,6 +68,8 @@
 </template>
 
 <script>
+import { jobService } from '@/services/jobService';
+
 export default {
   name: 'Sidebar',
   props: {
@@ -91,7 +93,7 @@ export default {
       this.loading.states = true;
       try {
         const response = await jobService.getJobCountsByState();
-        this.jobsByState = response.data.data; // Access the data property of the response
+        this.jobsByState = response.data.data;
       } catch (err) {
         console.error('Error loading jobs by state:', err);
       } finally {
@@ -102,19 +104,41 @@ export default {
     async loadJobsByCategory() {
       this.loading.categories = true;
       try {
-        const response = await jobService.getJobCountsByCategory();
-        this.jobsByCategory = response.data;
+        const response = await jobService.getAllJobs();
+        
+        // Group jobs by category and count them
+        const categoryCount = response.data.reduce((acc, job) => {
+          const category = job.category || 'Other';
+          if (!acc[category]) {
+            acc[category] = 0;
+          }
+          acc[category]++;
+          return acc;
+        }, {});
+        
+        // Convert to array format needed for display
+        this.jobsByCategory = Object.entries(categoryCount).map(([name, count]) => ({
+          name,
+          count,
+          slug: name.toLowerCase().replace(/\s+/g, '-')
+        }));
+        
       } catch (err) {
         console.error('Error loading jobs by category:', err);
       } finally {
         this.loading.categories = false;
       }
     },
+
     formatDate(date) {
       if (!date) return "";
       const options = { year: "numeric", month: "short", day: "numeric" };
       return new Date(date).toLocaleDateString("en-US", options);
     },
+  },
+  
+  created() {
+    this.loadJobsByCategory();
   }
 };
 </script>
