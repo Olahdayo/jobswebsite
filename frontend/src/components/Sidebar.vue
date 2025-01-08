@@ -12,7 +12,7 @@
         >
           <h6 class="mb-1">{{ job.title }}</h6>
           <p class="mb-1 small text-muted">{{ job.company }}</p>
-          <small class="text-muted">Posted {{ job.created_date }}</small>
+          <small class="text-muted">Posted {{ formatDate(job.created_at) }}</small>
         </router-link>
       </div>
     </div>
@@ -109,7 +109,12 @@ export default {
       } finally {
         this.loading.categories = false;
       }
-    }
+    },
+    formatDate(date) {
+      if (!date) return "";
+      const options = { year: "numeric", month: "short", day: "numeric" };
+      return new Date(date).toLocaleDateString("en-US", options);
+    },
   }
 };
 </script>

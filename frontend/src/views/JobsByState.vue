@@ -51,10 +51,12 @@
             
             <div class="job-tags">
               <span class="job-tag">
-                <i class="bi bi-cash"></i> Pay: {{ job.salary }}
+                <i class="fas fa-money-bill-wave"></i>
+                Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}
               </span>
               <span class="job-tag">
-                <i class="bi bi-person-workspace"></i> Experience: {{ job.experience_level }}
+                <i class="fas fa-graduation-cap"></i>
+                Experience: {{ job.experience_level }}
               </span>
             </div>
             
@@ -81,7 +83,9 @@ export default {
       error: null,
       total: 0,
       currentPage: 1,
-      lastPage: 1
+      lastPage: 1,
+      min_salary: "",
+      max_salary: "",
     };
   },
 
@@ -104,17 +108,24 @@ export default {
       this.error = null;
       
       try {
-        const { data: jobs, meta } = await jobService.searchJobs({ 
-          state: this.$route.params.state.replace(/-/g, ' ')
-        });
+        const response = await jobService.getAllJobs();
+        console.log('Response from getAllJobs:', response);
         
-        if (Array.isArray(jobs)) {
-          this.jobs = jobs;
-          this.total = meta.total;
-          this.currentPage = meta.current_page;
-          this.lastPage = meta.last_page;
+        if (response && response.data) {
+          // Filter jobs by state
+          const stateFilter = this.$route.params.state.replace(/-/g, ' ').toLowerCase();
+          this.jobs = response.data.filter(job => 
+            job.location.toLowerCase().includes(stateFilter)
+          );
+          
+          console.log('Filtered jobs:', this.jobs);
+          
+          // Update pagination
+          this.total = this.jobs.length;
+          this.currentPage = 1;
+          this.lastPage = Math.ceil(this.total / 10);
         } else {
-          console.error('Invalid jobs data:', jobs);
+          console.error('Invalid jobs data:', response);
           this.error = 'Invalid response format from server';
         }
       } catch (err) {
@@ -123,7 +134,16 @@ export default {
       } finally {
         this.loading = false;
       }
-    }
+    },
+    formatSalary(salary) {
+      if (!salary) return "0.00";
+      return Number(salary).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        style: 'currency',
+        currency: 'NGN'
+      });
+    },
   },
 
   watch: {

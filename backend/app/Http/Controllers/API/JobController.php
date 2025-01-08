@@ -28,7 +28,12 @@ class JobController extends Controller
 
             return response()->json([
                 'data' => $jobs,
-                'total' => $jobs->count()
+                'meta' => [
+                    'total' => $jobs->count(),
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $jobs->count()
+                ]
             ]);
 
         } catch (\Exception $e) {
