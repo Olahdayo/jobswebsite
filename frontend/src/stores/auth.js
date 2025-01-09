@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { authService } from "@/services/authService";
+import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -70,18 +71,20 @@ export const useAuthStore = defineStore("auth", {
 
     async logout() {
       try {
+        // Clear store state first
+        this.user = null;
+        this.token = null;
+        this.userType = null;
+
+        // Then call the API
         await authService.logout();
-        this.user = null;
-        this.token = null;
-        this.userType = null;
-        return true;
+        
+        // Navigate to home page
+        useRouter().push('/');
       } catch (error) {
-        console.error('Logout failed:', error);
-        // Still clear the store state even if the API call fails
-        this.user = null;
-        this.token = null;
-        this.userType = null;
-        return true;
+        console.warn('Error during logout:', error);
+        // Still navigate to home page even if there's an error
+        useRouter().push('/');
       }
     },
 

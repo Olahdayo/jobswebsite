@@ -39,7 +39,7 @@ Route::prefix('jobs')->group(function () {
 
 // Protected routes for employers
 Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/employer/logout', [AuthController::class, 'logout']);
     
     // Profile management
     Route::get('/employer/profile', [EmployerController::class, 'profile']);
@@ -58,7 +58,7 @@ Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
 
 // Protected routes for job seekers
 Route::middleware(['auth:sanctum', 'ability:job_seeker'])->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/jobseeker/logout', [AuthController::class, 'logout']);
     
     // Profile management
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);

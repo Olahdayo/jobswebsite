@@ -51,6 +51,22 @@
                   </div>
                 </div>
 
+                <div class="mb-3">
+                  <label class="form-label">Account Type <span class="text-danger">*</span></label>
+                  <select
+                    class="form-select"
+                    v-model="formData.accountType"
+                    :class="{ 'is-invalid': v$.formData.accountType.$error }"
+                    required
+                  >
+                    <option value="jobseeker">Job Seeker</option>
+                    <option value="employer">Employer</option>
+                  </select>
+                  <div class="invalid-feedback" v-if="v$.formData.accountType.$error">
+                    {{ v$.formData.accountType.$errors[0].$message }}
+                  </div>
+                </div>
+
                 <div class="mb-3 form-check">
                   <input
                     type="checkbox"
@@ -114,7 +130,8 @@ export default {
       formData: {
         email: '',
         password: '',
-        remember: false
+        remember: false,
+        accountType: 'jobseeker' // Default to job seeker
       }
     };
   },
@@ -123,7 +140,8 @@ export default {
     return {
       formData: {
         email: { required, email },
-        password: { required }
+        password: { required },
+        accountType: { required }
       }
     };
   },
@@ -142,28 +160,20 @@ export default {
         this.isLoading = true;
         this.error = null;
 
-        // Try job seeker login first
+        // Login based on account type
         try {
-          await this.authStore.loginAsJobSeeker(this.formData);
-          this.router.push({ name: 'JobSeekerDashboard' });
-          return;
-        } catch (error) {
-          // If it's not a 422 error (validation error), try employer login
-          if (error.response?.status !== 422) {
-            try {
-              await this.authStore.loginAsEmployer(this.formData);
-              this.router.push({ name: 'EmployerDashboard' });
-              return;
-            } catch (employerError) {
-              // If both logins fail, show error
-              if (employerError.response?.status === 422) {
-                this.error = 'Invalid email or password';
-              } else {
-                this.error = employerError.response?.data?.message || 'Login failed';
-              }
-            }
+          if (this.formData.accountType === 'employer') {
+            await this.authStore.loginAsEmployer(this.formData);
+            this.router.push({ name: 'EmployerDashboard' });
           } else {
-            this.error = error.response?.data?.message || 'Invalid credentials';
+            await this.authStore.loginAsJobSeeker(this.formData);
+            this.router.push({ name: 'JobSeekerDashboard' });
+          }
+        } catch (error) {
+          if (error.response?.status === 422) {
+            this.error = 'Invalid email or password';
+          } else {
+            this.error = error.response?.data?.message || 'Login failed';
           }
         }
       } catch (error) {
@@ -188,7 +198,8 @@ export default {
   border-radius: 15px;
 }
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
@@ -198,12 +209,12 @@ export default {
   font-weight: 500;
 }
 
-.input-group .btn-outline-secondary {
-  border-color: #ced4da;
+.form-select {
+  padding: 0.75rem;
+  border-radius: 8px;
 }
 
-.input-group .btn-outline-secondary:hover {
-  background-color: #f8f9fa;
-  border-color: #ced4da;
+.invalid-feedback {
+  display: block;
 }
 </style>

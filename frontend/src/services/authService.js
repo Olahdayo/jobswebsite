@@ -103,35 +103,30 @@ export const authService = {
 
     // Logout
     logout: async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                // If no token exists, just clear local storage
-                localStorage.clear();
-                return { message: 'Logged out successfully' };
-            }
+        const token = localStorage.getItem('token');
+        const userType = localStorage.getItem('user_type');
+        
+        // Clear local storage first to ensure user is logged out even if API call fails
+        localStorage.clear();
 
-            try {
-                await api.post('/logout', {}, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-            } catch (error) {
-                console.warn('Error during API logout:', error);
-                // Continue with local cleanup even if API call fails
-            }
-
-            // Clear all local storage items
-            localStorage.clear();
-            
+        if (!token) {
             return { message: 'Logged out successfully' };
-        } catch (error) {
-            console.error('Error in logout process:', error);
-            // Still clear local storage even if there's an error
-            localStorage.clear();
-            throw error;
         }
+
+        try {
+            // Try to call the appropriate logout endpoint based on user type
+            const logoutEndpoint = userType === 'employer' ? '/employer/logout' : '/jobseeker/logout';
+            await api.post(logoutEndpoint, {}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        } catch (error) {
+            console.warn('Error during API logout:', error);
+            // Don't throw the error since we've already cleared local storage
+        }
+
+        return { message: 'Logged out successfully' };
     },
 
     // Check if user is authenticated

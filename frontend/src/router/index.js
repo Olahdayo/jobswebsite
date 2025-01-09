@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
-// import JobSeekerSignup from "@/views/JobSeekerSignup.vue";
 import JobDetails from "@/views/JobDetails.vue";
-// import EmployerSignup from "@/views/EmployerSignup.vue";
 import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import PostJob from '../views/PostJob.vue'
@@ -11,7 +9,6 @@ import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
   "/login",
-  "/signup",
   "/signup/jobseeker",
   "/signup/employer",
   "/",
@@ -40,33 +37,6 @@ const router = createRouter({
         title: 'Login'
       }
     },
-    // {
-    //   path: "/signup",
-    //   name: "Signup",
-    //   component: () => import("../views/signup.vue"),
-    //   meta: {
-    //     requiresGuest: true,
-    //     title: 'Sign Up'
-    //   }
-    // },
-    // {
-    //   path: "/signup/jobseeker",
-    //   name: "JobseekerSignup",
-    //   component: JobSeekerSignup,
-    //   meta: {
-    //     requiresGuest: true,
-    //     title: 'Job Seeker Sign Up'
-    //   }
-    // },
-    // {
-    //   path: "/signup/employer",
-    //   name: "EmployerSignup",
-    //   component: EmployerSignup,
-    //   meta: {
-    //     requiresGuest: true,
-    //     title: 'Employer Sign Up'
-    //   }
-    // },
     {
       path: "/dashboard/employer",
       name: "EmployerDashboard",
