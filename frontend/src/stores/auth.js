@@ -1,57 +1,112 @@
 import { defineStore } from "pinia";
+import { authService } from "@/services/authService";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: JSON.parse(localStorage.getItem("currentUser")) || null,
+    user: null,
+    token: localStorage.getItem("token") || null,
+    userType: localStorage.getItem("user_type") || null,
   }),
 
+  getters: {
+    isAuthenticated: (state) => !!state.token,
+    currentUser: (state) => state.user,
+  },
+
   actions: {
-    login(email, password) {
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      console.log("Stored users:", users); // Debug log
-
-      const user = users.find(
-        (u) => u.email === email && u.password === password
-      );
-
-      if (!user) {
-        throw new Error("Invalid credentials");
+    async loginAsJobSeeker(credentials) {
+      try {
+        const response = await authService.jobSeekerLogin(credentials);
+        this.setAuthData(response.job_seeker, response.token, 'job_seeker');
+        return response;
+      } catch (error) {
+        console.error('Job seeker login failed:', error);
+        throw error;
       }
+    },
 
-      if (!user.type) {
-        throw new Error("User type not found");
+    async loginAsEmployer(credentials) {
+      try {
+        const response = await authService.employerLogin(credentials);
+        this.setAuthData(response.employer, response.token, 'employer');
+        return response;
+      } catch (error) {
+        console.error('Employer login failed:', error);
+        throw error;
       }
+    },
 
+    async registerJobSeeker(data) {
+      try {
+        const response = await authService.jobSeekerRegister(data);
+        this.setAuthData(response.job_seeker, response.token, 'job_seeker');
+        return response;
+      } catch (error) {
+        console.error('Job seeker registration failed:', error);
+        throw error;
+      }
+    },
+
+    async registerEmployer(data) {
+      try {
+        const response = await authService.employerRegister(data);
+        this.setAuthData(response.employer, response.token, 'employer');
+        return response;
+      } catch (error) {
+        console.error('Employer registration failed:', error);
+        throw error;
+      }
+    },
+
+    setAuthData(user, token, type) {
       this.user = user;
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      return user;
+      this.token = token;
+      this.userType = type;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user_type', type);
+      localStorage.setItem('user', JSON.stringify(user));
     },
 
-    signup(newUser) {
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-
-      const existingUser = users.find((u) => u.email === newUser.email);
-      if (existingUser) {
-        throw new Error("User already exists");
+    async logout() {
+      try {
+        await authService.logout();
+        this.user = null;
+        this.token = null;
+        this.userType = null;
+        return true;
+      } catch (error) {
+        console.error('Logout failed:', error);
+        // Still clear the store state even if the API call fails
+        this.user = null;
+        this.token = null;
+        this.userType = null;
+        return true;
       }
-
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      this.user = newUser;
-      localStorage.setItem("currentUser", JSON.stringify(newUser));
     },
 
-    logout() {
+    clearAuthData() {
       this.user = null;
-      localStorage.removeItem("currentUser");
+      this.token = null;
+      this.userType = null;
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_type');
+      localStorage.removeItem('user');
     },
 
     initAuth() {
-      const user = JSON.parse(localStorage.getItem("currentUser"));
-      if (user) {
-        this.user = user;
+      const token = localStorage.getItem('token');
+      const userType = localStorage.getItem('user_type');
+      const user = localStorage.getItem('user');
+
+      if (token && userType && user) {
+        this.user = JSON.parse(user);
+        this.token = token;
+        this.userType = userType;
+      } else {
+        this.clearAuthData();
       }
-    },
-  },
+    }
+  }
 });

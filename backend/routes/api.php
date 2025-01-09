@@ -16,6 +16,10 @@ use App\Http\Controllers\API\JobSeekerController;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/jobseeker/register', [AuthController::class, 'jobSeekerRegister']);
+Route::post('/employer/register', [AuthController::class, 'employerRegister']);
+Route::post('/jobseeker/login', [AuthController::class, 'jobSeekerLogin']);
+Route::post('/employer/login', [AuthController::class, 'employerLogin']);
 
 // Job routes (public)
 Route::prefix('jobs')->group(function () {

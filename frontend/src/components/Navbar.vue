@@ -63,7 +63,7 @@
               <i class="fas fa-sign-in-alt me-1"></i>Login
             </router-link>
             <router-link
-              to="/signup"
+              to="/register"
               class="btn btn-primary"
               @click="closeNavbar"
             >
