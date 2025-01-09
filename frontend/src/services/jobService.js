@@ -439,6 +439,22 @@ export const jobService = {
 
         }
 
+    },
+
+    // Get jobs with filters
+    getJobs: async (filters = {}, page = 1) => {
+        try {
+            const response = await api.get('/jobs', {
+                params: {
+                    page,
+                    ...filters
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('JobService: Error fetching filtered jobs:', error);
+            throw error;
+        }
     }
 
 };

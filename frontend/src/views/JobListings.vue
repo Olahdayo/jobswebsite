@@ -24,15 +24,20 @@
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-3">Searching for jobs...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="error" class="alert alert-danger" role="alert">
+            {{ error }}
           </div>
 
           <!-- Jobs List -->
           <div v-else>
             <!-- Results Summary -->
-            <div
-              class="results-summary mb-4 d-flex justify-content-between align-items-center"
-            >
+            <div class="results-summary mb-4 d-flex justify-content-between align-items-center">
               <p class="text-muted mb-0">
+                <span v-if="hasActiveFilters" class="badge bg-info me-2">Filtered Results</span>
                 Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of {{ paginationInfo.total }} jobs
               </p>
               <div class="sort-options">
@@ -43,32 +48,15 @@
               </div>
             </div>
 
-            <!-- Active Filters -->
-            <div v-if="hasActiveFilters" class="active-filters mb-4">
-              <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="text-muted">Active filters:</span>
-                <template v-for="(value, key) in activeFilters">
-                  <button
-                    v-if="value"
-                    @click="removeFilter(key)"
-                    class="filter-badge"
-                    :key="key"
-                  >
-                    {{ value }}
-                    <i class="fas fa-times ms-2"></i>
-                  </button>
-                </template>
-                <button
-                  @click="clearAllFilters"
-                  class="btn btn-sm btn-outline-secondary"
-                >
-                  Clear all
-                </button>
+            <!-- No Results -->
+            <div v-if="allJobs.length === 0" class="text-center py-5">
+              <div class="alert alert-info" role="alert">
+                No jobs found matching your criteria.
               </div>
             </div>
 
             <!-- Jobs Grid -->
-            <div class="jobs-grid">
+            <div v-else class="jobs-grid">
               <div
                 v-for="job in paginatedJobs"
                 :key="job.id"
@@ -238,18 +226,13 @@
         <!-- Sidebar -->
         <div
           class="col-lg-3 search-sidebar-wrapper"
-          :class="{ 'mobile-search-active': showMobileSearch }"
+          :class="{ 'show-mobile': showMobileSearch }"
         >
-          <div class="search-sidebar-overlay" @click="toggleMobileSearch"></div>
-          <div class="search-sidebar">
-            <div
-              class="d-flex justify-content-between align-items-center d-lg-none mb-3"
-            >
-              <h5 class="mb-0">Filter Jobs</h5>
-              <button class="btn-close" @click="toggleMobileSearch"></button>
-            </div>
-            <SearchFilter @filter-applied="applyFilters" />
-          </div>
+          <SearchFilter
+            :initial-filters="filters"
+            @search="handleSearch"
+            @reset="resetAndLoadAllJobs"
+          />
         </div>
       </div>
     </div>
@@ -275,6 +258,7 @@ export default {
         total: 0
       },
       isLoading: false,
+      error: null,
       showMobileSearch: false,
       filters: {
         keyword: "",
@@ -290,7 +274,6 @@ export default {
   },
 
   computed: {
-    // Calculate pagination values
     paginatedJobs() {
       const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
       const end = start + this.pagination.perPage;
@@ -327,19 +310,18 @@ export default {
     async loadJobs() {
       try {
         this.isLoading = true;
+        this.error = null;
         const response = await jobService.getAllJobs();
         
-        // Store all jobs
-        this.allJobs = response.data;
-        this.pagination.total = response.total;
-
-        // Update URL
-        const url = new URL(window.location);
-        url.searchParams.set('page', this.pagination.currentPage);
-        window.history.replaceState({}, '', url);
-
+        if (response?.data) {
+          this.allJobs = response.data;
+          this.pagination.total = response.total || this.allJobs.length;
+        } else {
+          throw new Error('Invalid response format');
+        }
       } catch (error) {
         console.error('Error loading jobs:', error);
+        this.error = 'Failed to load jobs. Please try again.';
         this.allJobs = [];
       } finally {
         this.isLoading = false;
@@ -347,15 +329,9 @@ export default {
     },
 
     changePage(newPage) {
-      if (newPage >= 1 && newPage <= this.totalPages && newPage !== this.pagination.currentPage) {
-        this.pagination.currentPage = newPage;
-        
-        // Update URL
-        const url = new URL(window.location);
-        url.searchParams.set('page', newPage);
-        window.history.replaceState({}, '', url);
-        
-        // Scroll to top
+      const page = parseInt(newPage);
+      if (!isNaN(page) && page >= 1 && page <= this.totalPages) {
+        this.pagination.currentPage = page;
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
@@ -383,29 +359,73 @@ export default {
       });
     },
 
-    async applyFilters(filters) {
+    async handleSearch(searchFilters) {
       this.isLoading = true;
+      this.error = null;
+      
       try {
-        const response = await jobService.searchJobs(filters, 1); // Reset to first page
-        if (response && Array.isArray(response.data)) {
+        const response = await jobService.searchJobs(searchFilters);
+        
+        if (response?.data) {
           this.allJobs = response.data;
-          this.filters = { ...filters };
-          this.pagination.currentPage = 1;
+          this.pagination = {
+            currentPage: response.current_page || 1,
+            perPage: response.per_page || 10,
+            total: response.total || this.allJobs.length
+          };
+          this.filters = { ...searchFilters };
+        } else {
+          throw new Error('Invalid response format');
         }
       } catch (error) {
-        console.error("Error applying filters:", error);
+        console.error('Error searching jobs:', error);
+        this.error = error.response?.data?.message || 'Failed to search jobs. Please try again.';
         this.allJobs = [];
-        this.pagination.total = 0;
+      } finally {
+        this.isLoading = false;
+        // Close mobile search if open
+        if (this.showMobileSearch) {
+          this.toggleMobileSearch();
+        }
+      }
+    },
+
+    async resetAndLoadAllJobs() {
+      this.isLoading = true;
+      this.error = null;
+
+      try {
+        // Reset filters
+        this.filters = {
+          keyword: "",
+          location: "",
+          category: "",
+          type: "",
+          experience_level: "",
+          min_salary: "",
+          max_salary: "",
+          is_featured: false
+        };
+
+        // Load all jobs
+        const response = await jobService.getAllJobs();
+        if (response?.data) {
+          this.allJobs = response.data;
+          this.pagination.total = response.total || this.allJobs.length;
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+        this.error = 'Failed to load jobs. Please try again.';
+        this.allJobs = [];
       } finally {
         this.isLoading = false;
       }
-    }
+    },
   },
   
   mounted() {
-    // Get initial page from URL
-    const page = parseInt(new URLSearchParams(window.location.search).get('page')) || 1;
-    this.pagination.currentPage = page;
     this.loadJobs();
   }
 };
@@ -609,7 +629,7 @@ export default {
     transition: all 0.3s ease;
   }
 
-  .search-sidebar-wrapper.mobile-search-active {
+  .search-sidebar-wrapper.show-mobile {
     right: 0;
     visibility: visible;
   }
@@ -627,7 +647,7 @@ export default {
     transition: transform 0.3s ease;
   }
 
-  .mobile-search-active .search-sidebar {
+  .show-mobile .search-sidebar {
     transform: translateX(0);
   }
 

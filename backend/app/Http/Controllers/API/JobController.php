@@ -156,35 +156,59 @@ class JobController extends Controller
      */
     public function search(Request $request)
     {
-        $query = JobListing::with('employer');
+        $query = JobListing::with('employer')->where('is_active', true);
 
-        // Filter by category
-        if ($request->has('category')) {
-            $category = str_replace('-', ' ', $request->category);
-            $query->where('category', 'LIKE', '%' . $category . '%');
+        // Filter by keyword (search in title and description)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function($q) use ($keyword) {
+                $q->where('title', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('description', 'LIKE', '%' . $keyword . '%');
+            });
         }
 
-        // Filter by state/location
-        if ($request->has('state')) {
-            $query->where('location', 'LIKE', '%' . $request->state . '%');
+        // Filter by location
+        if ($request->filled('location')) {
+            $query->where('location', 'LIKE', '%' . $request->location . '%');
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // Filter by job type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by experience level
+        if ($request->filled('experience_level')) {
+            $query->where('experience_level', $request->experience_level);
+        }
+
+        // Filter by salary range
+        if ($request->filled('min_salary')) {
+            $query->where('min_salary', '>=', $request->min_salary);
+        }
+        if ($request->filled('max_salary')) {
+            $query->where('max_salary', '<=', $request->max_salary);
+        }
+
+        // Filter featured jobs
+        if ($request->filled('is_featured') && $request->is_featured) {
+            $query->where('is_featured', true);
         }
 
         // Get paginated results
-        $jobs = $query->latest()->paginate(10);
-
-        // Format each job
-        $formattedJobs = collect($jobs->items())->map(function ($job) {
-            return $this->formatJob($job);
-        });
+        $jobs = $query->latest()->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $formattedJobs,
-            'meta' => [
-                'total' => $jobs->total(),
-                'current_page' => $jobs->currentPage(),
-                'last_page' => $jobs->lastPage(),
-                'per_page' => $jobs->perPage()
-            ]
+            'data' => $jobs->items(),
+            'total' => $jobs->total(),
+            'current_page' => $jobs->currentPage(),
+            'per_page' => $jobs->perPage(),
+            'last_page' => $jobs->lastPage()
         ]);
     }
 

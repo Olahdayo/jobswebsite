@@ -27,7 +27,7 @@
         </button>
       </div>
 
-      <form @submit.prevent="applyFilters" class="filter-form">
+      <form @submit.prevent="handleSubmit" class="filter-form">
         <div class="mb-3">
           <label for="keyword" class="form-label">Search</label>
           <input
@@ -151,10 +151,20 @@
 import { jobService } from "@/services/jobService";
 
 export default {
+  name: 'SearchFilter',
+  
+  emits: ['search', 'reset'],
+
   props: {
     initialFilters: {
       type: Object,
-      default: () => ({
+      default: () => ({})
+    }
+  },
+
+  data() {
+    return {
+      filters: {
         keyword: "",
         location: "",
         category: "",
@@ -163,13 +173,7 @@ export default {
         min_salary: "",
         max_salary: "",
         is_featured: false
-      })
-    }
-  },
-
-  data() {
-    return {
-      filters: { ...this.initialFilters },
+      },
       filterOptions: {
         locations: [],
         categories: [],
@@ -196,85 +200,91 @@ export default {
   },
 
   methods: {
-    async loadFilterOptions() {
+    // Handle form submission
+    handleSubmit() {
+      this.isLoading = true;
       try {
-        const [locations, categories] = await Promise.all([
-          jobService.getLocations(),
-          jobService.getCategories()
-        ]);
-        this.filterOptions.locations = locations;
-        this.filterOptions.categories = categories;
+        // Emit search event with current filters
+        this.$emit('search', { ...this.filters });
+        this.updateActiveFilters();
       } catch (error) {
-        console.error("Error loading filter options:", error);
+        console.error('Error in search filter:', error);
+      } finally {
+        this.isLoading = false;
       }
     },
 
-    async applyFilters() {
-      this.isLoading = true;
-      this.updateActiveFilters();
-      const filters = Object.fromEntries(
-        Object.entries(this.filters).filter(([_, value]) => value !== "" && value !== null)
-      );
-      this.$emit("filter-change", filters);
-      this.isLoading = false;
-    },
-
+    // Remove a single filter
     removeFilter(key) {
-      this.filters[key] = "";
-      this.applyFilters();
+      this.filters[key] = '';
+      this.updateActiveFilters();
+      this.handleSubmit(); // Trigger search with updated filters
     },
 
+    // Clear all filters
     clearAllFilters() {
-      Object.keys(this.filters).forEach(key => {
-        if (typeof this.filters[key] === "boolean") {
-          this.filters[key] = false;
-        } else {
-          this.filters[key] = "";
-        }
-      });
+      // Reset all filter values to default
+      this.filters = {
+        keyword: "",
+        location: "",
+        category: "",
+        type: "",
+        experience_level: "",
+        min_salary: "",
+        max_salary: "",
+        is_featured: false
+      };
+      
+      // Update active filters
       this.activeFilters = [];
-      this.applyFilters();
+      
+      // Emit reset event to load all jobs
+      this.$emit('reset');
     },
 
+    // Update active filters list
     updateActiveFilters() {
       this.activeFilters = Object.entries(this.filters)
-        .filter(([key, value]) => value !== "" && value !== null && value !== false)
+        .filter(([_, value]) => value && value !== '')
         .map(([key, value]) => ({
           key,
-          value,
           label: this.formatFilterLabel(key, value)
         }));
     },
 
+    // Format filter label for display
     formatFilterLabel(key, value) {
-      switch (key) {
-        case "keyword":
-          return `Search: ${value}`;
-        case "min_salary":
-          return `Min Salary: $${value}`;
-        case "max_salary":
-          return `Max Salary: $${value}`;
-        case "is_featured":
-          return "Featured Jobs";
-        default:
-          return `${key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}: ${value}`;
-      }
-    }
-  },
+      const labels = {
+        keyword: `Keyword: ${value}`,
+        location: `Location: ${value}`,
+        category: `Category: ${value}`,
+        type: `Type: ${value}`,
+        experience_level: `Experience: ${value}`,
+        min_salary: `Min Salary: ₦${value}`,
+        max_salary: `Max Salary: ₦${value}`,
+        is_featured: 'Featured Only'
+      };
+      return labels[key] || `${key}: ${value}`;
+    },
 
-  watch: {
-    initialFilters: {
-      handler(newFilters) {
-        this.filters = { ...newFilters };
-        this.updateActiveFilters();
-      },
-      deep: true
+    // Load filter options from API
+    async loadFilterOptions() {
+      try {
+        const options = await jobService.getFilterOptions();
+        this.filterOptions = {
+          ...this.filterOptions,
+          locations: options.locations || [],
+          categories: options.categories || []
+        };
+      } catch (error) {
+        console.error('Error loading filter options:', error);
+      }
     }
   },
 
   mounted() {
     this.loadFilterOptions();
-    if (Object.values(this.filters).some(value => value !== "" && value !== false)) {
+    if (Object.keys(this.initialFilters).some(key => this.initialFilters[key])) {
       this.updateActiveFilters();
     }
   }
