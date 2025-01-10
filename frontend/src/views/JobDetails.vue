@@ -100,13 +100,117 @@
             <div class="mt-4">
               <button 
                 @click="handleApply" 
-                class="btn btn-primary"
+                class="btn btn-primary btn-lg"
                 :disabled="isApplying"
               >
-                <span v-if="isApplying" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                {{ isApplying ? 'Applying...' : 'Apply Now' }}
+                <i class="bi bi-send me-2"></i>
+                Apply Now
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="isLoading">
+        <div class="text-center p-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2">Loading job details...</p>
+        </div>
+      </div>
+      <div v-else-if="loadError" class="alert alert-danger m-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ loadError }}
+      </div>
+    </div>
+
+    <!-- Application Modal -->
+    <div class="modal fade" id="applicationModal" tabindex="-1" ref="applicationModal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-briefcase me-2"></i>
+              Apply for {{ job?.title }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitApplication" class="application-form">
+              <!-- Cover Letter -->
+              <div class="mb-4">
+                <label for="coverLetter" class="form-label">
+                  <i class="bi bi-file-text me-2"></i>
+                  Cover Letter <span class="text-danger">*</span>
+                </label>
+                <div class="form-text mb-2">
+                  Write a compelling cover letter explaining why you're the best candidate for this position.
+                  Minimum 100 characters required.
+                </div>
+                <textarea
+                  id="coverLetter"
+                  v-model="applicationForm.coverLetter"
+                  class="form-control"
+                  rows="6"
+                  required
+                  minlength="100"
+                  :class="{ 'is-invalid': formErrors.coverLetter }"
+                ></textarea>
+                <div class="invalid-feedback" v-if="formErrors.coverLetter">
+                  {{ formErrors.coverLetter }}
+                </div>
+                <div class="form-text mt-1">
+                  {{ applicationForm.coverLetter.length }} / 100 characters minimum
+                </div>
+              </div>
+
+              <!-- Resume Upload -->
+              <div class="mb-4">
+                <label for="resume" class="form-label">
+                  <i class="bi bi-file-earmark-pdf me-2"></i>
+                  Resume/CV <span class="text-danger">*</span>
+                </label>
+                <div class="form-text mb-2">
+                  Upload your latest resume in PDF, DOC, or DOCX format. Maximum file size: 5MB
+                </div>
+                <input
+                  type="file"
+                  id="resume"
+                  class="form-control"
+                  @change="handleResumeUpload"
+                  accept=".pdf,.doc,.docx"
+                  required
+                  :class="{ 'is-invalid': formErrors.resume }"
+                />
+                <div class="invalid-feedback" v-if="formErrors.resume">
+                  {{ formErrors.resume }}
+                </div>
+                <div class="form-text mt-1" v-if="applicationForm.resumeFile">
+                  Selected file: {{ applicationForm.resumeFile.name }}
+                  ({{ formatFileSize(applicationForm.resumeFile.size) }})
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary" 
+                  data-bs-dismiss="modal"
+                  :disabled="isApplying"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  :disabled="isApplying || !isFormValid"
+                >
+                  <span v-if="isApplying" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  <i v-else class="bi bi-send me-2"></i>
+                  {{ isApplying ? 'Submitting...' : 'Submit Application' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -116,18 +220,23 @@
     <div class="modal fade" id="successModal" tabindex="-1" ref="successModal">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Application Submitted</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-check-circle me-2"></i>
+              Application Submitted
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
-            <div class="text-center mb-4">
-              <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+          <div class="modal-body text-center">
+            <div class="my-4">
+              <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
             </div>
-            <p>Your application has been successfully submitted! The employer will review your application and contact you if they're interested.</p>
+            <h4 class="mb-3">Thank you for applying!</h4>
+            <p>Your application has been successfully submitted for {{ job?.title }}.</p>
+            <p class="text-muted">The employer will review your application and contact you if they're interested.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -137,15 +246,18 @@
     <div class="modal fade" id="errorModal" tabindex="-1" ref="errorModal">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Cannot Apply</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Error
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
-            <div class="text-center mb-4">
-              <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+          <div class="modal-body text-center">
+            <div class="my-4">
+              <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
             </div>
-            <p>{{ errorMessage }}</p>
+            <p class="mb-0">{{ errorMessage }}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -159,7 +271,7 @@
 <script>
 import { Modal } from 'bootstrap';
 import { useAuthStore } from "@/stores/auth";
-import { jobService } from '@/services/jobService'
+import { jobService } from '@/services/jobService';
 
 export default {
   name: "JobDetails",
@@ -167,36 +279,199 @@ export default {
   data() {
     return {
       job: null,
+      isLoading: true,
+      loadError: null,
       isApplying: false,
       errorMessage: '',
       successModal: null,
       errorModal: null,
+      applicationModal: null,
+      formErrors: {
+        coverLetter: '',
+        resume: ''
+      },
+      applicationForm: {
+        coverLetter: '',
+        resumeFile: null
+      },
       defaultCompanyLogo: '/images/dashboard-default.svg'
     };
+  },
+
+  computed: {
+    isFormValid() {
+      return this.applicationForm.coverLetter.length >= 100 && 
+             this.applicationForm.resumeFile &&
+             !this.formErrors.coverLetter &&
+             !this.formErrors.resume;
+    }
   },
 
   mounted() {
     // Initialize Bootstrap modals
     this.successModal = new Modal(this.$refs.successModal);
     this.errorModal = new Modal(this.$refs.errorModal);
+    this.applicationModal = new Modal(this.$refs.applicationModal);
   },
 
   async created() {
-    this.authStore = useAuthStore();
     await this.loadJobDetails();
-    if (this.authStore.user) {
-      this.checkIfApplied();
-    }
   },
 
   methods: {
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+    handleResumeUpload(event) {
+      const file = event.target.files[0];
+      this.formErrors.resume = '';
+      
+      if (!file) {
+        this.applicationForm.resumeFile = null;
+        return;
+      }
+
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        this.formErrors.resume = 'Resume file size must be less than 5MB';
+        event.target.value = '';
+        this.applicationForm.resumeFile = null;
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        this.formErrors.resume = 'Please upload a PDF or Word document';
+        event.target.value = '';
+        this.applicationForm.resumeFile = null;
+        return;
+      }
+
+      this.applicationForm.resumeFile = file;
+    },
+
+    async handleApply() {
+      const authStore = useAuthStore();
+      
+      if (!authStore.isAuthenticated || !localStorage.getItem('token')) {
+        this.$router.push({
+          name: 'Login',
+          query: { redirect: this.$route.fullPath }
+        });
+        return;
+      }
+
+      if (authStore.userType === 'employer') {
+        this.errorMessage = 'Only job seekers can apply for jobs';
+        this.errorModal.show();
+        return;
+      }
+
+      // Reset form and errors
+      this.applicationForm = {
+        coverLetter: '',
+        resumeFile: null
+      };
+      this.formErrors = {
+        coverLetter: '',
+        resume: ''
+      };
+
+      // Show application form modal
+      this.applicationModal.show();
+    },
+
+    async submitApplication() {
+      // Validate cover letter
+      if (this.applicationForm.coverLetter.length < 100) {
+        this.formErrors.coverLetter = 'Cover letter must be at least 100 characters';
+        return;
+      }
+
+      if (!this.applicationForm.resumeFile) {
+        this.formErrors.resume = 'Please upload your resume';
+        return;
+      }
+
+      const authStore = useAuthStore();
+      const userId = authStore.user?.id;
+      
+      if (!userId || !this.job?.id) {
+        this.errorMessage = 'Application cannot be submitted. Please try again later.';
+        this.errorModal.show();
+        return;
+      }
+
+      // Check if token exists
+      if (!localStorage.getItem('token')) {
+        this.errorMessage = 'Your session has expired. Please log in again.';
+        this.errorModal.show();
+        this.$router.push({
+          name: 'Login',
+          query: { redirect: this.$route.fullPath }
+        });
+        return;
+      }
+
+      try {
+        this.isApplying = true;
+
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('job_id', this.job.id);
+        formData.append('job_seeker_id', userId);
+        formData.append('cover_letter', this.applicationForm.coverLetter);
+        formData.append('resume', this.applicationForm.resumeFile);
+
+        // Submit application
+        await jobService.applyForJob(formData);
+
+        // Hide application modal and show success
+        this.applicationModal.hide();
+        this.successModal.show();
+        
+        // Reset form
+        this.applicationForm = {
+          coverLetter: '',
+          resumeFile: null
+        };
+        this.formErrors = {
+          coverLetter: '',
+          resume: ''
+        };
+      } catch (error) {
+        console.error('Error applying for job:', error);
+        if (error.response?.status === 401) {
+          this.errorMessage = 'Your session has expired. Please log in again.';
+          this.$router.push({
+            name: 'Login',
+            query: { redirect: this.$route.fullPath }
+          });
+        } else {
+          this.errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
+        }
+        this.errorModal.show();
+      } finally {
+        this.isApplying = false;
+      }
+    },
+
     async loadJobDetails() {
       try {
         const jobId = this.$route.params.id;
         const response = await jobService.getJob(jobId);
         this.job = response.data;
+        this.isLoading = false;
       } catch (error) {
         console.error('Error loading job details:', error);
+        this.loadError = error.response?.data?.message || 'Failed to load job details. Please try again.';
+        this.isLoading = false;
       }
     },
 
@@ -228,53 +503,6 @@ export default {
         });
       
       return items;
-    },
-
-    async handleApply() {
-      const authStore = useAuthStore();
-      
-      if (!authStore.isAuthenticated) {
-        // Redirect to login with current job page as redirect URL
-        this.$router.push({
-          name: 'Login',
-          query: { redirect: this.$route.fullPath }
-        });
-        return;
-      }
-
-      // Check if user is an employer
-      if (authStore.userType === 'employer') {
-        this.errorMessage = 'Only job seekers can apply for jobs';
-        this.errorModal.show();
-        return;
-      }
-
-      try {
-        this.isApplying = true;
-        
-        // Submit application
-        await jobService.applyForJob({
-          jobId: this.job.id,
-          userId: authStore.user.id
-        });
-
-        // Show success modal
-        this.successModal.show();
-      } catch (error) {
-        console.error('Error applying for job:', error);
-        this.errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
-        this.errorModal.show();
-      } finally {
-        this.isApplying = false;
-      }
-    },
-
-    checkIfApplied() {
-      // This should be replaced with an actual API call to check application status
-      const applications = JSON.parse(localStorage.getItem('applications')) || [];
-      this.hasApplied = applications.some(
-        app => app.jobId === this.$route.params.id && app.userId === this.authStore.user.id
-      );
     }
   }
 };
@@ -461,6 +689,32 @@ export default {
 
 .modal .bi {
   font-size: 3rem;
+}
+
+.application-form {
+  max-width: 100%;
+}
+
+.application-form textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.application-form .form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.modal-header {
+  border-bottom: 0;
+}
+
+.modal-footer {
+  border-top: 0;
+}
+
+.bi {
+  vertical-align: -0.125em;
 }
 
 @media (min-width: 768px) {

@@ -220,10 +220,13 @@ export default {
 
     async handleLogout() {
       try {
-        await this.authStore.logout();
-        this.$router.push("/login");
+        const authStore = useAuthStore();
+        await authStore.logout();
+        this.$router.push('/');
       } catch (error) {
         console.error('Error logging out:', error);
+        // Still redirect to home even if there's an error
+        this.$router.push('/');
       }
     },
   },

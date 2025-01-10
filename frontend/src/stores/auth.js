@@ -1,16 +1,15 @@
 import { defineStore } from "pinia";
 import { authService } from "@/services/authService";
-import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem("token") || null,
     userType: localStorage.getItem("user_type") || null,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    isAuthenticated: (state) => !!state.token && !!state.user,
     currentUser: (state) => state.user,
   },
 
@@ -72,19 +71,18 @@ export const useAuthStore = defineStore("auth", {
     async logout() {
       try {
         // Clear store state first
-        this.user = null;
-        this.token = null;
-        this.userType = null;
+        this.clearAuthData();
 
         // Then call the API
         await authService.logout();
         
-        // Navigate to home page
-        useRouter().push('/');
+        // Return success - let the component handle navigation
+        return true;
       } catch (error) {
         console.warn('Error during logout:', error);
-        // Still navigate to home page even if there's an error
-        useRouter().push('/');
+        // Still clear data even if API call fails
+        this.clearAuthData();
+        return false;
       }
     },
 
@@ -100,15 +98,11 @@ export const useAuthStore = defineStore("auth", {
 
     initAuth() {
       const token = localStorage.getItem('token');
-      const userType = localStorage.getItem('user_type');
       const user = localStorage.getItem('user');
+      const userType = localStorage.getItem('user_type');
 
-      if (token && userType && user) {
-        this.user = JSON.parse(user);
-        this.token = token;
-        this.userType = userType;
-      } else {
-        this.clearAuthData();
+      if (token && user && userType) {
+        this.setAuthData(JSON.parse(user), token, userType);
       }
     }
   }

@@ -126,33 +126,46 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const userType = authStore.userType;
-  const isPublicRoute = to.matched.some(record => record.meta.public);
+  const isPublicRoute = to.matched.some((record) => record.meta.public);
+  const requiresGuest = to.matched.some((record) => record.meta.requiresGuest);
 
+  // Allow access to public routes or guest-only routes for unauthenticated users
+  if (isPublicRoute || (requiresGuest && !isAuthenticated)) {
+    return next();
+  }
+
+  // Redirect to login if the route is not public and the user is not authenticated
   if (!isPublicRoute && !isAuthenticated) {
-    // Store the intended destination
-    next({
-      name: 'login',
-      query: { redirect: to.fullPath }
+    return next({
+      name: "Login",
+      query: { redirect: to.fullPath },
     });
-  } else if (to.meta.requiresAuth) {
-    if (!isAuthenticated) {
-      // Not authenticated, redirect to login
-      return next({ name: 'Login' });
-    }
+  }
 
-    // Check if route requires specific user type
-    if (to.meta.userType && to.meta.userType !== userType) {
-      // Wrong user type, redirect to appropriate dashboard
-      return next({ name: userType === 'employer' ? 'EmployerDashboard' : 'JobSeekerDashboard' });
-    }
-  } else if (to.meta.requiresGuest && isAuthenticated) {
-    // Already authenticated, redirect to appropriate dashboard
-    return next({ name: userType === 'employer' ? 'EmployerDashboard' : 'JobSeekerDashboard' });
+  // Redirect to appropriate dashboard if the user is authenticated but tries to access a guest-only route
+  if (requiresGuest && isAuthenticated) {
+    return next({
+      name:
+        userType === "employer" ? "EmployerDashboard" : "JobSeekerDashboard",
+    });
+  }
+
+  // Redirect to appropriate dashboard if the user is authenticated but tries to access a route requiring a different user type
+  if (
+    to.meta.requiresAuth &&
+    to.meta.userType &&
+    to.meta.userType !== userType
+  ) {
+    return next({
+      name:
+        userType === "employer" ? "EmployerDashboard" : "JobSeekerDashboard",
+    });
   }
 
   // Set page title
-  document.title = to.meta.title ? `${to.meta.title} - JobPortal` : 'JobPortal';
-  
+  document.title = to.meta.title ? `${to.meta.title} - JobPortal` : "JobPortal";
+
+  // Allow navigation
   next();
 });
 

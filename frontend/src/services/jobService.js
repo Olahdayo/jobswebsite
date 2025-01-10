@@ -168,11 +168,20 @@ export const jobService = {
 
 
     // Apply for a job
+    applyForJob: async (formData) => {
+        // Get the auth token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
 
-    applyForJob: async (data) => {
         try {
-            const response = await api.put(`/jobs/${data.jobId}/apply`, {
-                user_id: data.userId
+            const response = await api.post('/applications', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
             });
             return response.data;
         } catch (error) {

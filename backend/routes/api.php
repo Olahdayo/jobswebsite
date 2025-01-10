@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\EmployerController;
 use App\Http\Controllers\API\JobSeekerController;
+use App\Http\Controllers\API\ApplicationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,4 +68,9 @@ Route::middleware(['auth:sanctum', 'ability:job_seeker'])->group(function () {
     // Job applications
     Route::post('/jobs/{job}/apply', [JobSeekerController::class, 'applyForJob']);
     Route::get('/jobseeker/applications', [JobSeekerController::class, 'applications']);
+    
+    // Applications
+    Route::post('/applications', [ApplicationController::class, 'store']);
+    Route::get('/applications', [ApplicationController::class, 'index']);
+    Route::get('/applications/{application}', [ApplicationController::class, 'show']);
 });
