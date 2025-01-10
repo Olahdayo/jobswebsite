@@ -13,7 +13,7 @@
               </div>
 
               <!-- Login Form -->
-              <form @submit.prevent="handleSubmit" class="needs-validation" novalidate>
+              <form @submit.prevent="handleLogin" class="needs-validation" novalidate>
                 <div class="mb-3">
                   <label class="form-label">Email <span class="text-danger">*</span></label>
                   <input
@@ -151,7 +151,7 @@ export default {
       this.showPassword = !this.showPassword;
     },
 
-    async handleSubmit() {
+    async handleLogin() {
       try {
         // Validate form
         const isValid = await this.v$.$validate();
@@ -161,24 +161,22 @@ export default {
         this.error = null;
 
         // Login based on account type
-        try {
-          if (this.formData.accountType === 'employer') {
-            await this.authStore.loginAsEmployer(this.formData);
-            this.router.push({ name: 'EmployerDashboard' });
-          } else {
-            await this.authStore.loginAsJobSeeker(this.formData);
-            this.router.push({ name: 'JobSeekerDashboard' });
-          }
-        } catch (error) {
-          if (error.response?.status === 422) {
-            this.error = 'Invalid email or password';
-          } else {
-            this.error = error.response?.data?.message || 'Login failed';
-          }
+        let response;
+        if (this.formData.accountType === 'employer') {
+          response = await this.authStore.loginAsEmployer(this.formData);
+        } else {
+          response = await this.authStore.loginAsJobSeeker(this.formData);
         }
+
+        // Get redirect path from query parameters or use default
+        const redirectPath = this.$route.query.redirect || 
+          (this.authStore.userType === 'employer' ? '/dashboard/employer' : '/dashboard/jobseeker');
+        
+        // Use router.push with the full path
+        await this.$router.push(redirectPath);
       } catch (error) {
         console.error('Login error:', error);
-        this.error = error.response?.data?.message || error.message || 'Login failed';
+        this.error = error.response?.data?.message || 'Failed to login. Please try again.';
       } finally {
         this.isLoading = false;
       }

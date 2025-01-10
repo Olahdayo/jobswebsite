@@ -98,18 +98,57 @@
             </div>
 
             <div class="mt-4">
-              <button
-                v-if="!hasApplied"
-                @click="handleApply"
-                class="apply-button"
-                :disabled="isSubmitting"
+              <button 
+                @click="handleApply" 
+                class="btn btn-primary"
+                :disabled="isApplying"
               >
-                {{ isSubmitting ? "Submitting..." : "Apply Now" }}
+                <span v-if="isApplying" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                {{ isApplying ? 'Applying...' : 'Apply Now' }}
               </button>
-              <div v-else class="alert alert-success">
-                You have already applied for this job
-              </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" ref="successModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Application Submitted</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-4">
+              <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+            </div>
+            <p>Your application has been successfully submitted! The employer will review your application and contact you if they're interested.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" ref="errorModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cannot Apply</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-4">
+              <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+            </div>
+            <p>{{ errorMessage }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -118,6 +157,7 @@
 </template>
 
 <script>
+import { Modal } from 'bootstrap';
 import { useAuthStore } from "@/stores/auth";
 import { jobService } from '@/services/jobService'
 
@@ -127,10 +167,18 @@ export default {
   data() {
     return {
       job: null,
-      isSubmitting: false,
-      hasApplied: false,
+      isApplying: false,
+      errorMessage: '',
+      successModal: null,
+      errorModal: null,
       defaultCompanyLogo: '/images/dashboard-default.svg'
     };
+  },
+
+  mounted() {
+    // Initialize Bootstrap modals
+    this.successModal = new Modal(this.$refs.successModal);
+    this.errorModal = new Modal(this.$refs.errorModal);
   },
 
   async created() {
@@ -183,26 +231,41 @@ export default {
     },
 
     async handleApply() {
-      if (!this.authStore.user) {
-        this.$router.push('/login');
+      const authStore = useAuthStore();
+      
+      if (!authStore.isAuthenticated) {
+        // Redirect to login with current job page as redirect URL
+        this.$router.push({
+          name: 'Login',
+          query: { redirect: this.$route.fullPath }
+        });
         return;
       }
 
-      if (this.authStore.user.type !== 'jobseeker') {
-        alert('Only job seekers can apply for jobs');
+      // Check if user is an employer
+      if (authStore.userType === 'employer') {
+        this.errorMessage = 'Only job seekers can apply for jobs';
+        this.errorModal.show();
         return;
       }
 
-      this.isSubmitting = true;
       try {
-        await jobService.applyForJob(this.job.id);
-        this.hasApplied = true;
-        alert('Application submitted successfully!');
+        this.isApplying = true;
+        
+        // Submit application
+        await jobService.applyForJob({
+          jobId: this.job.id,
+          userId: authStore.user.id
+        });
+
+        // Show success modal
+        this.successModal.show();
       } catch (error) {
         console.error('Error applying for job:', error);
-        alert('Failed to submit application. Please try again.');
+        this.errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
+        this.errorModal.show();
       } finally {
-        this.isSubmitting = false;
+        this.isApplying = false;
       }
     },
 
@@ -396,50 +459,13 @@ export default {
   margin-top: 0.25rem;
 }
 
-.apply-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width: 100%;
-}
-
-.apply-button:hover {
-  background-color: #2563eb;
-}
-
-.apply-button:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-}
-
-.alert {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.alert-success {
-  background-color: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
+.modal .bi {
+  font-size: 3rem;
 }
 
 @media (min-width: 768px) {
   .content-grid {
     grid-template-columns: 2fr 1fr;
-  }
-  
-  .apply-button {
-    width: auto;
   }
 }
 </style>

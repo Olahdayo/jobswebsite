@@ -169,22 +169,16 @@ export const jobService = {
 
     // Apply for a job
 
-    applyForJob: async (jobId, userId) => {
-
+    applyForJob: async (data) => {
         try {
-
-            const response = await api.post(`/jobs/${jobId}/apply`, { userId });
-
+            const response = await api.put(`/jobs/${data.jobId}/apply`, {
+                user_id: data.userId
+            });
             return response.data;
-
         } catch (error) {
-
             console.error('Error applying for job:', error);
-
             throw error;
-
         }
-
     },
 
 
@@ -322,28 +316,6 @@ export const jobService = {
         } catch (error) {
 
             console.error('Error fetching featured jobs:', error);
-
-            throw error;
-
-        }
-
-    },
-
-
-
-    // Apply for a job
-
-    applyForJob: async (jobId, data) => {
-
-        try {
-
-            const response = await api.post(`/jobs/${jobId}/apply`, data);
-
-            return response.data;
-
-        } catch (error) {
-
-            console.error('Error applying for job:', error);
 
             throw error;
 

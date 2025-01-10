@@ -21,21 +21,19 @@ const publicPages = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
       path: "/",
       name: "Home",
       component: Home,
+      meta: { public: true }
     },
     {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/auth/Login.vue'),
-      meta: {
-        requiresGuest: true,
-        title: 'Login'
-      }
+      meta: { public: true }
     },
     {
       path: "/dashboard/employer",
@@ -61,27 +59,32 @@ const router = createRouter({
       path: "/featured-jobs",
       name: "FeaturedJobs",
       component: () => import("../views/FeaturedJobs.vue"),
+      meta: { public: true }
     },
     {
       path: "/Joblistings",
       name: "Joblistings",
       component: () => import("@/views/JobListings.vue"),
+      meta: { public: true }
     },
     {
       path: "/jobs/:id",
       name: "JobDetails",
       component: JobDetails,
       props: true,
+      meta: { public: true }
     },
     {
       path: "/jobs/state/:state",
       name: "JobsByState",
       component: () => import("@/views/JobsByState.vue"),
+      meta: { public: true }
     },
     {
       path: "/jobs/category/:category?",
       name: "JobsByCategory",
       component: () => import("@/views/JobsByCategory.vue"),
+      meta: { public: true }
     },
     {
       path: '/post-job',
@@ -96,7 +99,8 @@ const router = createRouter({
     {
       path: '/support',
       name: 'Support',
-      component: Support
+      component: Support,
+      meta: { public: true }
     },
     {
       path: '/register',
@@ -122,9 +126,15 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const userType = authStore.userType;
+  const isPublicRoute = to.matched.some(record => record.meta.public);
 
-  // Check if route requires authentication
-  if (to.meta.requiresAuth) {
+  if (!isPublicRoute && !isAuthenticated) {
+    // Store the intended destination
+    next({
+      name: 'login',
+      query: { redirect: to.fullPath }
+    });
+  } else if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
       // Not authenticated, redirect to login
       return next({ name: 'Login' });
@@ -135,10 +145,7 @@ router.beforeEach((to, from, next) => {
       // Wrong user type, redirect to appropriate dashboard
       return next({ name: userType === 'employer' ? 'EmployerDashboard' : 'JobSeekerDashboard' });
     }
-  }
-
-  // Check if route requires guest access
-  if (to.meta.requiresGuest && isAuthenticated) {
+  } else if (to.meta.requiresGuest && isAuthenticated) {
     // Already authenticated, redirect to appropriate dashboard
     return next({ name: userType === 'employer' ? 'EmployerDashboard' : 'JobSeekerDashboard' });
   }
