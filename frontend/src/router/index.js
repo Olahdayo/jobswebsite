@@ -168,5 +168,4 @@ router.beforeEach((to, from, next) => {
   // Allow navigation
   next();
 });
-
 export default router;
