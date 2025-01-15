@@ -5,21 +5,39 @@
       <div class="container-fluid px-4">
         <h1 class="navbar-brand mb-0 h1 fw-bold">My Dashboard</h1>
         <div class="d-flex align-items-center">
-          <span class="me-3">Welcome, {{ user?.first_name || "User" }}</span>
-          <!-- <div class="profile-avatar mb-3">
-            {{ getInitials(user?.first_name, user?.last_name) }}
-          </div> -->
-          <!-- <h5 class="card-title mb-1">
-            {{ user?.first_name }} {{ user?.last_name }}
-          </h5> -->
-          <p class="text-muted mb-3">{{ user?.email }}</p>
-          <button
-            @click="handleLogout"
-            class="btn btn-outline-danger d-flex align-items-center"
-          >
-            <i class="fas fa-sign-out-alt me-2"></i>
-            Logout
-          </button>
+          <div class="dropdown">
+            <button
+              class="btn btn-link text-dark d-flex align-items-center"
+              type="button"
+              @click="toggleDropdown"
+            >
+              <div class="avatar me-2">
+                {{ getInitials(user?.first_name, user?.last_name) }}
+              </div>
+              <span class="me-2">{{ user?.email }}</span>
+              <i
+                class="fas fa-chevron-down ms-1"
+                :class="{ 'rotate-180': isDropdownOpen }"
+              ></i>
+            </button>
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              :class="{ show: isDropdownOpen }"
+              @click="isDropdownOpen = false"
+            >
+              <li>
+                <router-link to="/profile" class="dropdown-item">
+                  <i class="fas fa-user me-2"></i>Profile
+                </router-link>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button @click="handleLogout" class="dropdown-item text-danger">
+                  <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </nav>
@@ -220,6 +238,7 @@
 <script>
 import { authService } from "@/services/authService";
 import { jobService } from "@/services/jobService";
+import { Dropdown } from "bootstrap";
 
 export default {
   name: "JobSeekerDashboard",
@@ -230,6 +249,7 @@ export default {
       applications: [],
       isLoading: true,
       error: null,
+      isDropdownOpen: false,
     };
   },
 
@@ -275,7 +295,6 @@ export default {
     async loadApplications() {
       try {
         this.isLoading = true;
-        console.log("Fetching applications..."); // Debug log
         const response = await jobService.getUserApplications();
 
         // Check if response has data property
@@ -288,19 +307,19 @@ export default {
           console.warn("Unexpected response format:", response);
         }
 
-        console.log("Loaded applications:", this.applications);
+        // console.log("Loaded applications:", this.applications);
       } catch (error) {
         console.error("Error loading applications:", error);
         this.error = "Failed to load applications. Please try again later.";
 
         // More detailed error logging
-        if (error.response) {
-          console.error("Error details:", {
-            status: error.response.status,
-            data: error.response.data,
-            headers: error.response.headers,
-          });
-        }
+        // if (error.response) {
+        //   console.error("Error details:", {
+        //     status: error.response.status,
+        //     data: error.response.data,
+        //     headers: error.response.headers,
+        //   });
+        // }
       } finally {
         this.isLoading = false;
       }
@@ -337,6 +356,10 @@ export default {
     handleImageError(e) {
       e.target.src = "/images/dashboard-default.svg";
     },
+
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
   },
 
   async created() {
@@ -355,6 +378,27 @@ export default {
     } finally {
       this.isLoading = false;
     }
+  },
+
+  mounted() {
+    // Initialize all dropdowns
+    const dropdownElementList = document.querySelectorAll(".dropdown-toggle");
+    const dropdownList = [...dropdownElementList].map(
+      (dropdownToggleEl) => new Dropdown(dropdownToggleEl)
+    );
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const dropdown = this.$el.querySelector(".dropdown");
+      if (!dropdown.contains(e.target)) {
+        this.isDropdownOpen = false;
+      }
+    });
+  },
+
+  beforeUnmount() {
+    // Clean up event listener
+    document.removeEventListener("click", this.closeDropdown);
   },
 };
 </script>
@@ -427,5 +471,46 @@ export default {
 
 .table small {
   font-size: 0.85em;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #495057;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-item i {
+  width: 20px;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+
+.dropdown-menu {
+  margin-top: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 </style>

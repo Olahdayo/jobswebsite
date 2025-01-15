@@ -161,4 +161,15 @@ export const authService = {
       return false;
     }
   },
+
+  // Add this method to your authService
+  async updateProfile(profileData) {
+    try {
+      const response = await api.put("/jobseeker/profile", profileData);
+      return response;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  },
 };

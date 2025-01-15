@@ -59,7 +59,7 @@
       <!-- Bottom Bar -->
       <div class="row mt-4 pt-4 border-top">
         <div class="col-md-6 text-center text-md-start">
-          <p class="mb-0">&copy; {{ currentYear }} JobHunter. All rights reserved.</p>
+          <p class="mb-0">&copy; {{ currentYear }} Pinify. All rights reserved.</p>
         </div>
         <div class="col-md-6 text-center text-md-end">
           <a href="#" class="text-light text-decoration-none me-3">Privacy Policy</a>

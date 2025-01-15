@@ -3,8 +3,8 @@ import Home from "../views/Home.vue";
 import JobDetails from "@/views/JobDetails.vue";
 import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
-import PostJob from '../views/PostJob.vue'
-import Support from '../views/Support.vue'
+import PostJob from "../views/PostJob.vue";
+import Support from "../views/Support.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -16,7 +16,7 @@ const publicPages = [
   "/jobs/:id",
   "/Joblistings",
   "/jobs/state/:state",
-  "/jobs/category/:category"
+  "/jobs/category/:category",
 ];
 
 const router = createRouter({
@@ -26,13 +26,13 @@ const router = createRouter({
       path: "/",
       name: "Home",
       component: Home,
-      meta: { public: true }
+      meta: { public: true },
     },
     {
-      path: '/login',
-      name: 'Login',
-      component: () => import('@/views/auth/Login.vue'),
-      meta: { public: true }
+      path: "/login",
+      name: "Login",
+      component: () => import("@/views/auth/Login.vue"),
+      meta: { public: true },
     },
     {
       path: "/dashboard/employer",
@@ -40,9 +40,9 @@ const router = createRouter({
       component: EmployerDashboard,
       meta: {
         requiresAuth: true,
-        userType: 'employer',
-        title: 'Employer Dashboard'
-      }
+        userType: "employer",
+        title: "Employer Dashboard",
+      },
     },
     {
       path: "/dashboard/jobseeker",
@@ -50,65 +50,71 @@ const router = createRouter({
       component: JobSeekerDashboard,
       meta: {
         requiresAuth: true,
-        userType: 'job_seeker',
-        title: 'Job Seeker Dashboard'
-      }
+        userType: "job_seeker",
+        title: "Job Seeker Dashboard",
+      },
     },
     {
       path: "/featured-jobs",
       name: "FeaturedJobs",
       component: () => import("../views/FeaturedJobs.vue"),
-      meta: { public: true }
+      meta: { public: true },
     },
     {
       path: "/Joblistings",
       name: "Joblistings",
       component: () => import("@/views/JobListings.vue"),
-      meta: { public: true }
+      meta: { public: true },
     },
     {
       path: "/jobs/:id",
       name: "JobDetails",
       component: JobDetails,
       props: true,
-      meta: { public: true }
+      meta: { public: true },
     },
     {
       path: "/jobs/state/:state",
       name: "JobsByState",
       component: () => import("@/views/JobsByState.vue"),
-      meta: { public: true }
+      meta: { public: true },
     },
     {
       path: "/jobs/category/:category?",
       name: "JobsByCategory",
       component: () => import("@/views/JobsByCategory.vue"),
-      meta: { public: true }
+      meta: { public: true },
     },
     {
-      path: '/post-job',
-      name: 'PostJob',
+      path: "/post-job",
+      name: "PostJob",
       component: PostJob,
       meta: {
         requiresAuth: true,
-        userType: 'employer',
-        title: 'Post a Job'
-      }
+        userType: "employer",
+        title: "Post a Job",
+      },
     },
     {
-      path: '/support',
-      name: 'Support',
+      path: "/support",
+      name: "Support",
       component: Support,
-      meta: { public: true }
+      meta: { public: true },
     },
     {
-      path: '/register',
-      name: 'Register',
-      component: () => import('@/views/auth/Register.vue'),
+      path: "/register",
+      name: "Register",
+      component: () => import("@/views/auth/Register.vue"),
       meta: {
         requiresGuest: true,
-        title: 'Create Account'
-      }
+        title: "Create Account",
+      },
+    },
+    {
+      path: "/profile",
+      name: "Profile",
+      component: () => import("@/views/Profile.vue"),
+      meta: { requiresAuth: true },
     },
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -117,7 +123,7 @@ const router = createRouter({
     } else {
       return { top: 0 };
     }
-  }
+  },
 });
 
 // Global navigation guard
