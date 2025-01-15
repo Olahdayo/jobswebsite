@@ -20,41 +20,53 @@ class ApplicationController extends Controller
     public function store(Request $request)
     {
         try {
+            // Get authenticated user
+            $jobSeeker = $request->user();
+
             Log::info('Starting application submission', [
                 'job_id' => $request->job_id,
-                'job_seeker_id' => $request->job_seeker_id
+                'job_seeker_id' => $jobSeeker->id,
+                'request_data' => $request->all(),
+                'files' => $request->allFiles()
             ]);
+
+            // Check if job exists and log all jobs
+            $job = Job::find($request->job_id);
+            $allJobs = Job::pluck('id')->toArray();
+            
+            Log::info('Job validation check', [
+                'requested_job_id' => $request->job_id,
+                'job_exists' => $job ? true : false,
+                'available_jobs' => $allJobs,
+                'table_name' => (new Job)->getTable()
+            ]);
+
+            if (!$job) {
+                return response()->json([
+                    'message' => 'The selected job is no longer available',
+                    'errors' => ['job_id' => ['Job not found or no longer available']]
+                ], 422);
+            }
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'job_id' => 'required|exists:jobs,id',
-                'job_seeker_id' => 'required|exists:job_seekers,id',
-                'cover_letter' => 'required|string|min:100',
-                'resume' => 'required|file|mimes:pdf,doc,docx|max:5120', // 5MB max
+                'job_id' => ['required', 'exists:job_listings,id'],
+                'cover_letter' => ['required', 'string', 'min:100'],
+                'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'], // 5MB max
+            ], [
+                'job_id.exists' => 'The selected job is no longer available.',
+                'job_id.required' => 'No job was selected for application.'
             ]);
 
             if ($validator->fails()) {
                 Log::warning('Application validation failed', [
-                    'errors' => $validator->errors()->toArray()
+                    'errors' => $validator->errors()->toArray(),
+                    'request_data' => $request->all(),
+                    'available_jobs' => Job::pluck('id')->toArray() // Log available job IDs
                 ]);
                 return response()->json([
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Check if user has already applied
-            $existingApplication = Application::where('job_id', $request->job_id)
-                ->where('job_seeker_id', $request->job_seeker_id)
-                ->first();
-
-            if ($existingApplication) {
-                Log::info('Duplicate application attempt', [
-                    'job_id' => $request->job_id,
-                    'job_seeker_id' => $request->job_seeker_id
-                ]);
-                return response()->json([
-                    'message' => 'You have already applied for this job'
                 ], 422);
             }
 
@@ -77,21 +89,25 @@ class ApplicationController extends Controller
                 ], 422);
             }
 
-            // Handle file upload
-            if (!$request->hasFile('resume')) {
-                Log::warning('Resume file missing in request');
+            // Check if user has already applied
+            $existingApplication = Application::where('job_id', $request->job_id)
+                ->where('job_seeker_id', $jobSeeker->id)
+                ->first();
+
+            if ($existingApplication) {
+                Log::info('Duplicate application attempt', [
+                    'job_id' => $request->job_id,
+                    'job_seeker_id' => $jobSeeker->id
+                ]);
                 return response()->json([
-                    'message' => 'Resume file is required'
+                    'message' => 'You have already applied for this job'
                 ], 422);
             }
 
+            // Handle file upload
+            if ($request->hasFile('resume')) {
             try {
                 $file = $request->file('resume');
-                Log::info('Processing resume file', [
-                    'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType()
-                ]);
 
                 // Create resumes directory if it doesn't exist
                 $resumesPath = storage_path('app/public/resumes');
@@ -100,27 +116,17 @@ class ApplicationController extends Controller
                 }
 
                 $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+                    // Store file and get path
                 $path = $file->storeAs('resumes', $filename, 'public');
 
                 if (!$path) {
                     throw new \Exception('Failed to store resume file');
-                }
-
-                Log::info('Resume file stored successfully', ['path' => $path]);
-            } catch (\Exception $e) {
-                Log::error('File upload failed', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                return response()->json([
-                    'message' => 'Failed to upload resume file'
-                ], 500);
             }
 
             // Create application
             $application = Application::create([
                 'job_id' => $request->job_id,
-                'job_seeker_id' => $request->job_seeker_id,
+                        'job_seeker_id' => $jobSeeker->id,
                 'cover_letter' => $request->cover_letter,
                 'resume_url' => $path,
                 'status' => 'pending'
@@ -132,9 +138,23 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'message' => 'Application submitted successfully',
-                'data' => $application
+                        'data' => $application->load('job.employer')
             ], 201);
+                } catch (\Exception $e) {
+                    Log::error('File upload failed', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    return response()->json([
+                        'message' => 'Failed to upload resume file',
+                        'error' => $e->getMessage()
+                    ], 500);
+                }
+            }
 
+            return response()->json([
+                'message' => 'Resume file is required'
+            ], 422);
         } catch (\Exception $e) {
             // Delete uploaded file if application creation fails
             if (isset($path)) {
@@ -151,8 +171,7 @@ class ApplicationController extends Controller
 
             Log::error('Application submission failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->except(['resume'])
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([

@@ -95,22 +95,26 @@ class AuthController extends Controller
 
     public function jobSeekerLogin(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
             'remember' => 'boolean'
         ]);
 
-        $jobSeeker = JobSeeker::where('email', $request->email)->first();
+        // Find the job seeker
+        $jobSeeker = JobSeeker::where('email', $validated['email'])->first();
 
-        if (!$jobSeeker || !Hash::check($request->password, $jobSeeker->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
+        // Check credentials manually
+        if (!$jobSeeker || !Hash::check($validated['password'], $jobSeeker->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
-        $token = $jobSeeker->createToken('auth_token', ['job_seeker'])->plainTextToken;
+        // Create token with proper abilities
+        $token = $jobSeeker->createToken('auth_token', ['job-seeker'])->plainTextToken;
 
+        // Handle remember me functionality
         $remember_token = null;
         if ($request->boolean('remember')) {
             $remember_token = Str::random(60);
@@ -119,9 +123,8 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'job_seeker' => $jobSeeker,
             'token' => $token,
-            'token_type' => 'Bearer',
+            'job_seeker' => $jobSeeker,
             'remember_token' => $remember_token
         ]);
     }

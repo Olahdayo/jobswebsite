@@ -40,13 +40,20 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'employer' => [
+
+        'api' => [
             'driver' => 'sanctum',
-            'provider' => 'employers',
+            'provider' => 'users',
         ],
+
         'job_seeker' => [
             'driver' => 'sanctum',
             'provider' => 'job_seekers',
+        ],
+
+        'employer' => [
+            'driver' => 'sanctum',
+            'provider' => 'employers',
         ],
     ],
 
@@ -72,13 +79,15 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-        'employers' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Employer::class,
-        ],
+
         'job_seekers' => [
             'driver' => 'eloquent',
             'model' => App\Models\JobSeeker::class,
+        ],
+
+        'employers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Employer::class,
         ],
     ],
 
@@ -108,14 +117,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        'employers' => [
-            'provider' => 'employers',
+
+        'job_seekers' => [
+            'provider' => 'job_seekers',
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
-        'job_seekers' => [
-            'provider' => 'job_seekers',
+
+        'employers' => [
+            'provider' => 'employers',
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
@@ -133,6 +144,6 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+    'password_timeout' => 10800,
 
 ];

@@ -13,9 +13,15 @@
               </div>
 
               <!-- Login Form -->
-              <form @submit.prevent="handleLogin" class="needs-validation" novalidate>
+              <form
+                @submit.prevent="handleLogin"
+                class="needs-validation"
+                novalidate
+              >
                 <div class="mb-3">
-                  <label class="form-label">Email <span class="text-danger">*</span></label>
+                  <label class="form-label"
+                    >Email <span class="text-danger">*</span></label
+                  >
                   <input
                     type="email"
                     class="form-control"
@@ -29,7 +35,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label">Password <span class="text-danger">*</span></label>
+                  <label class="form-label"
+                    >Password <span class="text-danger">*</span></label
+                  >
                   <div class="input-group">
                     <input
                       :type="showPassword ? 'text' : 'password'"
@@ -38,21 +46,30 @@
                       :class="{ 'is-invalid': v$.formData.password.$error }"
                       required
                     />
-                    <button 
-                      class="btn btn-outline-secondary" 
+                    <button
+                      class="btn btn-outline-secondary"
                       type="button"
                       @click="togglePassword"
                     >
-                      <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                      <i
+                        :class="
+                          showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'
+                        "
+                      ></i>
                     </button>
-                    <div class="invalid-feedback" v-if="v$.formData.password.$error">
+                    <div
+                      class="invalid-feedback"
+                      v-if="v$.formData.password.$error"
+                    >
                       {{ v$.formData.password.$errors[0].$message }}
                     </div>
                   </div>
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label">Account Type <span class="text-danger">*</span></label>
+                  <label class="form-label"
+                    >Account Type <span class="text-danger">*</span></label
+                  >
                   <select
                     class="form-select"
                     v-model="formData.accountType"
@@ -62,7 +79,10 @@
                     <option value="jobseeker">Job Seeker</option>
                     <option value="employer">Employer</option>
                   </select>
-                  <div class="invalid-feedback" v-if="v$.formData.accountType.$error">
+                  <div
+                    class="invalid-feedback"
+                    v-if="v$.formData.accountType.$error"
+                  >
                     {{ v$.formData.accountType.$errors[0].$message }}
                   </div>
                 </div>
@@ -74,7 +94,9 @@
                     id="rememberMe"
                     v-model="formData.remember"
                   />
-                  <label class="form-check-label" for="rememberMe">Remember me</label>
+                  <label class="form-check-label" for="rememberMe"
+                    >Remember me</label
+                  >
                 </div>
 
                 <!-- Submit Button -->
@@ -89,7 +111,7 @@
                       class="spinner-border spinner-border-sm me-2"
                       role="status"
                     ></span>
-                    {{ isLoading ? 'Logging in...' : 'Login' }}
+                    {{ isLoading ? "Logging in..." : "Login" }}
                   </button>
                 </div>
 
@@ -108,13 +130,13 @@
 </template>
 
 <script>
-import { useVuelidate } from '@vuelidate/core';
-import { required, email } from '@vuelidate/validators';
-import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
+import { useVuelidate } from "@vuelidate/core";
+import { required, email } from "@vuelidate/validators";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 export default {
-  name: 'Login',
+  name: "Login",
 
   setup() {
     const router = useRouter();
@@ -128,11 +150,11 @@ export default {
       error: null,
       showPassword: false,
       formData: {
-        email: '',
-        password: '',
+        email: "",
+        password: "",
         remember: false,
-        accountType: 'jobseeker' // Default to job seeker
-      }
+        accountType: "jobseeker", // Default to job seeker
+      },
     };
   },
 
@@ -141,8 +163,8 @@ export default {
       formData: {
         email: { required, email },
         password: { required },
-        accountType: { required }
-      }
+        accountType: { required },
+      },
     };
   },
 
@@ -162,26 +184,30 @@ export default {
 
         // Login based on account type
         let response;
-        if (this.formData.accountType === 'employer') {
+        if (this.formData.accountType === "employer") {
           response = await this.authStore.loginAsEmployer(this.formData);
         } else {
           response = await this.authStore.loginAsJobSeeker(this.formData);
         }
 
         // Get redirect path from query parameters or use default
-        const redirectPath = this.$route.query.redirect || 
-          (this.authStore.userType === 'employer' ? '/dashboard/employer' : '/dashboard/jobseeker');
-        
+        const redirectPath =
+          this.$route.query.redirect ||
+          (this.authStore.userType === "employer"
+            ? "/dashboard/employer"
+            : "/dashboard/jobseeker");
+
         // Use router.push with the full path
         await this.$router.push(redirectPath);
       } catch (error) {
-        console.error('Login error:', error);
-        this.error = error.response?.data?.message || 'Failed to login. Please try again.';
+        console.error("Login error:", error);
+        this.error =
+          error.response?.data?.message || "Failed to login. Please try again.";
       } finally {
         this.isLoading = false;
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

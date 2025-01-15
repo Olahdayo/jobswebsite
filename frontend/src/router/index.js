@@ -12,7 +12,6 @@ const publicPages = [
   "/signup/jobseeker",
   "/signup/employer",
   "/",
-  "/jobs",
   "/featured-jobs",
   "/jobs/:id",
   "/Joblistings",

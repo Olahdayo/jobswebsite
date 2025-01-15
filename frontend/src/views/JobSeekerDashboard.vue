@@ -130,7 +130,7 @@
         <div class="card border-0 bg-primary text-white">
           <div class="card-body text-center py-5">
             <h2 class="card-title mb-4">Ready to find your next opportunity?</h2>
-            <router-link to="/jobs" class="btn btn-lg btn-light">
+            <router-link to="/JobListings" class="btn btn-lg btn-light">
               Browse Jobs
               <i class="fas fa-arrow-right ms-2"></i>
             </router-link>
