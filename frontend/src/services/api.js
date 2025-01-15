@@ -8,12 +8,19 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor
+// Request interceptor for API calls
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // console.log("Request config:", {
+      //   url: config.url,
+      //   method: config.method,
+      //   headers: config.headers,
+      // });
+    } else {
+      console.warn("No token found in localStorage");
     }
     return config;
   },
@@ -70,4 +77,5 @@ export const jobService = {
     }
   },
 };
+
 export default api;
