@@ -5,7 +5,7 @@
         <!-- Company Info -->
         <div class="col-md-4 mb-4">
           <h5 class="mb-3">
-            <i class="bi bi-briefcase-fill me-2"></i>JobHunter
+            <i class="bi bi-briefcase-fill me-2"></i>Pinify
           </h5>
           <p class="mb-3">Connecting talented professionals with amazing opportunities worldwide.</p>
           <div class="social-links">
@@ -101,5 +101,49 @@ export default {
 
 .newsletter-form .input-group {
   max-width: 400px;
+}
+
+@media (max-width: 767.98px) {
+  footer {
+    padding: 2rem 0 !important;
+  }
+
+  h5, h6 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem !important;
+  }
+
+  p {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .list-unstyled li {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .mt-4 {
+    margin-top: 1rem !important;
+  }
+
+  .pt-4 {
+    padding-top: 1rem !important;
+  }
+
+  .newsletter-form .input-group {
+    max-width: 100%;
+  }
+
+  .social-links {
+    margin-bottom: 1rem;
+  }
+
+  .social-links a {
+    font-size: 1rem;
+  }
 }
 </style>

@@ -6,7 +6,7 @@
       <div class="container position-relative">
         <div class="row min-vh-75 align-items-center py-5">
           <div class="col-lg-8 text-center text-lg-start">
-            <h1 class="display-4 fw-bold mb-4">Unlock Your Future</h1>
+            <h1 class="display-4 fw-bold mb-4">Pin down your next career move!</h1>
             <p class="lead mb-5">
               Dive into a world of opportunities and discover your perfect
               match! Easily browse, apply, and connect with top employers in
@@ -15,38 +15,53 @@
             <div
               class="d-flex gap-3 justify-content-center justify-content-lg-start"
             >
-              <button @click="scrollToJobSection" class="btn btn-light btn-lg">
-                See Jobs
+              <button @click="scrollToJobSection" class="btn btn-primary btn-lg btn-glow">
+                <span class="btn-content">
+                  <i class="bi bi-search me-2"></i>See Jobs
+                  <span class="btn-shine"></span>
+                </span>
               </button>
               <Button
                 to="/signup"
                 label="Join Us"
                 buttonType="btn-outline-light"
                 size="btn-lg"
+                class="btn-hover-slide"
               >
                 <i class="bi bi-person-plus me-2"></i>
               </Button>
             </div>
           </div>
           <div class="col-lg-4 d-none d-lg-block">
-            <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow">
-              <h4 class="mb-3">Quick Stats</h4>
+            <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow-lg">
+              <div class="mb-4 d-flex justify-content-between align-items-center">
+                <h4 class="m-0">Quick Stats</h4>
+              </div>
               <div class="d-flex justify-content-between mb-3">
-                <div class="text-center">
-                  <h3 class="fw-bold text-success">
-                    {{ jobsStore.jobs.length }}
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-success-subtle mb-2">
+                    <i class="bi bi-briefcase"></i>
+                  </div>
+                  <h3 class="fw-bold text-success counter">
+                    {{ stats.activeJobs }}
                   </h3>
                   <p class="text-muted mb-0">Active Jobs</p>
                 </div>
-                <div class="text-center">
-                  <h3 class="fw-bold text-dark">
-                    {{ Object.keys(jobsByState).length }}
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-primary-subtle mb-2">
+                    <i class="bi bi-geo-alt"></i>
+                  </div>
+                  <h3 class="fw-bold text-primary counter">
+                    {{ stats.totalLocations }}
                   </h3>
                   <p class="text-muted mb-0">Locations</p>
                 </div>
-                <div class="text-center">
-                  <h3 class="fw-bold text-info">
-                    {{ Object.keys(jobsByField).length }}
+                <div class="text-center stat-card">
+                  <div class="stat-icon bg-info-subtle mb-2">
+                    <i class="bi bi-grid"></i>
+                  </div>
+                  <h3 class="fw-bold text-info counter">
+                    {{ stats.totalCategories }}
                   </h3>
                   <p class="text-muted mb-0">Categories</p>
                 </div>
@@ -64,42 +79,79 @@
           <section class="mb-5">
             <div
               id="featured-jobs"
-              class="featured-jobs-container border rounded-3 bg-white p-4"
+              class="featured-jobs-container border-0 rounded-4 bg-white p-4 shadow-hover"
             >
-              <div class="mb-4">
-                <h2 class="m-0">Featured Jobs</h2>
+              <div class="mb-4 d-flex justify-content-between align-items-center">
+                <h2 class="m-0 section-title">
+                  <span class="highlight-text">Featured</span> Jobs
+                  <div class="title-underline"></div>
+                </h2>
+                <div class="featured-badge">
+                  <span class="badge-dot"></span>
+                  <span class="ms-2">Live Updates</span>
+                </div>
               </div>
               <div class="row g-3">
                 <div class="col-md-6" v-for="job in featuredJobs" :key="job.id">
-                  <div class="job-card border-0 shadow-sm p-3 bg-white">
-                    <router-link :to="'/jobs/' + job.id">
-                      <div class="d-flex align-items-start gap-3">
-                        <img
-                          :src="
-                            job.companyLogo
-                              ? job.companyLogo
-                              : defaultCompanyLogo
-                          "
-                          alt="Company Logo"
-                          class="company-logo flex-shrink-0"
-                          width="40"
-                          height="40"
-                        />
-                        <div>
-                          <h5 class="mb-1">{{ job.title }}</h5>
-                          <p class="text-muted mb-2 small">{{ job.company }}</p>
-                          <div class="d-flex gap-2">
-                            <span class="badge bg-light text-dark">{{
-                              job.location
-                            }}</span>
-                            <span class="badge bg-light text-dark">{{
-                              job.type
-                            }}</span>
+                  <router-link 
+                    :to="'/jobs/' + job.id" 
+                    class="text-decoration-none"
+                  >
+                    <div class="job-card" :class="{ 'featured-job': job.is_featured }">
+                      <div class="card-header">
+                        <div class="company-info">
+                          <img 
+                            :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                            :alt="job.employer?.company_name"
+                            class="company-logo"
+                          />
+                          <div>
+                            <h5 class="job-title">{{ job.title }}</h5>
+                            <p class="company-name">{{ job.employer?.company_name }}</p>
                           </div>
                         </div>
+                        <div class="featured-badge" v-if="job.is_featured">
+                          <i class="fas fa-star"></i>
+                          Featured
+                        </div>
                       </div>
-                    </router-link>
-                  </div>
+                      
+                      <div class="card-body">
+                        <div class="job-meta">
+                          <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Location: {{ job.location }}</span>
+                          </div>
+                          <div class="meta-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Job Type: {{ job.type }}</span>
+                          </div>
+                          <div class="meta-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                          </div>
+                        </div>
+                        
+                        <p class="job-description">Description: {{ job.description.substring(0, 100) }}...</p>
+                        
+                        <div class="job-tags">
+                          <span class="tag">Experience: {{ job.experience_level }}</span>
+                          <span class="tag">Category: {{ job.category }}</span>
+                        </div>
+                      </div>
+
+                      <div class="card-footer">
+                        <div class="deadline">
+                          <i class="fas fa-clock"></i>
+                          <span>Deadline: {{ formatDate(job.deadline) }}</span>
+                        </div>
+                        <div class="posted-date">
+                          <i class="fas fa-calendar"></i>
+                          <span>Posted: {{ formatDate(job.created_at) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </router-link>
                 </div>
               </div>
               <div class="text-center mt-4 pt-3 border-top">
@@ -117,46 +169,65 @@
             <h2 class="mb-4">Latest Jobs</h2>
             <div class="row g-3">
               <div class="col-12" v-for="job in latestJobs" :key="job.id">
-                <div class="job-card border-0 shadow-sm p-4 bg-white">
-                  <div class="d-flex align-items-start gap-4">
-                    <img
-                      :src="
-                        job.companyLogo ? job.companyLogo : defaultCompanyLogo
-                      "
-                      alt="Company Logo"
-                      class="company-logo flex-shrink-0"
-                      width="60"
-                      height="60"
-                    />
-                    <div>
-                      <h5 class="mb-1">{{ job.title }}</h5>
-                      <p class="text-muted mb-2 small">{{ job.company }}</p>
-                      <p class="text-muted mb-2 small">
-                        <i class="bi bi-calendar3 me-2"></i>
-                        {{ formatJobDate(job.postedDate) }}
-                      </p>
-                      <p class="mb-3">{{ job.description }}</p>
-                      <div class="d-flex gap-2">
-                        <span class="badge bg-light text-dark">{{
-                          job.location
-                        }}</span>
-                        <span class="badge bg-light text-dark">{{
-                          job.type
-                        }}</span>
-                        <span class="badge bg-light text-dark"
-                          >{{ job.salary }}/month</span
-                        >
-                      </div>
-                      <div class="mt-3">
-                        <Button
-                          :to="'/jobs/' + job.id"
-                          label="View Details"
-                          buttonType="btn btn-outline-primary btn-sm"
+                <router-link 
+                  :to="'/jobs/' + job.id" 
+                  class="text-decoration-none"
+                >
+                  <div class="job-card" :class="{ 'featured-job': job.is_featured }">
+                    <div class="card-header">
+                      <div class="company-info">
+                        <img 
+                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                          :alt="job.employer?.company_name"
+                          class="company-logo"
                         />
+                        <div>
+                          <h5 class="job-title">{{ job.title }}</h5>
+                          <p class="company-name">{{ job.employer?.company_name }}</p>
+                        </div>
+                      </div>
+                      <div class="featured-badge" v-if="job.is_featured">
+                        <i class="fas fa-star"></i>
+                        Featured
+                      </div>
+                    </div>
+                    
+                    <div class="card-body">
+                      <div class="job-meta">
+                        <div class="meta-item">
+                          <i class="fas fa-map-marker-alt"></i>
+                          <span>Job Location: {{ job.location }}</span>
+                        </div>
+                        <div class="meta-item">
+                          <i class="fas fa-briefcase"></i>
+                          <span>Job Type: {{ job.type }}</span>
+                        </div>
+                        <div class="meta-item">
+                          <i class="fas fa-money-bill-wave"></i>
+                          <span>Job Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                        </div>
+                      </div>
+                      
+                      <p class="job-description">Job Description: {{ job.description.substring(0, 100) }}...</p>
+                      
+                      <div class="job-tags">
+                        <span class="tag">Job Experience: {{ job.experience_level }}</span>
+                        <span class="tag">Job Category: {{ job.category }}</span>
+                      </div>
+                    </div>
+
+                    <div class="card-footer">
+                      <div class="deadline">
+                        <i class="fas fa-clock"></i>
+                        <span>Job Deadline: {{ formatDate(job.deadline) }}</span>
+                      </div>
+                      <div class="posted-date">
+                        <i class="fas fa-calendar"></i>
+                        <span>Job Posted: {{ formatDate(job.created_at) }}</span>
                       </div>
                     </div>
                   </div>
-                </div>
+                </router-link>
               </div>
             </div>
             <div class="text-center mt-4">
@@ -175,7 +246,6 @@
             :recentPostings="recentPostings"
             :jobsByState="jobsByState"
             :jobsByField="jobsByField"
-            :formatDate="formatDate"
           />
         </div>
       </div>
@@ -184,130 +254,166 @@
 </template>
 
 <script>
-import { useJobsStore } from "@/stores/jobs";
+import { useAuthStore } from "@/stores/auth";
+import { jobService } from '@/services/jobService';
 import Sidebar from "@/components/Sidebar.vue";
 import Button from "@/components/Button.vue";
-import Navbar from "@/components/Navbar.vue";
-// import { useRouter } from "vue-router";
 
 export default {
   name: "Home",
   components: {
     Sidebar,
     Button,
-    Navbar,
   },
+
   data() {
     return {
-      // These are the filters to find  job
-      searchFilters: {
-        query: "",
-        location: "",
-        field: "",
-        education: "",
-        jobType: "",
+      featuredJobs: [],
+      latestJobs: [],
+      isLoading: false,
+      stats: {
+        activeJobs: 0,
+        totalLocations: 0,
+        totalCategories: 0,
+        featuredJobs: 0
       },
-      showMobileFilters: false,
-      isScrolled: false,
-      showSearchFilters: false,
-      defaultCompanyLogo: "/images/dashboard-default.svg",
-      jobsToShow: 10,
+      jobsByState: {},
+      jobsByField: {},
+      recentPostings: [],
+      defaultCompanyLogo: '/images/dashboard-default.svg'
     };
   },
-  computed: {
-    featuredJobs() {
-      return this.jobsStore.getFeaturedJobs();
-    },
-    // Gets the newest jobs
-    latestJobs() {
-      return this.jobsStore.getLatestJobs().slice(0, this.jobsToShow);
-    },
+
+  async created() {
+    try {
+      await Promise.all([
+        this.loadJobs(),
+        this.loadStats()
+      ]);
+    } catch (error) {
+      console.error('Error initializing home page:', error);
+    }
   },
+
   methods: {
-    // search button find jobs!
-    handleSearch() {
+    async loadStats() {
       try {
-        this.jobsStore.searchFilters = { ...this.searchFilters };
-        this.jobsStore.filterJobs();
-        this.router.push("/jobs");
-      } catch (error) {}
-    },
-    // Handles the mobile filter menu submission
-    applyMobileFilters() {
-      this.showMobileFilters = false;
-      this.handleSearch();
-    },
-    // Formats the date
-    formatJobDate(dateString) {
-      const date = new Date(dateString);
-      const day = date.getDate();
-      const month = date.toLocaleString("default", { month: "long" });
-      return `${day} ${month}`;
+        const response = await jobService.getStats();
+        if (response) {
+          this.stats = {
+            activeJobs: response.activeJobs || 0,
+            totalLocations: response.totalLocations || 0,
+            totalCategories: response.totalCategories || 0,
+            featuredJobs: response.featuredJobs || 0
+          };
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
     },
 
-    formatDate(dateString) {
-      const days = Math.floor(
-        (new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)
-      );
-      return days === 0
-        ? "Today"
-        : days === 1
-        ? "Yesterday"
-        : `${days} days ago`;
-    },
-    handleScroll() {
-      this.isScrolled = window.scrollY > 100;
-    },
-    scrollToFeaturedJobs() {
-      const featuredJobsSection = document.getElementById("featured-jobs");
-      if (featuredJobsSection) {
-        featuredJobsSection.scrollIntoView({ behavior: "smooth" });
+    async loadJobs() {
+      this.isLoading = true;
+      try {
+        // Load latest jobs first
+        const latestResponse = await jobService.getAllJobs();
+        this.latestJobs = latestResponse.data ? latestResponse.data.slice(0, 5) : []; // Show top 5 latest jobs
+
+        // Try to load featured jobs
+        try {
+          const featuredResponse = await jobService.getFeaturedJobs();
+          // Check if featuredResponse has data property and it's an array
+          if (featuredResponse && featuredResponse.data && Array.isArray(featuredResponse.data)) {
+            this.featuredJobs = featuredResponse.data.slice(0, 6);
+          } else if (Array.isArray(featuredResponse)) {
+            this.featuredJobs = featuredResponse.slice(0, 6);
+          } else {
+            console.warn('Featured jobs response is not in expected format');
+            this.featuredJobs = [];
+          }
+        } catch (error) {
+          console.error('Error loading featured jobs:', error);
+          // Use latest jobs as fallback for featured
+          this.featuredJobs = this.latestJobs.slice(0, 6);
+        }
+
+        // Process jobs for sidebar stats
+        if (latestResponse.data && Array.isArray(latestResponse.data)) {
+          this.processJobStats(latestResponse.data);
+        }
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+        this.latestJobs = [];
+        this.featuredJobs = [];
+      } finally {
+        this.isLoading = false;
       }
     },
+
+    processJobStats(jobs) {
+      if (!Array.isArray(jobs)) {
+        console.warn('Jobs data is not an array');
+        return;
+      }
+
+      // Process jobs by state
+      this.jobsByState = jobs.reduce((acc, job) => {
+        if (job && job.location) {
+          const state = job.location.split(',').pop()?.trim() || 'Unknown';
+          acc[state] = (acc[state] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      // Process jobs by field
+      this.jobsByField = jobs.reduce((acc, job) => {
+        if (job) {
+          const field = job.category || 'Other';
+          acc[field] = (acc[field] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      // Get recent postings
+      this.recentPostings = [...jobs]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+    },
+
+    formatJobDate(date) {
+      const days = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return `${days} days ago`;
+      return this.formatDate(date);
+    },
+
+    formatDate(date) {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    },
+
+    formatSalary(salary) {
+      return salary.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    },
+
     scrollToJobSection() {
-      const jobSection = document.getElementById("job-section");
+      const jobSection = document.getElementById('job-section');
       if (jobSection) {
-        jobSection.scrollIntoView({ behavior: "smooth" });
+        jobSection.scrollIntoView({ behavior: 'smooth' });
       }
     },
-    toggleSearchFilters() {
-      this.showSearchFilters = !this.showSearchFilters;
-    },
-  },
-  mounted() {
-    window.addEventListener("scroll", this.handleScroll);
-  },
-  unmounted() {
-    window.removeEventListener("scroll", this.handleScroll);
-  },
-  setup() {
-    const jobsStore = useJobsStore();
-    jobsStore.initializeJobs();
-    return {
-      jobsStore,
-      recentPostings: [...jobsStore.jobs]
-        .sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate))
-        .slice(0, 5),
-      jobsByState: jobsStore.jobs.reduce((acc, job) => {
-        acc[job.location] = (acc[job.location] || 0) + 1;
-        return acc;
-      }, {}),
-      jobsByField: jobsStore.jobs.reduce((acc, job) => {
-        acc[job.field] = (acc[job.field] || 0) + 1;
-        return acc;
-      }, {}),
-      formatDate: (dateString) => {
-        const days = Math.floor(
-          (new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)
-        );
-        return days === 0
-          ? "Today"
-          : days === 1
-          ? "Yesterday"
-          : `${days} days ago`;
-      },
-    };
-  },
+
+    handleSearch() {
+      this.$router.push('/jobs');
+    }
+  }
 };
 </script>
 
@@ -416,13 +522,89 @@ html {
 }
 
 .job-card {
-  transition: transform 0.2s;
-  cursor: pointer;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  color: inherit;
 }
 
 .job-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
+  border-color: #3b82f6;
+}
+
+.job-title {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.job-company {
+  color: #4b5563;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.job-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.job-meta i {
+  color: #3b82f6;
+}
+
+.job-description {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-tag {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.job-tag i {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.job-deadline {
+  color: #dc2626;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.featured-job {
+  border-left: 4px solid #3b82f6;
+  background-color: #f8fafc;
 }
 
 /* Sidebar styles */
@@ -506,22 +688,214 @@ html {
   color: #000;
 }
 
-@media (max-width: 991.98px) {
-  .sticky-sidebar {
-    position: static;
-    max-height: none;
-    margin-top: 2rem;
+/* Enhanced button styles */
+.btn-glow {
+  position: relative;
+  background: linear-gradient(45deg, #4f46e5, #7c3aed);
+  border: none;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-glow .btn-content {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-glow .btn-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
   }
-  .search-section {
-    margin-top: 56px;
+  100% {
+    transform: translateX(100%) rotate(45deg);
   }
-  .search-section.sticky-top {
-    margin-top: 0;
-    transform: translateY(56px);
+}
+
+.btn-hover-slide {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid white;
+  transition: all 0.3s ease;
+}
+
+.btn-hover-slide:hover {
+  background: white;
+  color: #4f46e5;
+  transform: translateY(-2px);
+}
+
+/* Stats card animations */
+.stat-card {
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1);
+}
+
+.counter {
+  display: inline-block;
+  animation: countUp 2s ease-out forwards;
+  position: relative;
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  .search-section.search-scrolled {
-    transform: translateY(56px);
-    padding: 0.25rem 0;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Featured Jobs section */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+
+.highlight-text {
+  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.title-underline {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, #4f46e5, transparent);
+}
+
+.featured-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background: #4f46e5;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+
+.badge-dot::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: inherit;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.hover-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.hover-card:hover .card-shine {
+  left: 100%;
+}
+
+.shadow-hover {
+  transition: all 0.3s ease;
+}
+
+.shadow-hover:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stat-card {
+    padding: 0.5rem;
+  }
+  
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
   }
 }
 </style>
