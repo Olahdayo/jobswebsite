@@ -1,108 +1,109 @@
 import api from "./api";
+// import { useAuthStore } from "@/stores/auth";
 
 export const jobService = {
-   // Get all jobs with pagination
-    getAllJobs: async (page = 1) => {
-        try {
+  // Get all jobs with pagination
+  getAllJobs: async (page = 1) => {
+    try {
       // console.log("JobService: Making request for page:", page);
-            
-            // Make the API call with axios config
+
+      // Make the API call with axios config
       const response = await api.get("/jobs", {
-                params: {
+        params: {
           page: page,
         },
-            });
-            
-            return response.data;
-        } catch (error) {
+      });
+
+      return response.data;
+    } catch (error) {
       console.error("JobService: Error fetching jobs:", error);
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get recent jobs
+  // Get recent jobs
 
-    getRecentJobs: async () => {
-        try {
+  getRecentJobs: async () => {
+    try {
       const response = await api.get("/jobs/recent");
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching recent jobs:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get job counts by state
+  // Get job counts by state
 
-    getJobCountsByState: async () => {
-        try {
+  getJobCountsByState: async () => {
+    try {
       const response = await api.get("/jobs/by-state");
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching job counts by state:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get job counts by category
+  // Get job counts by category
 
-    getJobCountsByCategory: async () => {
-        try {
+  getJobCountsByCategory: async () => {
+    try {
       const response = await api.get("/jobs/by-category");
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error getting job counts by category:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Search jobs
+  // Search jobs
 
-    searchJobs: async (filters, page = 1) => {
-        try {
-            const currentPage = Math.max(1, parseInt(page));
+  searchJobs: async (filters, page = 1) => {
+    try {
+      const currentPage = Math.max(1, parseInt(page));
       const response = await api.get("/jobs/search", {
-                params: {
-                    ...filters,
-                    page: currentPage,
+        params: {
+          ...filters,
+          page: currentPage,
           per_page: 10,
         },
-            });
-            return {
-                data: response.data.data || [],
-                total: response.data.total || 0,
-                current_page: response.data.current_page || 1,
-                per_page: response.data.per_page || 10,
+      });
+      return {
+        data: response.data.data || [],
+        total: response.data.total || 0,
+        current_page: response.data.current_page || 1,
+        per_page: response.data.per_page || 10,
         last_page: response.data.last_page || 1,
-            };
-        } catch (error) {
+      };
+    } catch (error) {
       console.error("Error searching jobs:", error);
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get a single job by ID
+  // Get a single job by ID
 
   getJob: async (id) => {
-        try {
-            const response = await api.get(`/jobs/${id}`);
+    try {
+      const response = await api.get(`/jobs/${id}`);
       // Log the response structure for debugging
       // console.log("Job response:", response);
       return response.data; // Return just the data portion
-        } catch (error) {
+    } catch (error) {
       console.error("Error fetching job details:", error);
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Apply for a job
-    applyForJob: async (formData) => {
+  // Apply for a job
+  applyForJob: async (formData) => {
     try {
       // Log the FormData contents for debugging
       // for (let pair of formData.entries()) {
@@ -110,13 +111,13 @@ export const jobService = {
       // }
 
       const response = await api.post("/applications", formData, {
-                headers: {
+        headers: {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
-            });
-            return response.data;
-        } catch (error) {
+      });
+      return response.data;
+    } catch (error) {
       console.error("Error applying for job:", error);
       // Log more detailed error information
       if (error.response) {
@@ -124,171 +125,188 @@ export const jobService = {
         console.error("Error response status:", error.response.status);
         console.error("Error response headers:", error.response.headers);
       }
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get all jobs
+  // Get all jobs
 
-    getAllJobs: async () => {
-        try {
+  getAllJobs: async () => {
+    try {
       const response = await api.get("/jobs");
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching jobs:", error);
-            return {
-                data: [],
+      return {
+        data: [],
         total: 0,
-            };
-        }
-    },
+      };
+    }
+  },
 
-    // Get jobs by location
+  // Get jobs by location
 
-    getJobsByLocation: async (location) => {
-        try {
-            const response = await api.get(`/jobs/location/${location}`);
+  getJobsByLocation: async (location) => {
+    try {
+      const response = await api.get(`/jobs/location/${location}`);
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching jobs by location:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get all unique job locations
-    getLocations: async () => {
-        try {
+  // Get all unique job locations
+  getLocations: async () => {
+    try {
       const response = await api.get("/jobs/locations");
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching locations:", error);
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get all categories
+  // Get all categories
 
-    getCategories: async () => {
-        try {
+  getCategories: async () => {
+    try {
       const response = await api.get("/jobs/categories");
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching categories:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get jobs by category
+  // Get jobs by category
 
-    getJobsByCategory: async (category) => {
-        try {
-            const response = await api.get(`/jobs/category/${category}`);
+  getJobsByCategory: async (category) => {
+    try {
+      const response = await api.get(`/jobs/category/${category}`);
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching jobs by category:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get featured jobs
+  // Get featured jobs
 
-    getFeaturedJobs: async () => {
-        try {
+  getFeaturedJobs: async () => {
+    try {
       const response = await api.get("/jobs/featured");
 
-            // Ensure we're returning the data property of the response
+      // Ensure we're returning the data property of the response
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching featured jobs:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get stats
+  // Get stats
 
-    getStats: async () => {
-        try {
+  getStats: async () => {
+    try {
       const response = await api.get("/jobs/stats");
 
-            return response.data;
-        } catch (error) {
+      return response.data;
+    } catch (error) {
       console.error("Error fetching stats:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get all filter options
+  // Get all filter options
 
-    getFilterOptions: async () => {
-        try {
-            const [locations, categories] = await Promise.all([
+  getFilterOptions: async () => {
+    try {
+      const [locations, categories] = await Promise.all([
         api.get("/jobs/locations"),
 
         api.get("/jobs/categories"),
-            ]);
+      ]);
 
-            return {
-                locations: locations.data,
+      return {
+        locations: locations.data,
 
-                categories: categories.data,
+        categories: categories.data,
 
-                jobTypes: [
-                    "Full-time",
+        jobTypes: [
+          "Full-time",
 
-                    "Part-time",
+          "Part-time",
 
-                    "Contract",
+          "Contract",
 
-                    "Remote",
+          "Remote",
 
-                    "Internship",
+          "Internship",
 
           "Graduate Trainee",
-                ],
+        ],
 
-                experienceLevels: [
-                    "Entry Level",
+        experienceLevels: [
+          "Entry Level",
 
-                    "Junior Level",
+          "Junior Level",
 
-                    "Mid Level",
+          "Mid Level",
 
-                    "Senior Level",
+          "Senior Level",
 
-                    "Lead/Manager",
+          "Lead/Manager",
 
           "Executive",
         ],
       };
-        } catch (error) {
+    } catch (error) {
       console.error("Error fetching filter options:", error);
 
-            throw error;
-        }
-    },
+      throw error;
+    }
+  },
 
-    // Get jobs with filters
-    getJobs: async (filters = {}, page = 1) => {
-        try {
+  // Get jobs with filters
+  getJobs: async (filters = {}, page = 1) => {
+    try {
       const response = await api.get("/jobs", {
-                params: {
-                    page,
+        params: {
+          page,
           ...filters,
         },
-            });
-            return response.data;
-        } catch (error) {
+      });
+      return response.data;
+    } catch (error) {
       console.error("JobService: Error fetching filtered jobs:", error);
-            throw error;
+      throw error;
+    }
+  },
+
+  async getUserApplications() {
+    try {
+      const response = await api.get("/applications");
+      // console.log("Applications response:", response);
+      return response;
+    } catch (error) {
+      console.error("Error fetching user applications:", error);
+      if (error.response) {
+        console.error("Error response:", {
+          status: error.response.status,
+          data: error.response.data,
+        });
+      }
+      throw error;
     }
   },
 };

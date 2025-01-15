@@ -33,7 +33,7 @@ class ApplicationController extends Controller
             // Check if job exists and log all jobs
             $job = Job::find($request->job_id);
             $allJobs = Job::pluck('id')->toArray();
-            
+
             Log::info('Job validation check', [
                 'requested_job_id' => $request->job_id,
                 'job_exists' => $job ? true : false,
@@ -106,40 +106,40 @@ class ApplicationController extends Controller
 
             // Handle file upload
             if ($request->hasFile('resume')) {
-            try {
-                $file = $request->file('resume');
+                try {
+                    $file = $request->file('resume');
 
-                // Create resumes directory if it doesn't exist
-                $resumesPath = storage_path('app/public/resumes');
-                if (!file_exists($resumesPath)) {
-                    mkdir($resumesPath, 0755, true);
-                }
+                    // Create resumes directory if it doesn't exist
+                    $resumesPath = storage_path('app/public/resumes');
+                    if (!file_exists($resumesPath)) {
+                        mkdir($resumesPath, 0755, true);
+                    }
 
-                $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+                    $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
                     // Store file and get path
-                $path = $file->storeAs('resumes', $filename, 'public');
+                    $path = $file->storeAs('resumes', $filename, 'public');
 
-                if (!$path) {
-                    throw new \Exception('Failed to store resume file');
-            }
+                    if (!$path) {
+                        throw new \Exception('Failed to store resume file');
+                    }
 
-            // Create application
-            $application = Application::create([
-                'job_id' => $request->job_id,
+                    // Create application
+                    $application = Application::create([
+                        'job_id' => $request->job_id,
                         'job_seeker_id' => $jobSeeker->id,
-                'cover_letter' => $request->cover_letter,
-                'resume_url' => $path,
-                'status' => 'pending'
-            ]);
+                        'cover_letter' => $request->cover_letter,
+                        'resume_url' => $path,
+                        'status' => 'pending'
+                    ]);
 
-            Log::info('Application created successfully', [
-                'application_id' => $application->id
-            ]);
+                    Log::info('Application created successfully', [
+                        'application_id' => $application->id
+                    ]);
 
-            return response()->json([
-                'message' => 'Application submitted successfully',
+                    return response()->json([
+                        'message' => 'Application submitted successfully',
                         'data' => $application->load('job.employer')
-            ], 201);
+                    ], 201);
                 } catch (\Exception $e) {
                     Log::error('File upload failed', [
                         'error' => $e->getMessage(),
@@ -184,25 +184,17 @@ class ApplicationController extends Controller
     /**
      * Display a listing of applications for the authenticated job seeker.
      */
-    public function index(Request $request)
+    public function index()
     {
-        try {
-            $applications = Application::where('job_seeker_id', $request->user()->id)
-                ->with(['job', 'job.employer'])
-                ->latest()
-                ->get();
+        $applications = Application::where('job_seeker_id', request()->user()->id)
+            ->with(['job.employer'])
+            ->latest()
+            ->get();
 
-            return response()->json($applications);
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch applications', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'message' => 'Failed to fetch applications',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $applications
+        ]);
     }
 
     /**
