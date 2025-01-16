@@ -23,7 +23,11 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <router-link class="nav-link" to="/joblistings" @click="closeNavbar">
+            <router-link
+              class="nav-link"
+              to="/joblistings"
+              @click="closeNavbar"
+            >
               <i class="fas fa-search me-1"></i>Find Jobs
             </router-link>
           </li>
@@ -37,7 +41,11 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/jobs/category" @click="closeNavbar">
+            <router-link
+              class="nav-link"
+              to="/jobs/category"
+              @click="closeNavbar"
+            >
               <i class="fas fa-th-large me-1"></i>Categories
             </router-link>
           </li>
@@ -54,7 +62,7 @@
         </ul>
 
         <div class="nav-buttons d-flex align-items-center gap-2">
-          <template v-if="!authStore?.user">
+          <template v-if="!isAuthenticated">
             <router-link
               to="/login"
               class="btn btn-outline-primary"
@@ -73,28 +81,23 @@
           <template v-else>
             <div class="dropdown">
               <button
-                class="btn btn-light dropdown-toggle"
+                class="btn btn-light dropdown-toggle d-flex align-items-center"
                 type="button"
-                id="userDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+                @click="toggleDropdown"
+                ref="dropdownButton"
               >
-                <i class="fas fa-user-circle me-1"></i>
-                {{ authStore.user.name }}
+                <div class="user-avatar me-2">{{ userInitials }}</div>
+                <span>{{ userName }}</span>
               </button>
               <ul
                 class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="userDropdown"
+                :class="{ show: isDropdownOpen }"
               >
                 <li>
                   <router-link
                     class="dropdown-item"
-                    :to="
-                      authStore.user.type === 'employer'
-                        ? '/dashboard/employer'
-                        : '/dashboard/jobseeker'
-                    "
-                    @click="closeNavbar"
+                    :to="dashboardRoute"
+                    @click="closeDropdown"
                   >
                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                   </router-link>
@@ -103,7 +106,7 @@
                   <router-link
                     class="dropdown-item"
                     to="/profile"
-                    @click="closeNavbar"
+                    @click="closeDropdown"
                   >
                     <i class="fas fa-user-cog me-2"></i>Profile
                   </router-link>
@@ -129,7 +132,6 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
 import { Collapse } from "bootstrap";
 
 export default {
@@ -139,12 +141,43 @@ export default {
     return {
       isScrolled: false,
       navbarCollapse: null,
+      authStore: null,
+      isDropdownOpen: false,
     };
+  },
+
+  computed: {
+    isAuthenticated() {
+      return this.authStore?.isAuthenticated || false;
+    },
+
+    userType() {
+      return this.authStore?.userType;
+    },
+
+    dashboardRoute() {
+      return this.userType === "employer"
+        ? "/dashboard/employer"
+        : "/dashboard/jobseeker";
+    },
+
+    userName() {
+      const user = this.authStore?.user;
+      return user ? `${user.first_name} ${user.last_name}` : "";
+    },
+
+    userInitials() {
+      const user = this.authStore?.user;
+      return user
+        ? `${user.first_name?.charAt(0) || ""}${
+            user.last_name?.charAt(0) || ""
+          }`.toUpperCase()
+        : "";
+    },
   },
 
   created() {
     this.authStore = useAuthStore();
-    this.router = useRouter();
   },
 
   mounted() {
@@ -164,9 +197,8 @@ export default {
         const isClickInside =
           navbarToggler.contains(event.target) ||
           navbarContent.contains(event.target);
-
-        if (!isClickInside && navbarContent.classList.contains("show")) {
-          this.navbarCollapse.hide();
+        if (!isClickInside && !this.navbarCollapse._isTransitioning) {
+          this.closeNavbar();
         }
       });
 
@@ -175,16 +207,23 @@ export default {
       navLinks.forEach((link) => {
         link.addEventListener("click", () => {
           if (window.innerWidth < 992) {
-            // Only on mobile
-            this.navbarCollapse.hide();
+            this.closeNavbar();
           }
         });
       });
     }
+
+    // Handle dropdown clicks outside
+    document.addEventListener("click", (event) => {
+      if (this.$refs.dropdownButton && !this.$refs.dropdownButton.contains(event.target)) {
+        this.closeDropdown();
+      }
+    });
   },
 
   unmounted() {
     window.removeEventListener("scroll", this.handleScroll);
+    
     // Clean up event listeners
     const navbarContent = this.$el.querySelector("#navbarContent");
     if (navbarContent) {
@@ -193,12 +232,11 @@ export default {
         link.removeEventListener("click", () => {});
       });
     }
-    document.removeEventListener("click", () => {});
   },
 
   methods: {
     handleScroll() {
-      this.isScrolled = window.scrollY > 0;
+      this.isScrolled = window.scrollY > 50;
     },
 
     toggleNavbar() {
@@ -208,22 +246,39 @@ export default {
     },
 
     closeNavbar() {
-      if (window.innerWidth < 992 && this.navbarCollapse) {
-        // Only on mobile
+      if (this.navbarCollapse && !this.navbarCollapse._isTransitioning) {
         this.navbarCollapse.hide();
       }
     },
 
-    handleLogoutAndClose() {
-      this.closeNavbar();
-      this.handleLogout();
+    async handleLogoutAndClose() {
+      this.closeDropdown();
+      await this.handleLogout();
     },
 
-    handleLogout() {
-      this.authStore.logout();
-      this.router.push("/login");
+    async handleLogout() {
+      try {
+        await this.authStore.logout();
+        this.$router.push('/login');
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
     },
+
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+
+    closeDropdown() {
+      this.isDropdownOpen = false;
+    }
   },
+
+  watch: {
+    $route() {
+      this.closeNavbar();
+    }
+  }
 };
 </script>
 
@@ -367,5 +422,18 @@ export default {
   .nav-link {
     padding: 0.75rem;
   }
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 </style>

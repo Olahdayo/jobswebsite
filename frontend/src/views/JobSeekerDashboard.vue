@@ -5,7 +5,7 @@
       <div class="container-fluid px-4">
         <h1 class="navbar-brand mb-0 h1 fw-bold">My Dashboard</h1>
         <div class="d-flex align-items-center">
-          <div class="dropdown">
+          <!-- <div class="dropdown">
             <button
               class="btn btn-link text-dark d-flex align-items-center"
               type="button"
@@ -37,7 +37,7 @@
                 </button>
               </li>
             </ul>
-          </div>
+          </div> -->
         </div>
       </div>
     </nav>
@@ -238,7 +238,7 @@
 <script>
 import { authService } from "@/services/authService";
 import { jobService } from "@/services/jobService";
-import { Dropdown } from "bootstrap";
+// import { Dropdown } from "bootstrap";
 
 export default {
   name: "JobSeekerDashboard",
@@ -249,7 +249,7 @@ export default {
       applications: [],
       isLoading: true,
       error: null,
-      isDropdownOpen: false,
+      // isDropdownOpen: false,
     };
   },
 
@@ -380,26 +380,26 @@ export default {
     }
   },
 
-  mounted() {
-    // Initialize all dropdowns
-    const dropdownElementList = document.querySelectorAll(".dropdown-toggle");
-    const dropdownList = [...dropdownElementList].map(
-      (dropdownToggleEl) => new Dropdown(dropdownToggleEl)
-    );
+  // mounted() {
+  //   // Initialize all dropdowns
+  //   const dropdownElementList = document.querySelectorAll(".dropdown-toggle");
+  //   const dropdownList = [...dropdownElementList].map(
+  //     (dropdownToggleEl) => new Dropdown(dropdownToggleEl)
+  //   );
 
-    // Close dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-      const dropdown = this.$el.querySelector(".dropdown");
-      if (!dropdown.contains(e.target)) {
-        this.isDropdownOpen = false;
-      }
-    });
-  },
+  //   // Close dropdown when clicking outside
+  //   document.addEventListener("click", (e) => {
+  //     const dropdown = this.$el.querySelector(".dropdown");
+  //     if (!dropdown.contains(e.target)) {
+  //       this.isDropdownOpen = false;
+  //     }
+  //   });
+  // },
 
-  beforeUnmount() {
-    // Clean up event listener
-    document.removeEventListener("click", this.closeDropdown);
-  },
+  // beforeUnmount() {
+  //   // Clean up event listener
+  //   document.removeEventListener("click", this.closeDropdown);
+  // },
 };
 </script>
 
