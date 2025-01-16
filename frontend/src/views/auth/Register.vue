@@ -357,8 +357,9 @@
 <script>
 import { useVuelidate } from '@vuelidate/core';
 import { required, email, minLength, sameAs } from '@vuelidate/validators';
-import { authService } from '@/services/authService';
 import SuccessModal from '@/components/SuccessModal.vue';
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'Register',
@@ -367,7 +368,9 @@ export default {
   },
 
   setup() {
-    return { v$: useVuelidate() };
+    const authStore = useAuthStore();
+    const router = useRouter();
+    return { v$: useVuelidate(), authStore, router };
   },
 
   data() {
@@ -478,16 +481,25 @@ export default {
 
         // Register based on account type
         if (this.accountType === 'jobseeker') {
-          await authService.jobSeekerRegister(this.formData);
+          await this.authStore.registerJobSeeker(this.formData);
+          this.showSuccessModal = true;
+          // Clear auth state before redirecting
+          this.authStore.clearAuthData();
+          setTimeout(() => {
+            this.$router.push('/login');
+          }, 1000);
         } else {
-          await authService.employerRegister(this.formData);
+          await this.authStore.registerEmployer(this.formData);
+          this.showSuccessModal = true;
+          // Clear auth state before redirecting
+          this.authStore.clearAuthData();
+          setTimeout(() => {
+            this.$router.push('/login');
+          }, 1000);
         }
-
-        // Show success modal
-        this.showSuccessModal = true;
       } catch (error) {
         console.error('Registration error:', error);
-        this.error = error.response?.data?.message || error.message || 'Registration failed';
+        this.error = error.response?.data?.message || 'Registration failed. Please try again.';
       } finally {
         this.isLoading = false;
       }
@@ -495,8 +507,9 @@ export default {
 
     handleSuccessModalClose() {
       this.showSuccessModal = false;
-      // Redirect to login page
-      this.$router.push('/login');
+      this.resetForm();
+      // Clear auth state when modal is closed
+      this.authStore.clearAuthData();
     }
   }
 };

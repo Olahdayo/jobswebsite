@@ -131,9 +131,7 @@
 </template>
 
 <script>
-import { authService } from "@/services/authService";
-import { useRouter } from "vue-router";
-import { Collapse, Dropdown } from "bootstrap";
+import { useAuthStore } from "@/stores/auth";
 
 export default {
   name: "Navbar",
@@ -142,19 +140,18 @@ export default {
     return {
       isScrolled: false,
       navbarCollapse: null,
-      user: null,
-      isAuth: false,
+      authStore: null,
       isDropdownOpen: false,
     };
   },
 
   computed: {
     isAuthenticated() {
-      return this.isAuth;
+      return this.authStore?.isAuthenticated || false;
     },
 
     userType() {
-      return authService.getUserType();
+      return this.authStore?.userType;
     },
 
     dashboardRoute() {
@@ -164,21 +161,22 @@ export default {
     },
 
     userName() {
-      return this.user ? `${this.user.first_name} ${this.user.last_name}` : "";
+      const user = this.authStore?.user;
+      return user ? `${user.first_name} ${user.last_name}` : "";
     },
 
     userInitials() {
-      return this.user
-        ? `${this.user.first_name?.charAt(0) || ""}${
-            this.user.last_name?.charAt(0) || ""
+      const user = this.authStore?.user;
+      return user
+        ? `${user.first_name?.charAt(0) || ""}${
+            user.last_name?.charAt(0) || ""
           }`.toUpperCase()
         : "";
     },
   },
 
   created() {
-    this.router = useRouter();
-    this.checkAuthStatus();
+    this.authStore = useAuthStore();
   },
 
   mounted() {
@@ -198,59 +196,28 @@ export default {
         const isClickInside =
           navbarToggler.contains(event.target) ||
           navbarContent.contains(event.target);
-
-        if (!isClickInside && navbarContent.classList.contains("show")) {
-          this.navbarCollapse.hide();
+        if (!isClickInside && !this.navbarCollapse._isTransitioning) {
+          this.closeNavbar();
         }
-      });
-
-      // Close navbar when clicking on a nav link
-      const navLinks = navbarContent.querySelectorAll(".nav-link");
-      navLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          if (window.innerWidth < 992) {
-            this.navbarCollapse.hide();
-          }
-        });
       });
     }
 
-    // Add click outside handler for dropdown
-    document.addEventListener("click", (e) => {
-      if (
-        this.$refs.dropdownButton &&
-        !this.$refs.dropdownButton.contains(e.target)
-      ) {
-        this.isDropdownOpen = false;
+    // Handle dropdown clicks outside
+    document.addEventListener("click", (event) => {
+      if (this.$refs.dropdownButton && !this.$refs.dropdownButton.contains(event.target)) {
+        this.closeDropdown();
       }
     });
   },
 
   unmounted() {
     window.removeEventListener("scroll", this.handleScroll);
-
-    // Clean up event listeners
-    const navbarContent = this.$el.querySelector("#navbarContent");
-    if (navbarContent) {
-      const navLinks = navbarContent.querySelectorAll(".nav-link");
-      navLinks.forEach((link) => {
-        link.removeEventListener("click", () => {});
-      });
-    }
-    document.removeEventListener("click", () => {});
-    document.removeEventListener("click", this.closeDropdown);
+    document.removeEventListener("click", this.handleClickOutside);
   },
 
   methods: {
-    checkAuthStatus() {
-      this.isAuth = authService.isAuthenticated();
-      if (this.isAuth) {
-        this.user = authService.getCurrentUser();
-      }
-    },
-
     handleScroll() {
-      this.isScrolled = window.scrollY > 0;
+      this.isScrolled = window.scrollY > 50;
     },
 
     toggleNavbar() {
@@ -260,25 +227,22 @@ export default {
     },
 
     closeNavbar() {
-      if (window.innerWidth < 992 && this.navbarCollapse) {
+      if (this.navbarCollapse && !this.navbarCollapse._isTransitioning) {
         this.navbarCollapse.hide();
       }
     },
 
     async handleLogoutAndClose() {
-      this.closeNavbar();
+      this.closeDropdown();
       await this.handleLogout();
     },
 
     async handleLogout() {
       try {
-        await authService.logout();
-        this.user = null;
-        this.isAuth = false;
-        this.router.push("/login");
+        await this.authStore.logout();
+        this.$router.push('/login');
       } catch (error) {
-        console.error("Logout error:", error);
-        this.router.push("/login");
+        console.error('Logout failed:', error);
       }
     },
 
@@ -288,14 +252,14 @@ export default {
 
     closeDropdown() {
       this.isDropdownOpen = false;
-    },
+    }
   },
 
   watch: {
     $route() {
-      this.checkAuthStatus();
-    },
-  },
+      this.closeNavbar();
+    }
+  }
 };
 </script>
 

@@ -133,29 +133,29 @@
 import { useVuelidate } from "@vuelidate/core";
 import { required, email } from "@vuelidate/validators";
 import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
 
 export default {
   name: "Login",
-
-  setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    return { v$: useVuelidate(), router, authStore };
-  },
 
   data() {
     return {
       isLoading: false,
       error: null,
       showPassword: false,
+      authStore: null,
+      v$: useVuelidate(),
       formData: {
         email: "",
         password: "",
         remember: false,
-        accountType: "jobseeker", // Default to job seeker
+        accountType: "jobseeker", 
       },
     };
+  },
+
+  created() {
+    // Initialize auth store
+    this.authStore = useAuthStore();
   },
 
   validations() {
@@ -183,26 +183,23 @@ export default {
         this.error = null;
 
         // Login based on account type
-        let response;
         if (this.formData.accountType === "employer") {
-          response = await this.authStore.loginAsEmployer(this.formData);
+          await this.authStore.loginAsEmployer(this.formData);
         } else {
-          response = await this.authStore.loginAsJobSeeker(this.formData);
+          await this.authStore.loginAsJobSeeker(this.formData);
         }
 
         // Get redirect path from query parameters or use default
-        const redirectPath =
-          this.$route.query.redirect ||
+        const redirectPath = this.$route.query.redirect ||
           (this.authStore.userType === "employer"
             ? "/dashboard/employer"
             : "/dashboard/jobseeker");
 
-        // Use router.push with the full path
+        // Navigate to the appropriate dashboard
         await this.$router.push(redirectPath);
       } catch (error) {
         console.error("Login error:", error);
-        this.error =
-          error.response?.data?.message || "Failed to login. Please try again.";
+        this.error = error.response?.data?.message || "Login failed. Please check your credentials.";
       } finally {
         this.isLoading = false;
       }

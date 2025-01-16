@@ -39,7 +39,6 @@ export const useAuthStore = defineStore("auth", {
     async registerJobSeeker(data) {
       try {
         const response = await authService.jobSeekerRegister(data);
-        this.setAuthData(response.job_seeker, response.token, 'job_seeker');
         return response;
       } catch (error) {
         console.error('Job seeker registration failed:', error);
@@ -50,7 +49,6 @@ export const useAuthStore = defineStore("auth", {
     async registerEmployer(data) {
       try {
         const response = await authService.employerRegister(data);
-        this.setAuthData(response.employer, response.token, 'employer');
         return response;
       } catch (error) {
         console.error('Employer registration failed:', error);
