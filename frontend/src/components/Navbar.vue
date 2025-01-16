@@ -132,6 +132,7 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
+import { Collapse } from "bootstrap";
 
 export default {
   name: "Navbar",
@@ -200,6 +201,16 @@ export default {
           this.closeNavbar();
         }
       });
+
+      // Close navbar when clicking on a nav link
+      const navLinks = navbarContent.querySelectorAll(".nav-link");
+      navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          if (window.innerWidth < 992) {
+            this.closeNavbar();
+          }
+        });
+      });
     }
 
     // Handle dropdown clicks outside
@@ -212,7 +223,15 @@ export default {
 
   unmounted() {
     window.removeEventListener("scroll", this.handleScroll);
-    document.removeEventListener("click", this.handleClickOutside);
+    
+    // Clean up event listeners
+    const navbarContent = this.$el.querySelector("#navbarContent");
+    if (navbarContent) {
+      const navLinks = navbarContent.querySelectorAll(".nav-link");
+      navLinks.forEach((link) => {
+        link.removeEventListener("click", () => {});
+      });
+    }
   },
 
   methods: {
