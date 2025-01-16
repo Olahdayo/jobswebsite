@@ -9,7 +9,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  withCredentials: true, // Important for CORS with credentials
+  withCredentials: true, 
 });
 
 // Interceptor to add auth token to requests
@@ -87,7 +87,7 @@ export const authService = {
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user_type", "job_seeker");
-        localStorage.setItem("user", JSON.stringify(response.data.job_seeker));
+        // localStorage.setItem("user", JSON.stringify(response.data.job_seeker));
       }
       return response.data;
     } catch (error) {
@@ -123,7 +123,6 @@ export const authService = {
       );
     } catch (error) {
       console.warn("Error during API logout:", error);
-      // Don't throw the error since we've already cleared local storage
     }
 
     return { message: "Logged out successfully" };
@@ -131,7 +130,9 @@ export const authService = {
 
   // Check if user is authenticated
   isAuthenticated: () => {
-    return !!localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    return !!(token && user); 
   },
 
   // Get current user type
