@@ -67,19 +67,19 @@ export const useProfileStore = defineStore('profile', {
       }
     },
 
-    async uploadProfilePicture(file) {
+    async uploadProfilePicture(formData) {
       this.loading = true;
       this.error = null;
       try {
-        const formData = new FormData();
-        formData.append('profile_picture', file);
-        
+        // console.log('Uploading with formData:', formData);
         const response = await profileService.updateProfile(formData);
-        this.profile = response.data || response;
+        if (response.user) {
+          this.profile = response.user;
+        }
         return true;
       } catch (error) {
-        this.error = error.response?.data?.message || 'Failed to upload profile picture';
         console.error('Error uploading profile picture:', error);
+        this.error = error.response?.data?.message || 'Failed to upload profile picture';
         return false;
       } finally {
         this.loading = false;

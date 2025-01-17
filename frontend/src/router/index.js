@@ -91,8 +91,8 @@ const router = createRouter({
       name: "PostJob",
       component: PostJob,
       meta: {
-        requiresAuth: true,
-        userType: "employer",
+        public: true,
+        // userType: "employer",
         title: "Post a Job",
       },
     },

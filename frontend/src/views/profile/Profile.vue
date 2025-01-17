@@ -13,15 +13,19 @@
                   :alt="profileStore.userProfile?.first_name"
                   class="profile-picture"
                 >
-                <div class="upload-overlay" @click="triggerImageUpload">
-                  <i class="fas fa-camera"></i>
-                  <span>Change Photo</span>
+                <div class="upload-overlay" @click="triggerImageUpload" :class="{ 'uploading': isUploading }">
+                  <span v-if="!isUploading">
+                    <i class="fas fa-camera"></i> Change Photo
+                  </span>
+                  <span v-else>
+                    <i class="fas fa-spinner fa-spin"></i> Uploading...
+                  </span>
                 </div>
                 <input 
                   type="file" 
                   ref="fileInput" 
                   @change="handleImageChange" 
-                  accept="image/*" 
+                  accept="image/jpeg,image/png,image/gif" 
                   class="d-none"
                 >
               </div>
@@ -165,7 +169,7 @@
           </div>
 
           <!-- Professional Stats Card -->
-          <div class="card">
+          <div class="card mb-4">
             <div class="card-body">
               <h5 class="card-title mb-4">Professional Stats</h5>
               <div class="stats-grid">
@@ -297,6 +301,7 @@ export default {
   data() {
     return {
       showEditModal: false,
+      isUploading: false,
       editForm: {
         first_name: '',
         last_name: '',
@@ -339,13 +344,44 @@ export default {
     },
 
     triggerImageUpload() {
-      this.$refs.fileInput.click();
+      if (!this.isUploading) {
+        this.$refs.fileInput.click();
+      }
     },
 
     async handleImageChange(event) {
       const file = event.target.files[0];
-      if (file) {
-        await this.profileStore.uploadProfilePicture(file);
+      if (!file) return;
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a valid image file (JPEG, PNG, or GIF)');
+        return;
+      }
+
+      // Validate file size (10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        alert('Image size should not exceed 10MB');
+        return;
+      }
+
+      try {
+        this.isUploading = true;
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+        
+        const success = await this.profileStore.uploadProfilePicture(formData);
+        if (!success) {
+          throw new Error('Failed to upload profile picture');
+        }
+      } catch (error) {
+        alert(error.message || 'Failed to upload profile picture');
+      } finally {
+        this.isUploading = false;
+        // Clear the input to allow uploading the same file again
+        event.target.value = '';
       }
     },
 
@@ -394,10 +430,16 @@ export default {
   padding: 8px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, background-color 0.3s;
 }
 
-.profile-picture-container:hover .upload-overlay {
+.upload-overlay.uploading {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.8);
+  cursor: not-allowed;
+}
+
+.profile-picture-container:hover .upload-overlay:not(.uploading) {
   opacity: 1;
 }
 

@@ -32,32 +32,45 @@ export const profileService = {
   // Update user profile
   async updateProfile(profileData) {
     const userType = localStorage.getItem('user_type');
-    const endpoint = userType === 'employer' ? '/employer/profile' : '/jobseeker/profile';
+    const baseEndpoint = userType === 'employer' ? '/employer/profile' : '/jobseeker/profile';
     
-    // Check if we're uploading a file
-    if (profileData instanceof FormData) {
-      const response = await authAxios.put(endpoint, profileData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
-    }
+    try {
+      // Check if we're uploading a file
+      if (profileData instanceof FormData) {
+        // console.log('Uploading file...', {
+        //   file: profileData.get('profile_picture'),
+        //   size: profileData.get('profile_picture').size,
+        //   type: profileData.get('profile_picture').type
+        // });
+        
+        const response = await authAxios.post(`${baseEndpoint}/upload-photo`, profileData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Accept: 'application/json'
+          }
+        });
+        // console.log('Upload response:', response);
+        return response.data;
+      }
 
-    // Regular profile update
-    const response = await authAxios.put(endpoint, profileData);
-    return response.data;
+      // Regular profile update
+      const response = await authAxios.put(baseEndpoint, profileData);
+      return response.data;
+    } catch (error) {
+      console.error('Profile update error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   // Get user applications
   async getApplications() {
-    const response = await authAxios.get('/jobseeker/applications');
+    const response = await authAxios.get('/applications');
     return response.data;
   },
 
   // Cancel job application
   async cancelApplication(applicationId) {
-    const response = await authAxios.delete(`/jobseeker/applications/${applicationId}/cancel`);
+    const response = await authAxios.delete(`/applications/${applicationId}`);
     return response.data;
   }
 };
