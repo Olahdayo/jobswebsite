@@ -124,7 +124,7 @@
       <div class="container text-center">
         <h2 class="mb-4 animate__animated animate__pulse">Ready to Find Your Perfect Candidate?</h2>
         <p class="lead mb-4">Join thousands of companies who trust Pinify for their hiring needs</p>
-        <router-link to="/signup/employer" class="btn btn-primary btn-lg animate__animated animate__bounceIn">
+        <router-link to="/register" class="btn btn-primary btn-lg animate__animated animate__bounceIn">
           Get Started Now
         </router-link>
       </div>

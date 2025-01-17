@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class JobSeekerController extends Controller
 {
@@ -74,12 +76,76 @@ class JobSeekerController extends Controller
             'years_of_experience' => 'sometimes|integer',
             'current_job_title' => 'nullable|string',
             'location' => 'sometimes|string',
-            'profile_picture' => 'nullable|url',
         ]);
 
-        $request->user()->update($validated);
+        $user = $request->user();
+        $user->update($validated);
 
-        return response()->json($request->user());
+        return response()->json($user);
+    }
+
+    /**
+     * Upload profile picture for the authenticated user.
+     */
+    public function uploadProfilePicture(Request $request)
+    {
+        try {
+            // Log::info('Starting profile picture upload');
+            // Log::info('Request files:', $request->allFiles());
+            
+            if (!$request->hasFile('profile_picture')) {
+                Log::error('No file uploaded');
+                return response()->json([
+                    'message' => 'No file uploaded',
+                    'error' => 'Please select a file to upload'
+                ], 400);
+            }
+
+            $file = $request->file('profile_picture');
+            Log::info('File details:', [
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType()
+            ]);
+
+            // Validate file
+            $validated = $request->validate([
+                'profile_picture' => 'required|image|mimes:jpeg,png,gif|max:10240', // 10MB max
+            ]);
+
+            $user = $request->user();
+
+            // Delete old profile picture if it exists
+            if ($user->profile_picture && !str_starts_with($user->profile_picture, 'http')) {
+                Log::info('Deleting old profile picture: ' . $user->profile_picture);
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Generate a unique filename
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            
+            // Store the new profile picture with the unique filename
+            $path = $file->storeAs('profile-pictures', $filename, 'public');
+            // Log::info('New profile picture stored at: ' . $path);
+            
+            // Update user profile with new image path
+            $user->profile_picture = $path;
+            $user->save();
+
+            Log::info('Profile picture updated successfully');
+
+            return response()->json([
+                'message' => 'Profile picture uploaded successfully',
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Profile picture upload error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json([
+                'message' => 'Failed to upload profile picture',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

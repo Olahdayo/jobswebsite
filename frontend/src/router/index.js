@@ -5,6 +5,7 @@ import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import PostJob from "../views/PostJob.vue";
 import Support from "../views/Support.vue";
+import Profile from '@/views/profile/Profile.vue'
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -90,8 +91,8 @@ const router = createRouter({
       name: "PostJob",
       component: PostJob,
       meta: {
-        requiresAuth: true,
-        userType: "employer",
+        public: true,
+        // userType: "employer",
         title: "Post a Job",
       },
     },
@@ -113,8 +114,8 @@ const router = createRouter({
     {
       path: "/profile",
       name: "Profile",
-      component: () => import("@/views/Profile.vue"),
-      meta: { requiresAuth: true },
+      component: Profile,
+      meta: { requiresAuth: true }
     },
   ],
   scrollBehavior(to, from, savedPosition) {

@@ -64,6 +64,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Profile management
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
+    Route::post('/jobseeker/profile/upload-photo', [JobSeekerController::class, 'uploadProfilePicture']);
 
     // Applications
     Route::post('/applications', [ApplicationController::class, 'store']);
