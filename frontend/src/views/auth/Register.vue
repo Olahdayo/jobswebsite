@@ -485,19 +485,11 @@ export default {
           this.showSuccessModal = true;
           // Clear auth state before redirecting
           this.authStore.clearAuthData();
-          setTimeout(() => {
-            this.handleSuccessModalClose();
-            this.$router.push('/login');
-          }, 1000);
         } else {
           await this.authStore.registerEmployer(this.formData);
           this.showSuccessModal = true;
           // Clear auth state before redirecting
           this.authStore.clearAuthData();
-          setTimeout(() => {
-            this.handleSuccessModalClose();
-            this.$router.push('/login');
-          }, 1000);
         }
       } catch (error) {
         console.error('Registration error:', error);
@@ -520,6 +512,9 @@ export default {
       document.body.style.removeProperty('padding-right');
       // Clear auth state when modal is closed
       this.authStore.clearAuthData();
+      
+      // Navigate to login page after modal is closed
+      this.$router.push('/login');
     }
   }
 };
