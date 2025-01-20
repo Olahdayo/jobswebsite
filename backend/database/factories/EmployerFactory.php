@@ -23,13 +23,13 @@ class EmployerFactory extends Factory
         return [
             'company_name' => fake()->company(),
             'email' => fake()->unique()->companyEmail(),
-            'password' => Hash::make('password'), // default password for testing
+            'password' => Hash::make('password'), 
             'phone' => fake()->phoneNumber(),
             'company_description' => fake()->paragraphs(2, true),
             'website' => fake()->url(),
             'industry' => fake()->randomElement($industries),
             'location' => fake()->city() . ', ' . fake()->country(),
-            'logo_url' => fake()->imageUrl(200, 200, 'business'),
+            'logo_url' => 'https://placehold.co/200x200/png?text=' . urlencode($this->faker->company()),
             'is_verified' => fake()->boolean(70), // 70% chance of being verified
             'remember_token' => Str::random(10),
         ];
