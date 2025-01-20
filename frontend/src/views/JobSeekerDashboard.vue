@@ -5,39 +5,6 @@
       <div class="container-fluid px-4">
         <h1 class="navbar-brand mb-0 h1 fw-bold">My Dashboard</h1>
         <div class="d-flex align-items-center">
-          <!-- <div class="dropdown">
-            <button
-              class="btn btn-link text-dark d-flex align-items-center"
-              type="button"
-              @click="toggleDropdown"
-            >
-              <div class="avatar me-2">
-                {{ getInitials(user?.first_name, user?.last_name) }}
-              </div>
-              <span class="me-2">{{ user?.email }}</span>
-              <i
-                class="fas fa-chevron-down ms-1"
-                :class="{ 'rotate-180': isDropdownOpen }"
-              ></i>
-            </button>
-            <ul
-              class="dropdown-menu dropdown-menu-end"
-              :class="{ show: isDropdownOpen }"
-              @click="isDropdownOpen = false"
-            >
-              <li>
-                <router-link to="/profile" class="dropdown-item">
-                  <i class="fas fa-user me-2"></i>Profile
-                </router-link>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button @click="handleLogout" class="dropdown-item text-danger">
-                  <i class="fas fa-sign-out-alt me-2"></i>Logout
-                </button>
-              </li>
-            </ul>
-          </div> -->
         </div>
       </div>
     </nav>
@@ -203,6 +170,19 @@
                       </small>
                     </td>
                     <td>
+                      <button
+                        class="btn btn-sm btn-danger"
+                        @click="handleCancelApplication(application.id)"
+                        :disabled="isCancelling === application.id"
+                      >
+                        <span
+                          v-if="isCancelling === application.id"
+                          class="spinner-border spinner-border-sm me-1"
+                        ></span>
+                        Cancel
+                      </button>
+                    </td>
+                    <td>
                       <router-link
                         :to="`/jobs/${application.job?.id}`"
                         class="btn btn-sm btn-outline-primary"
@@ -218,7 +198,7 @@
           </div>
         </div>
 
-        <!-- Find More Jobs CTA -->
+        <!-- Find More Jobs -->
         <div class="card border-0 bg-primary text-white">
           <div class="card-body text-center py-5">
             <h2 class="card-title mb-4">
@@ -238,7 +218,7 @@
 <script>
 import { authService } from "@/services/authService";
 import { jobService } from "@/services/jobService";
-// import { Dropdown } from "bootstrap";
+import { useProfileStore } from "@/stores/profile";
 
 export default {
   name: "JobSeekerDashboard",
@@ -249,7 +229,8 @@ export default {
       applications: [],
       isLoading: true,
       error: null,
-      // isDropdownOpen: false,
+      isCancelling: null,
+      profileStore: useProfileStore()
     };
   },
 
@@ -360,6 +341,25 @@ export default {
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
     },
+
+    async handleCancelApplication(applicationId) {
+      if (confirm('Are you sure you want to cancel this application?')) {
+        this.isCancelling = applicationId;
+        try {
+          const success = await this.profileStore.cancelApplication(applicationId);
+          if (success) {
+            // Remove the application from local state
+            this.applications = this.applications.filter(app => app.id !== applicationId);
+            alert('Application cancelled successfully');
+          }
+        } catch (error) {
+          console.error('Failed to cancel application:', error);
+          alert('Failed to cancel application. Please try again.');
+        } finally {
+          this.isCancelling = null;
+        }
+      }
+    }
   },
 
   async created() {

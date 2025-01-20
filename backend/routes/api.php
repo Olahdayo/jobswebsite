@@ -67,7 +67,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/jobseeker/profile/upload-photo', [JobSeekerController::class, 'uploadProfilePicture']);
 
     // Applications
-    Route::post('/applications', [ApplicationController::class, 'store']);
-    Route::get('/applications', [ApplicationController::class, 'index']);
-    Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+    Route::prefix('applications')->group(function () {
+        Route::post('/', [ApplicationController::class, 'store']);
+        Route::get('/', [ApplicationController::class, 'index']);
+        Route::get('/{application}', [ApplicationController::class, 'show']);
+        Route::delete('/{applicationId}', [ApplicationController::class, 'cancel']);
+    });
 });

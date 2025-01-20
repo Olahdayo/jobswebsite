@@ -69,8 +69,25 @@ export const profileService = {
   },
 
   // Cancel job application
-  async cancelApplication(applicationId) {
-    const response = await authAxios.delete(`/applications/${applicationId}`);
-    return response.data;
+  cancelApplication: async (applicationId) => {
+    try {
+      console.log('Attempting to cancel application:', {
+        applicationId,
+        url: `/applications/${applicationId}`,
+        token: localStorage.getItem('token')
+      });
+
+      const response = await authAxios.delete(`/applications/${applicationId}`);
+      
+      console.log('Cancel application response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error cancelling application:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
   }
 };

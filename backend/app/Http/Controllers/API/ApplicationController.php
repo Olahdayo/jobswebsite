@@ -263,4 +263,82 @@ class ApplicationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Cancel a specific application.
+     */
+    public function cancel($applicationId)
+    {
+        try {
+            // Log the incoming request details
+            Log::info('Cancel application request received', [
+                'application_id' => $applicationId,
+                'request_method' => request()->method(),
+                'user_id' => request()->user()->id
+            ]);
+
+            $jobSeeker = request()->user();
+
+            // Find the application
+            $application = Application::where('id', $applicationId)
+                ->where('job_seeker_id', $jobSeeker->id)
+                ->first();
+
+            // Log application lookup details
+            Log::info('Application lookup details', [
+                'application_found' => $application ? true : false,
+                'application_details' => $application ? $application->toArray() : null
+            ]);
+
+            if (!$application) {
+                Log::warning('Application not found or unauthorized', [
+                    'application_id' => $applicationId,
+                    'user_id' => $jobSeeker->id
+                ]);
+
+                return response()->json([
+                    'message' => 'Application not found or you do not have permission to cancel this application'
+                ], 404);
+            }
+
+            // Check if application is in a state that can be cancelled
+            if (in_array($application->status, ['accepted', 'rejected'])) {
+                Log::warning('Attempt to cancel processed application', [
+                    'application_id' => $applicationId,
+                    'current_status' => $application->status
+                ]);
+
+                return response()->json([
+                    'message' => 'This application cannot be cancelled as it has already been processed'
+                ], 400);
+            }
+
+            // Update application status to withdrawn
+            $application->status = 'withdrawn';
+            $application->save();
+
+            // Log successful cancellation
+            Log::info('Application cancelled successfully', [
+                'application_id' => $applicationId,
+                'user_id' => $jobSeeker->id
+            ]);
+
+            return response()->json([
+                'message' => 'Application cancelled successfully',
+                'data' => $application
+            ]);
+        } catch (\Exception $e) {
+            // Log the full error details
+            Log::error('Failed to cancel application', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'application_id' => $applicationId
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to cancel application',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
