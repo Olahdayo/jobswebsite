@@ -486,6 +486,7 @@ export default {
           // Clear auth state before redirecting
           this.authStore.clearAuthData();
           setTimeout(() => {
+            this.handleSuccessModalClose();
             this.$router.push('/login');
           }, 1000);
         } else {
@@ -494,6 +495,7 @@ export default {
           // Clear auth state before redirecting
           this.authStore.clearAuthData();
           setTimeout(() => {
+            this.handleSuccessModalClose();
             this.$router.push('/login');
           }, 1000);
         }
@@ -508,6 +510,14 @@ export default {
     handleSuccessModalClose() {
       this.showSuccessModal = false;
       this.resetForm();
+      // Ensure modal backdrop is removed
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
       // Clear auth state when modal is closed
       this.authStore.clearAuthData();
     }

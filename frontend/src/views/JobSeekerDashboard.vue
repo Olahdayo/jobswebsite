@@ -380,26 +380,7 @@ export default {
     }
   },
 
-  // mounted() {
-  //   // Initialize all dropdowns
-  //   const dropdownElementList = document.querySelectorAll(".dropdown-toggle");
-  //   const dropdownList = [...dropdownElementList].map(
-  //     (dropdownToggleEl) => new Dropdown(dropdownToggleEl)
-  //   );
 
-  //   // Close dropdown when clicking outside
-  //   document.addEventListener("click", (e) => {
-  //     const dropdown = this.$el.querySelector(".dropdown");
-  //     if (!dropdown.contains(e.target)) {
-  //       this.isDropdownOpen = false;
-  //     }
-  //   });
-  // },
-
-  // beforeUnmount() {
-  //   // Clean up event listener
-  //   document.removeEventListener("click", this.closeDropdown);
-  // },
 };
 </script>
 

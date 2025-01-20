@@ -54,13 +54,23 @@ export default {
     },
 
     cleanupModal() {
-      const backdrop = document.querySelector(".modal-backdrop");
+      // Remove all modal-related elements and classes
+      const backdrop = document.querySelector('.modal-backdrop');
       if (backdrop) {
         backdrop.remove();
       }
-      document.body.classList.remove("modal-open");
-      document.body.style.removeProperty("overflow");
-      document.body.style.removeProperty("padding-right");
+      
+      // Remove all modal-related classes from body
+      document.body.classList.remove('modal-open');
+      document.body.classList.remove('overflow-hidden');
+      
+      // Remove any inline styles added by Bootstrap
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+      
+      // Ensure all modal-related classes are removed
+      const modalElements = document.querySelectorAll('.modal, .modal-backdrop');
+      modalElements.forEach(el => el.remove());
     },
   },
 
