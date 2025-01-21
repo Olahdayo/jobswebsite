@@ -4,8 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\Job;
+use App\Models\JobListing;
+use App\Models\Employer;
+use App\Models\JobSeeker;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EmployerController extends Controller
 {
@@ -93,7 +97,7 @@ class EmployerController extends Controller
     /**
      * Display a listing of the job's applications.
      */
-    public function applications(Request $request, Job $job)
+    public function applications(Request $request, JobListing $job)
     {
         $this->authorize('viewApplications', $job);
 
@@ -120,5 +124,53 @@ class EmployerController extends Controller
         $application->update($validated);
 
         return response()->json($application->load('jobSeeker'));
+    }
+
+    /**
+     * Get employer statistics.
+     */
+    public function stats()
+    {
+        try {
+            $employerId = Auth::id();
+            
+            // Get total jobs count
+            $totalJobs = JobListing::where('employer_id', $employerId)->count();
+            
+            // Get active jobs count using is_active boolean field
+            $activeJobs = JobListing::where('employer_id', $employerId)
+                                  ->where('is_active', true)
+                                  ->count();
+            
+            // Get total applications count
+            $totalApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
+                $query->where('employer_id', $employerId);
+            })->count();
+            
+            // Get pending applications count
+            $pendingApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
+                $query->where('employer_id', $employerId);
+            })->where('status', 'pending')->count();
+            
+            // Get accepted applications count
+            $acceptedApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
+                $query->where('employer_id', $employerId);
+            })->where('status', 'accepted')->count();
+            
+            return response()->json([
+                'totalJobs' => $totalJobs,
+                'activeJobs' => $activeJobs,
+                'totalApplications' => $totalApplications,
+                'pendingApplications' => $pendingApplications,
+                'acceptedApplications' => $acceptedApplications
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in employer stats: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'message' => 'Error fetching employer stats',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -17,9 +17,11 @@ class JobListing extends Model
         'responsibilities',
         'location',
         'type',
-        'salary',
+        'min_salary',
+        'max_salary',
         'experience_level',
         'category',
+        'education_level',
         'is_active',
         'is_featured',
         'deadline'
@@ -28,7 +30,9 @@ class JobListing extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
-        'deadline' => 'date'
+        'deadline' => 'date',
+        'requirements' => 'array',
+        'responsibilities' => 'array'
     ];
 
     public function employer()

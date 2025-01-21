@@ -105,10 +105,16 @@ export const jobService = {
   // Apply for a job
   applyForJob: async (formData) => {
     try {
-      // Log the FormData contents for debugging
-      // for (let pair of formData.entries()) {
-      //   console.log(pair[0] + ": " + pair[1]);
-      // }
+      // Log FormData contents for debugging (excluding file contents)
+      const formDataEntries = {};
+      for (let [key, value] of formData.entries()) {
+        if (key !== 'resume') {
+          formDataEntries[key] = value;
+        } else {
+          formDataEntries[key] = 'File present';
+        }
+      }
+      console.log('Submitting application with data:', formDataEntries);
 
       const response = await api.post("/applications", formData, {
         headers: {
@@ -116,16 +122,35 @@ export const jobService = {
           Accept: "application/json",
         },
       });
+
+      console.log('Application submitted successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error("Error applying for job:", error);
-      // Log more detailed error information
+      
       if (error.response) {
         console.error("Error response data:", error.response.data);
         console.error("Error response status:", error.response.status);
-        console.error("Error response headers:", error.response.headers);
+        
+        // Handle specific error cases
+        if (error.response.status === 422) {
+          // Validation errors or duplicate application
+          const errorMessage = error.response.data.message || 
+            'There was a problem with your application.';
+          throw new Error(errorMessage);
+        } else if (error.response.status === 401) {
+          throw new Error('Please log in to apply for this job.');
+        } else if (error.response.status === 403) {
+          throw new Error('You are not authorized to apply for this job.');
+        } else if (error.response.status === 404) {
+          throw new Error('This job posting is no longer available.');
+        } else if (error.response.status === 500) {
+          throw new Error('An error occurred while submitting your application. Please try again later.');
+        }
       }
-      throw error;
+      
+      // Generic error
+      throw new Error('Failed to submit application. Please try again.');
     }
   },
 
@@ -296,16 +321,120 @@ export const jobService = {
   async getUserApplications() {
     try {
       const response = await api.get("/applications");
-      // console.log("Applications response:", response);
+      
+      // More robust response handling
+      if (!response || !response.data) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Log the response for debugging
+      console.log("Applications response:", response.data);
+      
+      // Return the entire response
       return response;
     } catch (error) {
       console.error("Error fetching user applications:", error);
+      
+      // More detailed error logging
       if (error.response) {
-        console.error("Error response:", {
+        console.error("Full error response:", {
           status: error.response.status,
           data: error.response.data,
+          headers: error.response.headers,
         });
+        
+        // Handle specific error cases
+        if (error.response.status === 401) {
+          console.warn('User session expired. Redirecting to login.');
+        } else if (error.response.status === 500) {
+          console.error('Internal Server Error. Please contact support.');
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
       }
+      
+      throw error;
+    }
+  },
+
+  // Get employer's jobs
+  getEmployerJobs: async () => {
+    try {
+      const response = await api.get("/employer/jobs");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employer jobs:", error);
+      throw error;
+    }
+  },
+
+  // Get employer stats
+  getEmployerStats: async () => {
+    try {
+      const response = await api.get("/employer/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employer stats:", error);
+      throw error;
+    }
+  },
+
+  // Create a new job
+  createJob: async (jobData) => {
+    try {
+      const response = await api.post("/jobs", jobData);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating job:", error);
+      throw error;
+    }
+  },
+
+  // Update a job
+  updateJob: async (jobId, jobData) => {
+    try {
+      const response = await api.put(`/jobs/${jobId}`, jobData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating job:", error);
+      throw error;
+    }
+  },
+
+  // Toggle job status
+  toggleJobStatus: async (jobId) => {
+    try {
+      const response = await api.patch(`/employer/jobs/${jobId}/toggle-status`);
+      return response.data;
+    } catch (error) {
+      console.error("Error toggling job status:", error);
+      throw error;
+    }
+  },
+
+  // Get job applications
+  getJobApplications: async (jobId) => {
+    try {
+      const response = await api.get(`/employer/jobs/${jobId}/applications`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching job applications:", error);
+      throw error;
+    }
+  },
+
+  // Update application status
+  updateApplicationStatus: async (jobId, applicationId, status) => {
+    try {
+      const response = await api.patch(
+        `/employer/jobs/${jobId}/applications/${applicationId}`,
+        { status }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating application status:", error);
       throw error;
     }
   },

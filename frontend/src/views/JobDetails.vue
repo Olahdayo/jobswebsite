@@ -462,16 +462,9 @@ export default {
         // Add validation to ensure job exists
         if (!this.job || !this.job.id) {
           this.errorMessage = "Invalid job. Please refresh the page and try again.";
-        this.errorModal.show();
-        return;
-      }
-
-        // Log the job ID for debugging
-        // console.log('Submitting application for job:', {
-        //   id: this.job.id,
-        //   type: typeof this.job.id,
-        //   stringValue: this.job.id.toString()
-        // });
+          this.errorModal.show();
+          return;
+        }
 
         // Create FormData
         const formData = new FormData();
@@ -482,6 +475,7 @@ export default {
         this.isApplying = true;
         await jobService.applyForJob(formData);
 
+        // If we get here, the application was successful
         this.applicationModal.hide();
         this.showSuccessMessage("Application submitted successfully!");
         
@@ -496,16 +490,24 @@ export default {
         };
       } catch (error) {
         console.error("Error applying for job:", error);
-        // Show validation errors if available
-        if (error.response?.data?.errors) {
+        
+        // Handle specific error cases
+        if (error.message.includes("already applied")) {
+          this.errorMessage = "You have already applied for this job.";
+        } else if (error.response?.data?.errors) {
+          // Handle validation errors
           const errors = error.response.data.errors;
           Object.keys(errors).forEach(key => {
             this.formErrors[key] = errors[key][0];
           });
+          this.errorMessage = "Please fix the errors in your application.";
         } else {
-          this.errorMessage = error.response?.data?.message || "Failed to submit application";
-          this.errorModal.show();
+          // Handle other errors
+          this.errorMessage = error.message || "Failed to submit application. Please try again.";
         }
+        
+        // Show error modal
+        this.errorModal.show();
       } finally {
         this.isApplying = false;
       }

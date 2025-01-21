@@ -116,80 +116,75 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="application in recentApplications"
+                    v-for="application in applications"
                     :key="application.id"
+                    class="align-middle"
                   >
                     <td>
-                      <h6 class="mb-0">
-                        {{ application.job?.title || "Job Removed" }}
-                      </h6>
-                      <small class="text-muted">{{
-                        application.job?.type
-                      }}</small>
+                      <h6 class="mb-0">{{ application.jobTitle }}</h6>
+                      <small class="text-muted">{{ application.job?.type || "Unknown Type" }}</small>
                     </td>
                     <td>
                       <div class="d-flex align-items-center">
                         <img
-                          :src="
-                            getCompanyLogo(application.job?.employer?.logo_url)
-                          "
+                          v-if="application.job?.employer?.logo_url"
+                          :src="application.job.employer.logo_url"
+                          :alt="application.companyName + ' logo'"
                           class="company-logo me-2"
-                          :alt="application.job?.employer?.company_name"
                           @error="handleImageError"
                         />
                         <div>
-                          <span>{{
-                            application.job?.employer?.company_name ||
-                            "Company Removed"
-                          }}</span>
+                          <span>{{ application.companyName }}</span>
                           <br />
-                          <small class="text-muted">{{
-                            application.job?.location
-                          }}</small>
+                          <small class="text-muted">{{ application.job?.location || "Location Unknown" }}</small>
                         </div>
                       </div>
                     </td>
                     <td>
                       <span
-                        class="badge"
-                        :class="getStatusClass(application.status)"
+                        :class="{
+                          'badge rounded-pill': true,
+                          'bg-success': application.status === 'accepted',
+                          'bg-danger': application.status === 'rejected',
+                          'bg-warning': application.status === 'pending',
+                          'bg-secondary': application.status === 'cancelled'
+                        }"
                       >
-                        {{ application.status || "Unknown" }}
+                        {{ application.status }}
                       </span>
                     </td>
+                    <td>{{ formatDate(application.created_at) }}</td>
                     <td>
-                      <div>{{ formatDate(application.created_at) }}</div>
-                      <small class="text-muted">
-                        {{
-                          application.job?.deadline
-                            ? `Deadline: ${formatDate(
-                                application.job.deadline
-                              )}`
-                            : ""
-                        }}
-                      </small>
-                    </td>
-                    <td>
-                      <button
-                        class="btn btn-sm btn-danger"
-                        @click="handleCancelApplication(application.id)"
-                        :disabled="isCancelling === application.id"
-                      >
-                        <span
-                          v-if="isCancelling === application.id"
-                          class="spinner-border spinner-border-sm me-1"
-                        ></span>
-                        Cancel
-                      </button>
-                    </td>
-                    <td>
-                      <router-link
-                        :to="`/jobs/${application.job?.id}`"
-                        class="btn btn-sm btn-outline-primary"
-                        v-if="application.job?.id"
-                      >
-                        View Job
-                      </router-link>
+                      <div class="dropdown">
+                        <button
+                          class="btn btn-light btn-sm dropdown-toggle"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li>
+                            <a
+                              class="dropdown-item"
+                              :href="application.job?.id ? `/jobs/${application.job.id}` : '#'"
+                              :class="{ disabled: !application.job?.id }"
+                            >
+                              View Job
+                            </a>
+                          </li>
+                          <li>
+                            <button
+                              class="dropdown-item"
+                              @click="cancelApplication(application.id)"
+                              :disabled="application.status !== 'pending'"
+                            >
+                              Cancel Application
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -274,33 +269,27 @@ export default {
     },
 
     async loadApplications() {
-      try {
-        this.isLoading = true;
-        const response = await jobService.getUserApplications();
+      this.isLoading = true;
+      this.error = null;
 
-        // Check if response has data property
+      try {
+        const response = await jobService.getUserApplications();
+        
         if (response?.data?.data) {
-          this.applications = response.data.data; // For paginated responses
-        } else if (Array.isArray(response?.data)) {
-          this.applications = response.data; // For direct array responses
+          this.applications = response.data.data.map(application => ({
+            ...application,
+            companyName: application.job?.employer?.company_name || 'Unknown Company',
+            jobTitle: application.job?.title || 'Job No Longer Available'
+          }));
         } else {
           this.applications = [];
           console.warn("Unexpected response format:", response);
+          this.error = "Unable to load applications. Please try again.";
         }
-
-        // console.log("Loaded applications:", this.applications);
       } catch (error) {
         console.error("Error loading applications:", error);
-        this.error = "Failed to load applications. Please try again later.";
-
-        // More detailed error logging
-        // if (error.response) {
-        //   console.error("Error details:", {
-        //     status: error.response.status,
-        //     data: error.response.data,
-        //     headers: error.response.headers,
-        //   });
-        // }
+        this.error = error.message || "Failed to load applications";
+        this.applications = [];
       } finally {
         this.isLoading = false;
       }
@@ -334,8 +323,9 @@ export default {
       return logoUrl || "/images/dashboard-default.svg";
     },
 
-    handleImageError(e) {
-      e.target.src = "/images/dashboard-default.svg";
+    handleImageError(event) {
+      event.target.src = '/images/default-company-logo.png';
+      event.target.classList.add('default-logo');
     },
 
     toggleDropdown() {
@@ -379,8 +369,6 @@ export default {
       this.isLoading = false;
     }
   },
-
-
 };
 </script>
 
