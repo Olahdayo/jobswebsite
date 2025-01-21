@@ -70,8 +70,8 @@
                           :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
                           :alt="job.employer?.company_name"
                           class="company-logo"
-                          width="50"
-                          height="50"
+                          width="80"
+                          height="80"
                         />
                         <div class="flex-grow-1">
                           <div class="d-flex justify-content-between">

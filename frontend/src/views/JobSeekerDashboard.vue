@@ -5,39 +5,6 @@
       <div class="container-fluid px-4">
         <h1 class="navbar-brand mb-0 h1 fw-bold">My Dashboard</h1>
         <div class="d-flex align-items-center">
-          <!-- <div class="dropdown">
-            <button
-              class="btn btn-link text-dark d-flex align-items-center"
-              type="button"
-              @click="toggleDropdown"
-            >
-              <div class="avatar me-2">
-                {{ getInitials(user?.first_name, user?.last_name) }}
-              </div>
-              <span class="me-2">{{ user?.email }}</span>
-              <i
-                class="fas fa-chevron-down ms-1"
-                :class="{ 'rotate-180': isDropdownOpen }"
-              ></i>
-            </button>
-            <ul
-              class="dropdown-menu dropdown-menu-end"
-              :class="{ show: isDropdownOpen }"
-              @click="isDropdownOpen = false"
-            >
-              <li>
-                <router-link to="/profile" class="dropdown-item">
-                  <i class="fas fa-user me-2"></i>Profile
-                </router-link>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <button @click="handleLogout" class="dropdown-item text-danger">
-                  <i class="fas fa-sign-out-alt me-2"></i>Logout
-                </button>
-              </li>
-            </ul>
-          </div> -->
         </div>
       </div>
     </nav>
@@ -149,67 +116,75 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="application in recentApplications"
+                    v-for="application in applications"
                     :key="application.id"
+                    class="align-middle"
                   >
                     <td>
-                      <h6 class="mb-0">
-                        {{ application.job?.title || "Job Removed" }}
-                      </h6>
-                      <small class="text-muted">{{
-                        application.job?.type
-                      }}</small>
+                      <h6 class="mb-0">{{ application.jobTitle }}</h6>
+                      <small class="text-muted">{{ application.job?.type || "Unknown Type" }}</small>
                     </td>
                     <td>
                       <div class="d-flex align-items-center">
                         <img
-                          :src="
-                            getCompanyLogo(application.job?.employer?.logo_url)
-                          "
+                          v-if="application.job?.employer?.logo_url"
+                          :src="application.job.employer.logo_url"
+                          :alt="application.companyName + ' logo'"
                           class="company-logo me-2"
-                          :alt="application.job?.employer?.company_name"
                           @error="handleImageError"
                         />
                         <div>
-                          <span>{{
-                            application.job?.employer?.company_name ||
-                            "Company Removed"
-                          }}</span>
+                          <span>{{ application.companyName }}</span>
                           <br />
-                          <small class="text-muted">{{
-                            application.job?.location
-                          }}</small>
+                          <small class="text-muted">{{ application.job?.location || "Location Unknown" }}</small>
                         </div>
                       </div>
                     </td>
                     <td>
                       <span
-                        class="badge"
-                        :class="getStatusClass(application.status)"
+                        :class="{
+                          'badge rounded-pill': true,
+                          'bg-success': application.status === 'accepted',
+                          'bg-danger': application.status === 'rejected',
+                          'bg-warning': application.status === 'pending',
+                          'bg-secondary': application.status === 'cancelled'
+                        }"
                       >
-                        {{ application.status || "Unknown" }}
+                        {{ application.status }}
                       </span>
                     </td>
+                    <td>{{ formatDate(application.created_at) }}</td>
                     <td>
-                      <div>{{ formatDate(application.created_at) }}</div>
-                      <small class="text-muted">
-                        {{
-                          application.job?.deadline
-                            ? `Deadline: ${formatDate(
-                                application.job.deadline
-                              )}`
-                            : ""
-                        }}
-                      </small>
-                    </td>
-                    <td>
-                      <router-link
-                        :to="`/jobs/${application.job?.id}`"
-                        class="btn btn-sm btn-outline-primary"
-                        v-if="application.job?.id"
-                      >
-                        View Job
-                      </router-link>
+                      <div class="dropdown">
+                        <button
+                          class="btn btn-light btn-sm dropdown-toggle"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li>
+                            <a
+                              class="dropdown-item"
+                              :href="application.job?.id ? `/jobs/${application.job.id}` : '#'"
+                              :class="{ disabled: !application.job?.id }"
+                            >
+                              View Job
+                            </a>
+                          </li>
+                          <li>
+                            <button
+                              class="dropdown-item"
+                              @click="cancelApplication(application.id)"
+                              :disabled="application.status !== 'pending'"
+                            >
+                              Cancel Application
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -218,7 +193,7 @@
           </div>
         </div>
 
-        <!-- Find More Jobs CTA -->
+        <!-- Find More Jobs -->
         <div class="card border-0 bg-primary text-white">
           <div class="card-body text-center py-5">
             <h2 class="card-title mb-4">
@@ -238,7 +213,7 @@
 <script>
 import { authService } from "@/services/authService";
 import { jobService } from "@/services/jobService";
-// import { Dropdown } from "bootstrap";
+import { useProfileStore } from "@/stores/profile";
 
 export default {
   name: "JobSeekerDashboard",
@@ -249,7 +224,8 @@ export default {
       applications: [],
       isLoading: true,
       error: null,
-      // isDropdownOpen: false,
+      isCancelling: null,
+      profileStore: useProfileStore()
     };
   },
 
@@ -293,33 +269,27 @@ export default {
     },
 
     async loadApplications() {
-      try {
-        this.isLoading = true;
-        const response = await jobService.getUserApplications();
+      this.isLoading = true;
+      this.error = null;
 
-        // Check if response has data property
+      try {
+        const response = await jobService.getUserApplications();
+        
         if (response?.data?.data) {
-          this.applications = response.data.data; // For paginated responses
-        } else if (Array.isArray(response?.data)) {
-          this.applications = response.data; // For direct array responses
+          this.applications = response.data.data.map(application => ({
+            ...application,
+            companyName: application.job?.employer?.company_name || 'Unknown Company',
+            jobTitle: application.job?.title || 'Job No Longer Available'
+          }));
         } else {
           this.applications = [];
           console.warn("Unexpected response format:", response);
+          this.error = "Unable to load applications. Please try again.";
         }
-
-        // console.log("Loaded applications:", this.applications);
       } catch (error) {
         console.error("Error loading applications:", error);
-        this.error = "Failed to load applications. Please try again later.";
-
-        // More detailed error logging
-        // if (error.response) {
-        //   console.error("Error details:", {
-        //     status: error.response.status,
-        //     data: error.response.data,
-        //     headers: error.response.headers,
-        //   });
-        // }
+        this.error = error.message || "Failed to load applications";
+        this.applications = [];
       } finally {
         this.isLoading = false;
       }
@@ -353,13 +323,33 @@ export default {
       return logoUrl || "/images/dashboard-default.svg";
     },
 
-    handleImageError(e) {
-      e.target.src = "/images/dashboard-default.svg";
+    handleImageError(event) {
+      event.target.src = '/images/default-company-logo.png';
+      event.target.classList.add('default-logo');
     },
 
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
     },
+
+    async handleCancelApplication(applicationId) {
+      if (confirm('Are you sure you want to cancel this application?')) {
+        this.isCancelling = applicationId;
+        try {
+          const success = await this.profileStore.cancelApplication(applicationId);
+          if (success) {
+            // Remove the application from local state
+            this.applications = this.applications.filter(app => app.id !== applicationId);
+            alert('Application cancelled successfully');
+          }
+        } catch (error) {
+          console.error('Failed to cancel application:', error);
+          alert('Failed to cancel application. Please try again.');
+        } finally {
+          this.isCancelling = null;
+        }
+      }
+    }
   },
 
   async created() {
@@ -379,27 +369,6 @@ export default {
       this.isLoading = false;
     }
   },
-
-  // mounted() {
-  //   // Initialize all dropdowns
-  //   const dropdownElementList = document.querySelectorAll(".dropdown-toggle");
-  //   const dropdownList = [...dropdownElementList].map(
-  //     (dropdownToggleEl) => new Dropdown(dropdownToggleEl)
-  //   );
-
-  //   // Close dropdown when clicking outside
-  //   document.addEventListener("click", (e) => {
-  //     const dropdown = this.$el.querySelector(".dropdown");
-  //     if (!dropdown.contains(e.target)) {
-  //       this.isDropdownOpen = false;
-  //     }
-  //   });
-  // },
-
-  // beforeUnmount() {
-  //   // Clean up event listener
-  //   document.removeEventListener("click", this.closeDropdown);
-  // },
 };
 </script>
 

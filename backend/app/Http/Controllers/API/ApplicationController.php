@@ -14,6 +14,20 @@ use Illuminate\Support\Facades\Log;
 
 class ApplicationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware(function ($request, $next) {
+            if (!$request->user() || !($request->user() instanceof \App\Models\JobSeeker)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized. This endpoint is only for job seekers.'
+                ], 403);
+            }
+            return $next($request);
+        })->only(['index', 'store', 'show', 'update', 'cancel']);
+    }
+
     /**
      * Store a newly created application in storage.
      */
@@ -26,43 +40,28 @@ class ApplicationController extends Controller
             Log::info('Starting application submission', [
                 'job_id' => $request->job_id,
                 'job_seeker_id' => $jobSeeker->id,
-                'request_data' => $request->all(),
-                'files' => $request->allFiles()
+                'request_data' => $request->except(['resume']), // Don't log file contents
+                'has_resume' => $request->hasFile('resume')
             ]);
 
-            // Check if job exists and log all jobs
-            $job = Job::find($request->job_id);
-            $allJobs = Job::pluck('id')->toArray();
-
-            Log::info('Job validation check', [
-                'requested_job_id' => $request->job_id,
-                'job_exists' => $job ? true : false,
-                'available_jobs' => $allJobs,
-                'table_name' => (new Job)->getTable()
-            ]);
-
-            if (!$job) {
-                return response()->json([
-                    'message' => 'The selected job is no longer available',
-                    'errors' => ['job_id' => ['Job not found or no longer available']]
-                ], 422);
-            }
-
-            // Validate request
+            // Validate request first
             $validator = Validator::make($request->all(), [
                 'job_id' => ['required', 'exists:job_listings,id'],
-                'cover_letter' => ['required', 'string', 'min:100'],
+                'cover_letter' => ['required', 'string', 'min:50'],
                 'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'], // 5MB max
             ], [
                 'job_id.exists' => 'The selected job is no longer available.',
-                'job_id.required' => 'No job was selected for application.'
+                'job_id.required' => 'No job was selected for application.',
+                'cover_letter.min' => 'The cover letter must be at least 50 characters.',
+                'resume.required' => 'Please upload your resume.',
+                'resume.mimes' => 'The resume must be a PDF, DOC, or DOCX file.',
+                'resume.max' => 'The resume must not be larger than 5MB.'
             ]);
 
             if ($validator->fails()) {
                 Log::warning('Application validation failed', [
                     'errors' => $validator->errors()->toArray(),
-                    'request_data' => $request->all(),
-                    'available_jobs' => Job::pluck('id')->toArray() // Log available job IDs
+                    'request_data' => $request->except(['resume']),
                 ]);
                 return response()->json([
                     'message' => 'Validation failed',
@@ -70,23 +69,13 @@ class ApplicationController extends Controller
                 ], 422);
             }
 
-            // Get the job and check if it's still open
+            // Check if job exists
             $job = Job::find($request->job_id);
             if (!$job) {
-                Log::warning('Job not found', ['job_id' => $request->job_id]);
+                Log::warning('Job not found after validation', ['job_id' => $request->job_id]);
                 return response()->json([
-                    'message' => 'Job not found'
+                    'message' => 'The selected job is no longer available'
                 ], 404);
-            }
-
-            if ($job->deadline && now()->isAfter($job->deadline)) {
-                Log::info('Application attempt for expired job', [
-                    'job_id' => $request->job_id,
-                    'deadline' => $job->deadline
-                ]);
-                return response()->json([
-                    'message' => 'This job posting has expired'
-                ], 422);
             }
 
             // Check if user has already applied
@@ -100,7 +89,11 @@ class ApplicationController extends Controller
                     'job_seeker_id' => $jobSeeker->id
                 ]);
                 return response()->json([
-                    'message' => 'You have already applied for this job'
+                    'status' => 'error',
+                    'message' => 'You have already applied for this job.',
+                    'errors' => [
+                        'job_id' => ['You have already submitted an application for this position.']
+                    ]
                 ], 422);
             }
 
@@ -108,16 +101,14 @@ class ApplicationController extends Controller
             if ($request->hasFile('resume')) {
                 try {
                     $file = $request->file('resume');
-
-                    // Create resumes directory if it doesn't exist
-                    $resumesPath = storage_path('app/public/resumes');
-                    if (!file_exists($resumesPath)) {
-                        mkdir($resumesPath, 0755, true);
-                    }
-
-                    $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
-                    // Store file and get path
-                    $path = $file->storeAs('resumes', $filename, 'public');
+                    $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                    
+                    // Store file in public/resumes directory
+                    $path = $request->file('resume')->storeAs(
+                        'resumes',
+                        $filename,
+                        'public'
+                    );
 
                     if (!$path) {
                         throw new \Exception('Failed to store resume file');
@@ -133,12 +124,13 @@ class ApplicationController extends Controller
                     ]);
 
                     Log::info('Application created successfully', [
-                        'application_id' => $application->id
+                        'application_id' => $application->id,
+                        'resume_path' => $path
                     ]);
 
                     return response()->json([
                         'message' => 'Application submitted successfully',
-                        'data' => $application->load('job.employer')
+                        'data' => $application
                     ], 201);
                 } catch (\Exception $e) {
                     Log::error('File upload failed', [
@@ -156,27 +148,16 @@ class ApplicationController extends Controller
                 'message' => 'Resume file is required'
             ], 422);
         } catch (\Exception $e) {
-            // Delete uploaded file if application creation fails
-            if (isset($path)) {
-                try {
-                    Storage::disk('public')->delete($path);
-                    Log::info('Cleaned up resume file after error', ['path' => $path]);
-                } catch (\Exception $deleteError) {
-                    Log::error('Failed to clean up resume file', [
-                        'path' => $path,
-                        'error' => $deleteError->getMessage()
-                    ]);
-                }
-            }
-
             Log::error('Application submission failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'job_id' => $request->job_id,
+                'job_seeker_id' => optional($request->user())->id
             ]);
 
             return response()->json([
                 'message' => 'Failed to submit application',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred'
             ], 500);
         }
     }
@@ -186,15 +167,70 @@ class ApplicationController extends Controller
      */
     public function index()
     {
-        $applications = Application::where('job_seeker_id', request()->user()->id)
-            ->with(['job.employer'])
-            ->latest()
-            ->get();
+        try {
+            $user = request()->user();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $applications
-        ]);
+            // Get all applications for the job seeker with related data
+            $applications = Application::where('job_seeker_id', $user->id)
+                ->with([
+                    'job:id,title,location,type,employer_id',
+                    'job.employer:id,company_name,logo_url'
+                ])
+                ->latest()
+                ->get();
+
+            // Log the results
+            \Log::info('Applications retrieved', [
+                'job_seeker_id' => $user->id,
+                'application_count' => $applications->count(),
+                'first_application' => $applications->first() ? [
+                    'id' => $applications->first()->id,
+                    'has_job' => $applications->first()->job ? true : false
+                ] : null
+            ]);
+
+            // Return structured response
+            return response()->json([
+                'status' => 'success',
+                'data' => $applications->map(function ($application) {
+                    return [
+                        'id' => $application->id,
+                        'status' => $application->status,
+                        'created_at' => $application->created_at,
+                        'job' => $application->job ? [
+                            'id' => $application->job->id,
+                            'title' => $application->job->title,
+                            'location' => $application->job->location,
+                            'type' => $application->job->type,
+                            'employer' => $application->job->employer ? [
+                                'id' => $application->job->employer->id,
+                                'company_name' => $application->job->employer->company_name,
+                                'logo_url' => $application->job->employer->logo_url,
+                            ] : null
+                        ] : null
+                    ];
+                }),
+                'meta' => [
+                    'total' => $applications->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            // Log the full error details
+            \Log::error('Error retrieving applications', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => optional(request()->user())->id,
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            // Return a generic error response
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to retrieve applications',
+                'debug_message' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
     }
 
     /**
@@ -259,6 +295,84 @@ class ApplicationController extends Controller
             ]);
             return response()->json([
                 'message' => 'Failed to update application status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel a specific application.
+     */
+    public function cancel($applicationId)
+    {
+        try {
+            // Log the incoming request details
+            Log::info('Cancel application request received', [
+                'application_id' => $applicationId,
+                'request_method' => request()->method(),
+                'user_id' => request()->user()->id
+            ]);
+
+            $jobSeeker = request()->user();
+
+            // Find the application
+            $application = Application::where('id', $applicationId)
+                ->where('job_seeker_id', $jobSeeker->id)
+                ->first();
+
+            // Log application lookup details
+            Log::info('Application lookup details', [
+                'application_found' => $application ? true : false,
+                'application_details' => $application ? $application->toArray() : null
+            ]);
+
+            if (!$application) {
+                Log::warning('Application not found or unauthorized', [
+                    'application_id' => $applicationId,
+                    'user_id' => $jobSeeker->id
+                ]);
+
+                return response()->json([
+                    'message' => 'Application not found or you do not have permission to cancel this application'
+                ], 404);
+            }
+
+            // Check if application is in a state that can be cancelled
+            if (in_array($application->status, ['accepted', 'rejected'])) {
+                Log::warning('Attempt to cancel processed application', [
+                    'application_id' => $applicationId,
+                    'current_status' => $application->status
+                ]);
+
+                return response()->json([
+                    'message' => 'This application cannot be cancelled as it has already been processed'
+                ], 400);
+            }
+
+            // Update application status to withdrawn
+            $application->status = 'withdrawn';
+            $application->save();
+
+            // Log successful cancellation
+            Log::info('Application cancelled successfully', [
+                'application_id' => $applicationId,
+                'user_id' => $jobSeeker->id
+            ]);
+
+            return response()->json([
+                'message' => 'Application cancelled successfully',
+                'data' => $application
+            ]);
+        } catch (\Exception $e) {
+            // Log the full error details
+            Log::error('Failed to cancel application', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'application_id' => $applicationId
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to cancel application',
                 'error' => $e->getMessage()
             ], 500);
         }

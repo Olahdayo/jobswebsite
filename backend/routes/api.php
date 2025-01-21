@@ -39,7 +39,7 @@ Route::prefix('jobs')->group(function () {
 });
 
 // Protected routes for employers
-Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/employer/logout', [AuthController::class, 'logout']);
 
     // Profile management
@@ -48,6 +48,7 @@ Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
 
     // Job management
     Route::get('/employer/jobs', [EmployerController::class, 'jobs']);
+    Route::get('/employer/stats', [EmployerController::class, 'stats']); // Stats endpoint
     Route::post('/jobs', [JobController::class, 'store']);
     Route::put('/jobs/{job}', [JobController::class, 'update']);
     Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
@@ -60,14 +61,15 @@ Route::middleware(['auth:sanctum', 'ability:employer'])->group(function () {
 // Protected routes for job seekers
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/jobseeker/logout', [AuthController::class, 'logout']);
-
-    // Profile management
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
-    Route::post('/jobseeker/profile/upload-photo', [JobSeekerController::class, 'uploadProfilePicture']);
-
-    // Applications
-    Route::post('/applications', [ApplicationController::class, 'store']);
-    Route::get('/applications', [ApplicationController::class, 'index']);
-    Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+    
+    // Application routes
+    Route::prefix('applications')->group(function () {
+        Route::get('/', [ApplicationController::class, 'index']);
+        Route::post('/', [ApplicationController::class, 'store']);
+        Route::get('/{application}', [ApplicationController::class, 'show']);
+        Route::put('/{application}', [ApplicationController::class, 'update']);
+        Route::post('/{application}/cancel', [ApplicationController::class, 'cancel']);
+    });
 });

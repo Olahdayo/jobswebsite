@@ -50,23 +50,107 @@ class JobController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'location' => 'required|string',
-            'type' => 'required|string|in:full-time,part-time,contract',
-            'salary' => 'nullable|numeric',
-            'experience_level' => 'required|string',
-            'requirements' => 'required|array',
-            'responsibilities' => 'required|array',
-            'deadline' => 'required|date|after:today',
-        ]);
+        try {
+            // Log the entire request input for debugging
+            \Log::info('Job Creation Raw Input:', $request->all());
 
-        $job = $request->user()->jobListings()->create($validated);
+            // Define valid education levels
+            $validEducationLevels = [
+                'Secondary School',
+                'OND',
+                'HND', 
+                "Bachelor's Degree",
+                "Master's Degree",
+                'PhD',
+                'Professional Certification',
+                'Not Required'
+            ];
 
-        return response()->json([
-            'data' => $job
-        ], 201);
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'location' => 'required|string',
+                'type' => 'required|string|in:full-time,part-time,contract,remote,internship',
+                'salary' => 'nullable|array',
+                'salary.min' => 'nullable|numeric',
+                'salary.max' => 'nullable|numeric',
+                'experience_level' => 'required|string',
+                'requirements' => 'required|array',
+                'responsibilities' => 'required|array',
+                'deadline' => 'required|date|after:today',
+                'category' => 'sometimes|string',
+                'education_level' => 'sometimes|string|in:' . implode(',', $validEducationLevels)
+            ], [
+                // Custom error messages
+                'title.required' => 'Job title is required',
+                'description.required' => 'Job description is required',
+                'location.required' => 'Job location is required',
+                'type.required' => 'Job type is required',
+                'type.in' => 'Invalid job type selected',
+                'experience_level.required' => 'Experience level is required',
+                'requirements.required' => 'Job requirements are required',
+                'responsibilities.required' => 'Job responsibilities are required',
+                'deadline.required' => 'Application deadline is required',
+                'deadline.date' => 'Invalid deadline date',
+                'deadline.after' => 'Deadline must be a future date',
+                'education_level.in' => 'Invalid education level selected'
+            ]);
+
+            // Log the validated data for debugging
+            \Log::info('Job Creation Validated Data:', $validated);
+
+            // Add employer_id to the validated data
+            $validated['employer_id'] = $request->user()->id;
+
+            // Handle salary
+            if (isset($validated['salary'])) {
+                $validated['min_salary'] = $validated['salary']['min'] ?? null;
+                $validated['max_salary'] = $validated['salary']['max'] ?? null;
+                unset($validated['salary']);
+            }
+
+            // Ensure requirements and responsibilities are arrays
+            $validated['requirements'] = $validated['requirements'] ?? [];
+            $validated['responsibilities'] = $validated['responsibilities'] ?? [];
+
+            // Validate and clean education_level
+            if (isset($validated['education_level']) && 
+                !in_array($validated['education_level'], $validEducationLevels)) {
+                unset($validated['education_level']);
+            }
+
+            $job = JobListing::create($validated);
+
+            return response()->json([
+                'data' => $job
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log detailed validation errors
+            // Log::error('Job Creation Validation Errors:', [
+            //     'errors' => $e->errors(),
+            //     'input' => $request->all()
+            // ]);
+
+            // Return validation errors
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ], 422);
+        } catch (\Exception $e) {
+            // Log any other unexpected errors
+            // Log::error('Job Creation Error:', [
+            //     'message' => $e->getMessage(),
+            //     'trace' => $e->getTraceAsString(),
+            //     'input' => $request->all()
+            // ]);
+
+            return response()->json([
+                'message' => 'An unexpected error occurred',
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ], 500);
+        }
     }
 
     /**

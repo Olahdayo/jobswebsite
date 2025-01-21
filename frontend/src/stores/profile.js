@@ -84,6 +84,30 @@ export const useProfileStore = defineStore('profile', {
       } finally {
         this.loading = false;
       }
+    },
+
+    // Cancel a job application
+    async cancelApplication(applicationId) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await profileService.cancelApplication(applicationId);
+        
+        // If profile exists, update its applications
+        if (this.profile && Array.isArray(this.profile.applications)) {
+          this.profile.applications = this.profile.applications.filter(
+            app => app.id !== applicationId
+          );
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error cancelling application:', error);
+        this.error = error.response?.data?.message || 'Failed to cancel application';
+        return false;
+      } finally {
+        this.loading = false;
+      }
     }
   }
 });

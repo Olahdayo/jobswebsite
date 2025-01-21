@@ -100,11 +100,13 @@
                     <div class="job-card" :class="{ 'featured-job': job.is_featured }">
                       <div class="card-header">
                         <div class="company-info">
-                          <img 
-                            :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
-                            :alt="job.employer?.company_name"
-                            class="company-logo"
-                          />
+                          <img
+                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
+                          :alt="job.employer?.company_name"
+                          class="company-logo"
+                          width="80"
+                          height="80"
+                        />
                           <div>
                             <h5 class="job-title">{{ job.title }}</h5>
                             <p class="company-name">{{ job.employer?.company_name }}</p>
@@ -176,10 +178,12 @@
                   <div class="job-card" :class="{ 'featured-job': job.is_featured }">
                     <div class="card-header">
                       <div class="company-info">
-                        <img 
-                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                        <img
+                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
                           :alt="job.employer?.company_name"
                           class="company-logo"
+                          width="80"
+                          height="80"
                         />
                         <div>
                           <h5 class="job-title">{{ job.title }}</h5>
@@ -311,18 +315,17 @@ export default {
         console.error('Error loading stats:', error);
       }
     },
-
     async loadJobs() {
       this.isLoading = true;
       try {
         // Load latest jobs first
         const latestResponse = await jobService.getAllJobs();
-        this.latestJobs = latestResponse.data ? latestResponse.data.slice(0, 5) : []; // Show top 5 latest jobs
+        this.latestJobs = latestResponse.data ? latestResponse.data.slice(0, 5) : []; 
 
         // Try to load featured jobs
         try {
           const featuredResponse = await jobService.getFeaturedJobs();
-          // Check if featuredResponse has data property and it's an array
+          // CheturedResponse has data property and it's an array
           if (featuredResponse && featuredResponse.data && Array.isArray(featuredResponse.data)) {
             this.featuredJobs = featuredResponse.data.slice(0, 6);
           } else if (Array.isArray(featuredResponse)) {
@@ -899,3 +902,4 @@ html {
   }
 }
 </style>
+
