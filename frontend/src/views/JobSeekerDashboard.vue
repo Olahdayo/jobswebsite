@@ -30,58 +30,81 @@
 
       <div v-else>
         <!-- Stats Cards -->
-        <div class="row g-4 mb-4">
-          <div class="col-md-4">
-            <div class="card stat-card h-100 border-0">
+        <div class="row">
+          <div class="col-xl-3 col-md-6">
+            <div class="card">
               <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon applications">
-                    <i class="fas fa-paper-plane"></i>
+                <div class="d-flex align-items-start">
+                  <div class="avatar-sm">
+                    <span class="avatar-title bg-primary rounded">
+                      <i class="fas fa-paper-plane"></i>
+                    </span>
                   </div>
                   <div class="ms-3">
                     <h6 class="card-subtitle text-muted mb-1">
                       Applications Sent
                     </h6>
                     <h2 class="card-title mb-0">
-                      {{ applications?.length || 0 }}
+                      {{ stats.total }}
                     </h2>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="col-md-4">
-            <div class="card stat-card h-100 border-0">
+          <div class="col-xl-3 col-md-6">
+            <div class="card">
               <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon pending">
-                    <i class="fas fa-clock"></i>
+                <div class="d-flex align-items-start">
+                  <div class="avatar-sm">
+                    <span class="avatar-title bg-warning rounded">
+                      <i class="fas fa-clock"></i>
+                    </span>
                   </div>
                   <div class="ms-3">
                     <h6 class="card-subtitle text-muted mb-1">
                       Pending Reviews
                     </h6>
                     <h2 class="card-title mb-0">
-                      {{ pendingApplications?.length || 0 }}
+                      {{ stats.pending }}
                     </h2>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="col-md-4">
-            <div class="card stat-card h-100 border-0">
+          <div class="col-xl-3 col-md-6">
+            <div class="card">
               <div class="card-body">
-                <div class="d-flex align-items-center">
-                  <div class="stat-icon approved">
-                    <i class="fas fa-check-circle"></i>
+                <div class="d-flex align-items-start">
+                  <div class="avatar-sm">
+                    <span class="avatar-title bg-success rounded">
+                      <i class="fas fa-check"></i>
+                    </span>
                   </div>
                   <div class="ms-3">
-                    <h6 class="card-subtitle text-muted mb-1">Approved</h6>
+                    <h6 class="card-subtitle text-muted mb-1">Accepted</h6>
                     <h2 class="card-title mb-0">
-                      {{ approvedApplications?.length || 0 }}
+                      {{ stats.accepted }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-start">
+                  <div class="avatar-sm">
+                    <span class="avatar-title bg-danger rounded">
+                      <i class="fas fa-times"></i>
+                    </span>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">Rejected</h6>
+                    <h2 class="card-title mb-0">
+                      {{ stats.rejected }}
                     </h2>
                   </div>
                 </div>
@@ -90,101 +113,103 @@
           </div>
         </div>
 
-        <!-- Recent Applications -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white border-bottom-0 py-3">
-            <h5 class="card-title mb-0">Recent Applications</h5>
+        <!-- Search and Filter -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search applications..."
+              @input="e => handleSearch(e.target.value)"
+            />
+          </div>
+          <div class="col-md-6">
+            <select 
+              class="form-select"
+              @change="e => handleStatusFilter(e.target.value)"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Applications List -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Applications</h5>
           </div>
           <div class="card-body p-0">
-            <div v-if="applications?.length === 0" class="text-center py-5">
-              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-              <h5 class="text-muted">No applications yet</h5>
-              <p class="mb-0">
-                Start applying for jobs to see your applications here.
-              </p>
+            <div v-if="isLoading" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
             </div>
+
+            <div v-else-if="error" class="text-center py-5">
+              <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+              <h5 class="text-danger">{{ error }}</h5>
+              <button @click="retryLoading" class="btn btn-primary mt-3">
+                <i class="fas fa-sync-alt me-2"></i>Retry
+              </button>
+            </div>
+
+            <div v-else-if="applications.length === 0" class="text-center py-5">
+              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No applications found</h5>
+              <p class="text-muted">Start applying for jobs to see them here!</p>
+            </div>
+
             <div v-else class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+              <table class="table table-hover">
+                <thead>
                   <tr>
-                    <th>Job Title</th>
+                    <th>Job</th>
                     <th>Company</th>
+                    <th>Applied On</th>
                     <th>Status</th>
-                    <th>Applied Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="application in applications"
-                    :key="application.id"
-                    class="align-middle"
-                  >
+                  <tr v-for="application in applications" :key="application.id">
                     <td>
                       <h6 class="mb-0">{{ application.jobTitle }}</h6>
-                      <small class="text-muted">{{ application.job?.type || "Unknown Type" }}</small>
+                      <small class="text-muted">{{ application.job?.type || 'Unknown Type' }}</small>
                     </td>
                     <td>
                       <div class="d-flex align-items-center">
                         <img
                           v-if="application.job?.employer?.logo_url"
-                          :src="application.job.employer.logo_url"
-                          :alt="application.companyName + ' logo'"
+                          :src="getCompanyLogo(application.job.employer.logo_url)"
+                          :alt="application.companyName"
                           class="company-logo me-2"
                           @error="handleImageError"
                         />
                         <div>
                           <span>{{ application.companyName }}</span>
-                          <br />
-                          <small class="text-muted">{{ application.job?.location || "Location Unknown" }}</small>
+                          <br>
+                          <small class="text-muted">{{ application.job?.location || 'Location Unknown' }}</small>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <span
-                        :class="{
-                          'badge rounded-pill': true,
-                          'bg-success': application.status === 'accepted',
-                          'bg-danger': application.status === 'rejected',
-                          'bg-warning': application.status === 'pending',
-                          'bg-secondary': application.status === 'cancelled'
-                        }"
-                      >
-                        {{ application.status }}
-                      </span>
-                    </td>
                     <td>{{ formatDate(application.created_at) }}</td>
                     <td>
-                      <div class="dropdown">
-                        <button
-                          class="btn btn-light btn-sm dropdown-toggle"
-                          type="button"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                        >
-                          Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li>
-                            <a
-                              class="dropdown-item"
-                              :href="application.job?.id ? `/jobs/${application.job.id}` : '#'"
-                              :class="{ disabled: !application.job?.id }"
-                            >
-                              View Job
-                            </a>
-                          </li>
-                          <li>
-                            <button
-                              class="dropdown-item"
-                              @click="cancelApplication(application.id)"
-                              :disabled="application.status !== 'pending'"
-                            >
-                              Cancel Application
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
+                      <span :class="['badge', getStatusClass(application.status)]">
+                        <i :class="getStatusIcon(application.status)" class="me-1"></i>
+                        {{ application.status || 'Unknown' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        v-if="application.status === 'pending'"
+                        @click="handleCancelApplication(application.id)"
+                        class="btn btn-sm btn-outline-danger"
+                      >
+                        Cancel
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -211,48 +236,71 @@
 </template>
 
 <script>
-import { authService } from "@/services/authService";
-import { jobService } from "@/services/jobService";
+import { useJobSeekerStore } from "@/stores/jobSeeker";
+import { useAuthStore } from "@/stores/auth";
 import { useProfileStore } from "@/stores/profile";
+import { authService } from "@/services/authService";
 
 export default {
   name: "JobSeekerDashboard",
 
   data() {
     return {
+      jobSeekerStore: useJobSeekerStore(),
+      authStore: useAuthStore(),
+      profileStore: useProfileStore(),
+      searchTerm: '',
+      statusFilter: 'all',
       user: authService.getCurrentUser(),
-      applications: [],
-      isLoading: true,
-      error: null,
-      isCancelling: null,
-      profileStore: useProfileStore()
+      isCancelling: null
     };
   },
 
   computed: {
+    applications() {
+      return this.jobSeekerStore.filteredApplications;
+    },
+    stats() {
+      return this.jobSeekerStore.applicationStats;
+    },
+    isLoading() {
+      return this.jobSeekerStore.isLoading;
+    },
+    error() {
+      return this.jobSeekerStore.error;
+    },
     pendingApplications() {
-      return (
-        this.applications?.filter(
-          (app) => app.status?.toLowerCase() === "pending"
-        ) || []
-      );
+      return this.applications?.filter(
+        (app) => app.status?.toLowerCase() === "pending"
+      ) || [];
     },
     approvedApplications() {
-      return (
-        this.applications?.filter(
-          (app) => app.status?.toLowerCase() === "approved"
-        ) || []
-      );
+      return this.applications?.filter(
+        (app) => app.status?.toLowerCase() === "approved"
+      ) || [];
     },
     recentApplications() {
       if (!this.applications?.length) return [];
       return [...this.applications]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
-    },
+    }
   },
 
   methods: {
+    handleSearch(value) {
+      this.jobSeekerStore.setFilter('search', value);
+    },
+
+    handleStatusFilter(status) {
+      this.jobSeekerStore.setFilter('status', status);
+    },
+
+    handleImageError(event) {
+      event.target.src = '/images/default-company-logo.png';
+      event.target.classList.add('default-logo');
+    },
+
     formatDate(date) {
       if (!date) return "N/A";
       return new Date(date).toLocaleDateString("en-NG", {
@@ -268,33 +316,6 @@ export default {
       }`.toUpperCase();
     },
 
-    async loadApplications() {
-      this.isLoading = true;
-      this.error = null;
-
-      try {
-        const response = await jobService.getUserApplications();
-        
-        if (response?.data?.data) {
-          this.applications = response.data.data.map(application => ({
-            ...application,
-            companyName: application.job?.employer?.company_name || 'Unknown Company',
-            jobTitle: application.job?.title || 'Job No Longer Available'
-          }));
-        } else {
-          this.applications = [];
-          console.warn("Unexpected response format:", response);
-          this.error = "Unable to load applications. Please try again.";
-        }
-      } catch (error) {
-        console.error("Error loading applications:", error);
-        this.error = error.message || "Failed to load applications";
-        this.applications = [];
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
     async handleLogout() {
       try {
         await authService.logout();
@@ -307,29 +328,36 @@ export default {
 
     getStatusClass(status) {
       return {
-        "bg-warning": status === "pending",
-        "bg-success": status === "approved",
-        "bg-danger": status === "rejected",
-        "bg-secondary": !status,
+        'bg-warning': status === 'pending',
+        'bg-success': status === 'accepted',
+        'bg-danger': status === 'rejected',
+        'bg-secondary': status === 'withdrawn',
+        'bg-light text-dark': !status
       };
+    },
+
+    getStatusIcon(status) {
+      switch(status?.toLowerCase()) {
+        case 'pending':
+          return 'fas fa-clock';
+        case 'accepted':
+          return 'fas fa-check';
+        case 'rejected':
+          return 'fas fa-times';
+        case 'withdrawn':
+          return 'fas fa-undo';
+        default:
+          return 'fas fa-question';
+      }
     },
 
     async retryLoading() {
       this.error = null;
-      await this.loadApplications();
+      await this.jobSeekerStore.loadApplications();
     },
 
     getCompanyLogo(logoUrl) {
       return logoUrl || "/images/dashboard-default.svg";
-    },
-
-    handleImageError(event) {
-      event.target.src = '/images/default-company-logo.png';
-      event.target.classList.add('default-logo');
-    },
-
-    toggleDropdown() {
-      this.isDropdownOpen = !this.isDropdownOpen;
     },
 
     async handleCancelApplication(applicationId) {
@@ -338,8 +366,7 @@ export default {
         try {
           const success = await this.profileStore.cancelApplication(applicationId);
           if (success) {
-            // Remove the application from local state
-            this.applications = this.applications.filter(app => app.id !== applicationId);
+            await this.jobSeekerStore.loadApplications();
             alert('Application cancelled successfully');
           }
         } catch (error) {
@@ -362,71 +389,42 @@ export default {
         return;
       }
 
-      await this.loadApplications();
+      await this.jobSeekerStore.loadApplications();
     } catch (error) {
       console.error("Error initializing dashboard:", error);
-    } finally {
-      this.isLoading = false;
     }
-  },
+  }
 };
 </script>
 
 <style scoped>
-.dashboard-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.stat-card {
-  transition: transform 0.2s;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.stat-icon.applications {
-  background-color: rgba(13, 110, 253, 0.1);
-  color: #0d6efd;
-}
-
-.stat-icon.pending {
-  background-color: rgba(255, 193, 7, 0.1);
-  color: #ffc107;
-}
-
-.stat-icon.approved {
-  background-color: rgba(25, 135, 84, 0.1);
-  color: #198754;
-}
-
-.badge {
-  font-weight: 500;
-  padding: 0.5em 0.75em;
-}
-
-.table > :not(:first-child) {
-  border-top: 0;
-}
-
 .company-logo {
   width: 40px;
   height: 40px;
   object-fit: cover;
   border-radius: 4px;
-  background-color: #f8f9fa; /* Light background for empty images */
+}
+
+.default-logo {
+  background-color: #f8f9fa;
+  padding: 5px;
+}
+
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-title {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
 }
 
 .badge {
@@ -442,44 +440,53 @@ export default {
   font-size: 0.85em;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #e9ecef;
+.stat-card {
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  color: #495057;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.stat-icon.applications {
+  background-color: #4e73df;
+}
+
+.stat-icon.pending {
+  background-color: #f6c23e;
+}
+
+.stat-icon.approved {
+  background-color: #1cc88a;
+}
+
+.dropdown-menu {
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
 }
 
 .dropdown-item {
   padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
+  font-weight: 400;
+  color: #3a3b45;
 }
 
-.dropdown-item i {
-  width: 20px;
-}
-
-.rotate-180 {
-  transform: rotate(180deg);
-  transition: transform 0.2s ease;
-}
-
-.dropdown-menu {
-  margin-top: 0.5rem;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.2s ease;
-}
-
-.dropdown-menu.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+.dropdown-item:hover {
+  background-color: #f8f9fc;
+  color: #2e2f37;
 }
 </style>
