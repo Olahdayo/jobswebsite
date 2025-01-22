@@ -163,16 +163,26 @@ export default {
 
     userName() {
       const user = this.authStore?.user;
-      return user ? `${user.first_name} ${user.last_name}` : "";
+      if (!user) return '';
+      
+      if (this.userType === 'employer') {
+        return user.company_name || 'Company';
+      }
+      
+      return `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
     },
 
     userInitials() {
       const user = this.authStore?.user;
-      return user
-        ? `${user.first_name?.charAt(0) || ""}${
-            user.last_name?.charAt(0) || ""
-          }`.toUpperCase()
-        : "";
+      if (!user) return '';
+      
+      if (this.userType === 'employer') {
+        return (user.company_name || 'C').charAt(0).toUpperCase();
+      }
+      
+      const firstName = user.first_name || '';
+      const lastName = user.last_name || '';
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'U';
     },
   },
 

@@ -12,13 +12,13 @@
             <i class="fas fa-plus-circle me-2"></i>
             Post New Job
           </button>
-          <button
+          <!-- <button
             @click="handleLogout"
             class="btn btn-outline-danger d-flex align-items-center"
           >
             <i class="fas fa-sign-out-alt me-2"></i>
             Logout
-          </button>
+          </button> -->
         </div>
       </div>
     </nav>
@@ -556,11 +556,11 @@ export default {
       }
     },
 
-    handleLogout() {
-      if (this.authStore) {
-        this.authStore.logout();
-      }
-    },
+    // handleLogout() {
+    //   if (this.authStore) {
+    //     this.authStore.logout();
+    //   }
+    // },
 
     handleSuccessModalClose() {
       this.showSuccessModal = false;
