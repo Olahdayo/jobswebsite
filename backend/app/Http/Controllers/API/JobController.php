@@ -51,8 +51,7 @@ class JobController extends Controller
     public function store(Request $request)
     {
         try {
-            // Log the entire request input for debugging
-            \Log::info('Job Creation Raw Input:', $request->all());
+         
 
             // Define valid education levels
             $validEducationLevels = [
@@ -97,7 +96,7 @@ class JobController extends Controller
             ]);
 
             // Log the validated data for debugging
-            \Log::info('Job Creation Validated Data:', $validated);
+            Log::info('Job Creation Validated Data:', $validated);
 
             // Add employer_id to the validated data
             $validated['employer_id'] = $request->user()->id;
@@ -125,11 +124,7 @@ class JobController extends Controller
                 'data' => $job
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log detailed validation errors
-            // Log::error('Job Creation Validation Errors:', [
-            //     'errors' => $e->errors(),
-            //     'input' => $request->all()
-            // ]);
+            
 
             // Return validation errors
             return response()->json([
@@ -138,12 +133,6 @@ class JobController extends Controller
                 'input' => $request->all()
             ], 422);
         } catch (\Exception $e) {
-            // Log any other unexpected errors
-            // Log::error('Job Creation Error:', [
-            //     'message' => $e->getMessage(),
-            //     'trace' => $e->getTraceAsString(),
-            //     'input' => $request->all()
-            // ]);
 
             return response()->json([
                 'message' => 'An unexpected error occurred',

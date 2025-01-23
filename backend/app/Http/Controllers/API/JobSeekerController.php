@@ -90,11 +90,10 @@ class JobSeekerController extends Controller
     public function uploadProfilePicture(Request $request)
     {
         try {
-            // Log::info('Starting profile picture upload');
-            // Log::info('Request files:', $request->allFiles());
+            
             
             if (!$request->hasFile('profile_picture')) {
-                Log::error('No file uploaded');
+              
                 return response()->json([
                     'message' => 'No file uploaded',
                     'error' => 'Please select a file to upload'
@@ -102,11 +101,7 @@ class JobSeekerController extends Controller
             }
 
             $file = $request->file('profile_picture');
-            Log::info('File details:', [
-                'name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime' => $file->getMimeType()
-            ]);
+            
 
             // Validate file
             $validated = $request->validate([
@@ -117,7 +112,7 @@ class JobSeekerController extends Controller
 
             // Delete old profile picture if it exists
             if ($user->profile_picture && !str_starts_with($user->profile_picture, 'http')) {
-                Log::info('Deleting old profile picture: ' . $user->profile_picture);
+               
                 Storage::disk('public')->delete($user->profile_picture);
             }
 
@@ -126,7 +121,7 @@ class JobSeekerController extends Controller
             
             // Store the new profile picture with the unique filename
             $path = $file->storeAs('profile-pictures', $filename, 'public');
-            // Log::info('New profile picture stored at: ' . $path);
+            
             
             // Update user profile with new image path
             $user->profile_picture = $path;
@@ -139,8 +134,7 @@ class JobSeekerController extends Controller
                 'user' => $user
             ]);
         } catch (\Exception $e) {
-            Log::error('Profile picture upload error: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
+          
             return response()->json([
                 'message' => 'Failed to upload profile picture',
                 'error' => $e->getMessage()

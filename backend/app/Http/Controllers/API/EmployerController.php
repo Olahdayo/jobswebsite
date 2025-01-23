@@ -165,8 +165,7 @@ class EmployerController extends Controller
                 'acceptedApplications' => $acceptedApplications
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in employer stats: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Error fetching employer stats',
                 'error' => $e->getMessage()
