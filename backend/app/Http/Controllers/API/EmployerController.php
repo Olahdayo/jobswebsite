@@ -4,12 +4,15 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\JobListing;
+use App\Models\Job;
 use App\Models\Employer;
 use App\Models\JobSeeker;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class EmployerController extends Controller
 {
@@ -97,7 +100,7 @@ class EmployerController extends Controller
     /**
      * Display a listing of the job's applications.
      */
-    public function applications(Request $request, JobListing $job)
+    public function applications(Request $request, Job $job)
     {
         $this->authorize('viewApplications', $job);
 
@@ -129,42 +132,64 @@ class EmployerController extends Controller
     /**
      * Get employer statistics.
      */
-    public function stats()
+    public function stats(Request $request)
     {
         try {
-            $employerId = Auth::id();
+            $employer = $request->user();
+            
+            if (!$employer) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                    'error' => 'No authenticated user found'
+                ], 401);
+            }
+
+            
             
             // Get total jobs count
-            $totalJobs = JobListing::where('employer_id', $employerId)->count();
+            $totalJobs = Job::where('employer_id', $employer->id)->count();
+            
             
             // Get active jobs count using is_active boolean field
-            $activeJobs = JobListing::where('employer_id', $employerId)
-                                  ->where('is_active', true)
-                                  ->count();
+            $activeJobs = Job::where('employer_id', $employer->id)
+                            ->where('is_active', true)
+                            ->count();
+            
             
             // Get total applications count
-            $totalApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
-                $query->where('employer_id', $employerId);
+            $totalApplications = Application::whereHas('job', function($query) use ($employer) {
+                $query->where('employer_id', $employer->id);
             })->count();
             
+            
             // Get pending applications count
-            $pendingApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
-                $query->where('employer_id', $employerId);
+            $pendingApplications = Application::whereHas('job', function($query) use ($employer) {
+                $query->where('employer_id', $employer->id);
             })->where('status', 'pending')->count();
             
-            // Get accepted applications count
-            $acceptedApplications = Application::whereHas('jobListing', function($query) use ($employerId) {
-                $query->where('employer_id', $employerId);
-            })->where('status', 'accepted')->count();
             
-            return response()->json([
-                'totalJobs' => $totalJobs,
-                'activeJobs' => $activeJobs,
-                'totalApplications' => $totalApplications,
-                'pendingApplications' => $pendingApplications,
-                'acceptedApplications' => $acceptedApplications
-            ]);
+            // Get accepted applications count
+            $acceptedApplications = Application::whereHas('job', function($query) use ($employer) {
+                $query->where('employer_id', $employer->id);
+            })->where('status', 'accepted')->count();
+           
+            
+            $response = [
+                'status' => 'success',
+                'data' => [
+                    'totalJobs' => (int)$totalJobs,
+                    'activeJobs' => (int)$activeJobs,
+                    'totalApplications' => (int)$totalApplications,
+                    'pendingApplications' => (int)$pendingApplications,
+                    'acceptedApplications' => (int)$acceptedApplications
+                ]
+            ];
+            
+           
+            
+            return response()->json($response);
         } catch (\Exception $e) {
+          
             
             return response()->json([
                 'message' => 'Error fetching employer stats',

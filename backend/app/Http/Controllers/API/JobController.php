@@ -51,8 +51,6 @@ class JobController extends Controller
     public function store(Request $request)
     {
         try {
-         
-
             // Define valid education levels
             $validEducationLevels = [
                 'Secondary School',
@@ -65,11 +63,14 @@ class JobController extends Controller
                 'Not Required'
             ];
 
+            // Log incoming request data
+            Log::info('Job Creation Request:', $request->all());
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'location' => 'required|string',
-                'type' => 'required|string|in:full-time,part-time,contract,remote,internship',
+                'type' => 'required|string|in:full-time,part-time,contract',
                 'salary' => 'nullable|array',
                 'salary.min' => 'nullable|numeric',
                 'salary.max' => 'nullable|numeric',
@@ -79,23 +80,9 @@ class JobController extends Controller
                 'deadline' => 'required|date|after:today',
                 'category' => 'sometimes|string',
                 'education_level' => 'sometimes|string|in:' . implode(',', $validEducationLevels)
-            ], [
-                // Custom error messages
-                'title.required' => 'Job title is required',
-                'description.required' => 'Job description is required',
-                'location.required' => 'Job location is required',
-                'type.required' => 'Job type is required',
-                'type.in' => 'Invalid job type selected',
-                'experience_level.required' => 'Experience level is required',
-                'requirements.required' => 'Job requirements are required',
-                'responsibilities.required' => 'Job responsibilities are required',
-                'deadline.required' => 'Application deadline is required',
-                'deadline.date' => 'Invalid deadline date',
-                'deadline.after' => 'Deadline must be a future date',
-                'education_level.in' => 'Invalid education level selected'
             ]);
 
-            // Log the validated data for debugging
+            // Log the validated data
             Log::info('Job Creation Validated Data:', $validated);
 
             // Add employer_id to the validated data
@@ -108,36 +95,44 @@ class JobController extends Controller
                 unset($validated['salary']);
             }
 
-            // Ensure requirements and responsibilities are arrays
-            $validated['requirements'] = $validated['requirements'] ?? [];
-            $validated['responsibilities'] = $validated['responsibilities'] ?? [];
-
-            // Validate and clean education_level
-            if (isset($validated['education_level']) && 
-                !in_array($validated['education_level'], $validEducationLevels)) {
-                unset($validated['education_level']);
+            // Convert arrays to JSON strings for storage
+            if (isset($validated['requirements'])) {
+                $validated['requirements'] = json_encode($validated['requirements']);
             }
+            if (isset($validated['responsibilities'])) {
+                $validated['responsibilities'] = json_encode($validated['responsibilities']);
+            }
+
+            // Set default values
+            $validated['is_active'] = true;
+            $validated['is_featured'] = false;
+            $validated['category'] = $validated['category'] ?? 'Other';
+
+            
 
             $job = JobListing::create($validated);
 
+           
+
             return response()->json([
+                'message' => 'Job created successfully',
                 'data' => $job
             ], 201);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             
 
-            // Return validation errors
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $e->errors(),
-                'input' => $request->all()
+                'errors' => $e->errors()
             ], 422);
+
         } catch (\Exception $e) {
+           
 
             return response()->json([
                 'message' => 'An unexpected error occurred',
-                'error' => $e->getMessage(),
-                'input' => $request->all()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -426,7 +421,7 @@ class JobController extends Controller
 
             return response()->json($stats);
         } catch (\Exception $e) {
-            Log::error('Error getting job stats: ' . $e->getMessage());
+           
             return response()->json([
                 'activeJobs' => 0,
                 'totalLocations' => 0,

@@ -233,12 +233,14 @@
                   <!-- Job Type -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Type*</label>
-                    <select class="form-select" v-model="jobForm.type" required>
-                      <option value="">Select Type</option>
-                      <option v-for="type in filterOptions.jobTypes" 
-                              :key="type" 
-                              :value="type">
-                        {{ type }}
+                    <select v-model="jobForm.type" class="form-select" required>
+                      <option value="" disabled>Select job type</option>
+                      <option 
+                        v-for="type in jobTypes" 
+                        :key="type" 
+                        :value="type"
+                      >
+                        {{ type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ') }}
                       </option>
                     </select>
                   </div>
@@ -397,15 +399,13 @@ export default {
       jobTypes: [
         'full-time',
         'part-time', 
-        'contract',
-        'remote',
-        'internship'
+        'contract'
       ],
       jobForm: {
         title: '',
         description: '',
         location: '',
-        type: 'full-time',
+        type: '',
         experienceLevel: '',
         salaryMin: null,
         salaryMax: null,
@@ -422,7 +422,8 @@ export default {
       jobsStore: null,
       showSuccessModal: false,
       successJobTitle: '',
-      isJobCreationLoading: false
+      isJobCreationLoading: false,
+      isLoading: false
     };
   },
 
@@ -458,15 +459,16 @@ export default {
   methods: {
     async loadDashboardData() {
       try {
-        if (this.jobsStore) {
-          await Promise.all([
-            this.jobsStore.fetchEmployerJobs(),
-            this.jobsStore.fetchJobStats(),
-            this.jobsStore.fetchFilterOptions()
-          ]);
-        }
+        this.isLoading = true;
+        await Promise.all([
+          this.jobsStore.fetchEmployerJobs(),
+          this.jobsStore.fetchJobStats(),
+          this.jobsStore.fetchFilterOptions()
+        ]);
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        console.error('Error loading dashboard:', error);
+      } finally {
+        this.isLoading = false;
       }
     },
 
@@ -571,7 +573,6 @@ export default {
   created() {
     this.authStore = useAuthStore();
     this.jobsStore = useJobsStore();
-
     this.loadDashboardData();
   }
 }

@@ -92,10 +92,15 @@ export const useJobsStore = defineStore("jobs", {
       try {
         this.loading = true;
         const response = await jobService.getEmployerStats();
-        this.jobStats = {
-          ...this.jobStats,
-          ...response.data
-        };
+        if (response.data && response.status === 'success') {
+          this.jobStats = {
+            totalJobs: response.data.totalJobs || 0,
+            activeJobs: response.data.activeJobs || 0,
+            totalApplications: response.data.totalApplications || 0,
+            pendingApplications: response.data.pendingApplications || 0,
+            acceptedApplications: response.data.acceptedApplications || 0
+          };
+        }
       } catch (error) {
         console.error('Error fetching job stats:', error);
         this.error = error.message;
@@ -110,7 +115,7 @@ export const useJobsStore = defineStore("jobs", {
         const response = await jobService.createJob(jobData);
         if (response.data) {
           this.employerJobs = [...this.employerJobs, response.data];
-          await this.fetchJobStats(); // Refresh stats after creating a job
+          await this.fetchJobStats(); 
         }
         return response.data;
       } catch (error) {
