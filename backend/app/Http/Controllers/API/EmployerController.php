@@ -19,9 +19,53 @@ class EmployerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $employer = $request->user();
+
+            $jobs = Job::where('employer_id', $employer->id)
+                ->withCount([
+                    'applications as total_applications',
+                    'applications as pending_applications' => function ($query) {
+                        $query->where('status', 'pending');
+                    },
+                    'applications as accepted_applications' => function ($query) {
+                        $query->where('status', 'accepted');
+                    }
+                ])
+                ->with('applications') // Load the applications relationship
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($job) {
+                    return [
+                        'id' => $job->id,
+                        'title' => $job->title,
+                        'location' => $job->location,
+                        'type' => ucfirst(str_replace('-', ' ', $job->type)),
+                        'experience_level' => $job->experience_level,
+                        'deadline' => $job->deadline ? date('M d, Y', strtotime($job->deadline)) : null,
+                        'is_active' => $job->is_active,
+                        'created_at' => date('M d, Y', strtotime($job->created_at)),
+                        'applications' => [
+                            'total' => $job->applications->count(),
+                            'pending' => $job->applications->where('status', 'pending')->count(),
+                            'accepted' => $job->applications->where('status', 'accepted')->count()
+                        ]
+                    ];
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $jobs
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching employer jobs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
