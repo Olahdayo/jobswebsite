@@ -121,7 +121,6 @@
                   <th>Location</th>
                   <th>Type</th>
                   <th>Experience</th>
-                  <th>Applications</th>
                   <th>Status</th>
                   <th>Posted Date</th>
                   <th>Actions</th>
@@ -133,21 +132,6 @@
                   <td>{{ job.location }}</td>
                   <td>{{ job.type }}</td>
                   <td>{{ job.experience_level }}</td>
-                  <td>
-                    <div class="d-flex flex-column gap-1">
-                      <span class="fw-bold text-primary">
-                        {{ job.applications.total || 0 }} Applications
-                      </span>
-                      <div class="d-flex flex-column text-muted small">
-                        <div>
-                          <span class="text-warning">{{ job.applications.pending || 0 }}</span> Pending
-                        </div>
-                        <div>
-                          <span class="text-success">{{ job.applications.accepted || 0 }}</span> Accepted
-                        </div>
-                      </div>
-                    </div>
-                  </td>
                   <td>
                     <span 
                       :class="[
@@ -163,7 +147,7 @@
                     <div class="btn-group">
                       <button 
                         class="btn btn-sm btn-outline-primary" 
-                        @click="viewApplications(job.id)"
+                        @click="viewJob(job.id)"
                       >
                         View
                       </button>
@@ -180,7 +164,7 @@
                   </td>
                 </tr>
                 <tr v-if="employerJobs.length === 0">
-                  <td colspan="8" class="text-center py-4">
+                  <td colspan="7" class="text-center py-4">
                     <p class="text-muted mb-0">No jobs posted yet</p>
                   </td>
                 </tr>
@@ -593,7 +577,11 @@ export default {
     handleSuccessModalClose() {
       this.showSuccessModal = false;
       this.successJobTitle = '';
-    }
+    },
+
+    viewJob(jobId) {
+      this.$router.push({ name: 'job-details', params: { id: jobId } })
+    },
   },
 
   created() {
