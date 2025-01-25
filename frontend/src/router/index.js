@@ -123,6 +123,17 @@ const router = createRouter({
       component: Profile,
       meta: { requiresAuth: true }
     },
+    {
+      path: "/job-applications/:jobId",
+      name: "JobApplications",
+      component: () => import("@/views/JobApplications.vue"),
+      meta: {
+        requiresAuth: true,
+        userType: "employer",
+        title: "Job Applications"
+      },
+      props: true
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {

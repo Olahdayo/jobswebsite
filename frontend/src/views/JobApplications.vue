@@ -1,113 +1,38 @@
 <template>
-  <div class="job-applications-container">
-    <!-- Error Alert -->
-    <div v-if="errorMessage" class="container py-3">
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ errorMessage }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @click="clearErrorMessage"></button>
-      </div>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <template v-else-if="!errorMessage">
-      <!-- Header -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container-fluid px-4">
-          <h1 class="navbar-brand mb-0 h1 fw-bold">Job Applications</h1>
-          <button 
-            @click="goToDashboard" 
-            class="btn btn-outline-primary"
-          >
-            <i class="fas fa-arrow-left me-2"></i>
-            Back to Dashboard
-          </button>
-        </div>
-      </nav>
-
-      <!-- Job Details Card -->
-      <div class="container py-4">
-        <div v-if="job" class="card border-0 shadow-sm mb-4">
-          <div class="card-body">
-            <h5 class="card-title fw-bold mb-3">{{ job.title }}</h5>
-            <div class="row">
-              <div class="col-md-3">
-                <p class="text-muted mb-1">Location</p>
-                <p class="fw-bold">{{ job.location }}</p>
-              </div>
-              <div class="col-md-3">
-                <p class="text-muted mb-1">Type</p>
-                <p class="fw-bold">{{ job.type }}</p>
-              </div>
-              <div class="col-md-3">
-                <p class="text-muted mb-1">Experience Level</p>
-                <p class="fw-bold">{{ job.experience_level }}</p>
-              </div>
-              <div class="col-md-3">
-                <p class="text-muted mb-1">Status</p>
-                <span 
-                  :class="[
-                    'badge',
-                    job.is_active ? 'bg-success' : 'bg-secondary'
-                  ]"
-                >
-                  {{ job.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Applications Table -->
+  <div class="job-applications-container container py-4">
+    <div class="row">
+      <div class="col-12">
         <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white border-bottom-0 py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="card-title mb-0">Applications</h5>
-              <div class="btn-group">
-                <button 
-                  class="btn btn-outline-primary"
-                  :class="{ active: filter === 'all' }"
-                  @click="setFilter('all')"
-                >
-                  All
-                </button>
-                <button 
-                  class="btn btn-outline-warning"
-                  :class="{ active: filter === 'pending' }"
-                  @click="setFilter('pending')"
-                >
-                  Pending
-                </button>
-                <button 
-                  class="btn btn-outline-success"
-                  :class="{ active: filter === 'accepted' }"
-                  @click="setFilter('accepted')"
-                >
-                  Accepted
-                </button>
-                <button 
-                  class="btn btn-outline-danger"
-                  :class="{ active: filter === 'rejected' }"
-                  @click="setFilter('rejected')"
-                >
-                  Rejected
-                </button>
-              </div>
+          <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Job Applications</h4>
+            <div class="d-flex gap-2">
+              <button 
+                class="btn btn-outline-secondary" 
+                @click="$router.go(-1)"
+              >
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </button>
             </div>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
+            <div v-if="loading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div v-else-if="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+            <div v-else-if="applications.length === 0" class="text-center py-4">
+              <p class="text-muted mb-0">No applications found for this job.</p>
+            </div>
+            <div v-else class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Applicant Name</th>
                     <th>Email</th>
+                    <th>Phone</th>
                     <th>Resume</th>
                     <th>Applied Date</th>
                     <th>Status</th>
@@ -115,17 +40,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="application in filteredApplications" :key="application.id">
-                    <td>{{ application.job_seeker.name }}</td>
-                    <td>{{ application.job_seeker.email }}</td>
+                  <tr v-for="application in applications" :key="application.id">
+                    <td>{{ application.name }}</td>
+                    <td>{{ application.email }}</td>
+                    <td>{{ application.phone }}</td>
                     <td>
                       <a 
-                        v-if="application.resume_url"
-                        :href="application.resume_url" 
+                        v-if="application.resume_path" 
+                        :href="application.resume_path" 
                         target="_blank" 
                         class="btn btn-sm btn-outline-primary"
                       >
-                        <i class="fas fa-file-pdf me-1"></i>
                         View Resume
                       </a>
                       <span v-else class="text-muted">No Resume</span>
@@ -133,37 +58,29 @@
                     <td>{{ formatDate(application.created_at) }}</td>
                     <td>
                       <span 
-                        class="badge"
-                        :class="{
-                          'bg-warning': application.status === 'pending',
-                          'bg-success': application.status === 'accepted',
-                          'bg-danger': application.status === 'rejected'
-                        }"
+                        :class="[
+                          'badge', 
+                          getStatusClass(application.status)
+                        ]"
                       >
                         {{ application.status }}
                       </span>
                     </td>
                     <td>
-                      <div class="btn-group" v-if="application.status === 'pending'">
+                      <div class="btn-group">
                         <button 
-                          class="btn btn-sm btn-success"
-                          @click="handleApplicationStatus(application.id, 'accepted')"
+                          class="btn btn-sm btn-outline-success"
+                          @click="updateApplicationStatus(application.id, 'accepted')"
                         >
                           Accept
                         </button>
                         <button 
-                          class="btn btn-sm btn-danger"
-                          @click="handleApplicationStatus(application.id, 'rejected')"
+                          class="btn btn-sm btn-outline-danger"
+                          @click="updateApplicationStatus(application.id, 'rejected')"
                         >
                           Reject
                         </button>
                       </div>
-                      <span v-else>--</span>
-                    </td>
-                  </tr>
-                  <tr v-if="filteredApplications.length === 0">
-                    <td colspan="6" class="text-center py-4">
-                      <p class="text-muted mb-0">No applications found</p>
                     </td>
                   </tr>
                 </tbody>
@@ -172,127 +89,191 @@
           </div>
         </div>
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
 <script>
-import { mapActions, mapState } from 'pinia';
-import { useJobsStore } from '@/stores/jobs';
 import { useAuthStore } from '@/stores/auth';
+import api from '@/services/api';
 
 export default {
   name: 'JobApplications',
-  
-  data() {
-    return {
-      job: null,
-      applications: [],
-      filter: 'all',
-      isLoading: false,
-      errorMessage: ''
-    };
-  },
-
-  computed: {
-    ...mapState(useAuthStore, ['isAuthenticated']),
-
-    filteredApplications() {
-      if (this.filter === 'all') return this.applications;
-      return this.applications.filter(app => app.status === this.filter);
+  props: {
+    jobId: {
+      type: [String, Number],
+      required: true
     }
   },
-
-  created() {
-    this.loadJobData();
+  data() {
+    return {
+      applications: [], 
+      job: null,
+      loading: true,
+      error: null,
+    };
   },
-
+  created() {
+    this.fetchJobApplications();
+  },
   methods: {
-    ...mapActions(useJobsStore, ['fetchJobApplications', 'updateApplicationStatus']),
-
-    // Load job and application data
-    async loadJobData() {
-      // Check authentication
-      if (!this.isAuthenticated) {
-        this.errorMessage = 'You must be logged in to view job applications.';
-        this.$router.push('/login');
-        return;
-      }
-
+    async fetchJobApplications() {
       try {
-        this.isLoading = true;
-        this.errorMessage = '';
+        this.loading = true;
+        this.error = null;
 
-        const jobId = this.$route.params.id;
-        const response = await this.fetchJobApplications(jobId);
-        
-        this.job = response.job;
-        this.applications = response.applications;
+        // Ensure jobId is valid
+        if (!this.jobId) {
+          throw new Error('Invalid Job ID');
+        }
+
+        // Get current user from auth store
+        const authStore = useAuthStore();
+        const currentUser = authStore.user;
+        const userType = authStore.userType;
+
+        // Detailed logging of authentication state
+        // console.log('Authentication State:', {
+        //   isAuthenticated: authStore.isAuthenticated,
+        //   userType: userType,
+        //   user: currentUser,
+        //   tokenPresent: !!authStore.token
+        // });
+
+        // Enhanced user type validation
+        const validUserTypes = ['employer', 'admin'];
+        const normalizedUserType = userType ? userType.toLowerCase() : null;
+
+        if (!normalizedUserType || !validUserTypes.includes(normalizedUserType)) {
+          console.warn('Invalid User Type Check', {
+            originalUserType: userType,
+            normalizedUserType: normalizedUserType,
+            validTypes: validUserTypes
+          });
+          
+          // Log the entire user object for debugging
+          console.log('Full User Object:', currentUser);
+          
+          // Provide more context about the authorization failure
+          throw new Error(`Unauthorized access. Invalid user type '${userType}'.`);
+        }
+
+        // Fetch job applications with detailed error handling
+        const response = await api.get(`/jobs/${this.jobId}/applications`, {
+          // Add extra headers for debugging
+          headers: {
+            'X-User-Type': normalizedUserType,
+            'X-User-ID': currentUser?.id
+          }
+        });
+
+        // console.log('Full API Response:', {
+        //   status: response.status,
+        //   headers: response.headers,
+        //   data: response.data
+        // });
+
+        // Log raw response data for debugging
+        // console.log('Raw Response Data:', JSON.stringify(response.data));
+
+        // Validate response structure
+        if (!response.data || !response.data.job || !response.data.applications) {
+          throw new Error('Invalid response format: Missing job or applications data');
+        }
+
+        // Set job details
+        this.job = response.data.job;
+
+        // Ensure response has applications array
+        this.applications = response.data.applications || [];
+
+        // console.log('Parsed Applications:', {
+        //   count: this.applications.length,
+        //   details: this.applications
+        // });
+
+        // Additional validation
+        if (this.applications.length === 0) {
+          this.error = 'No applications found for this job.';
+        }
       } catch (error) {
-        console.error('Error loading job data:', error);
+        console.error('Job Applications Error:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         
-        // Handle specific error scenarios
-        if (error.response && error.response.status === 403) {
-          this.errorMessage = 'You do not have permission to view these job applications.';
-          this.$router.push('/dashboard/employer');
+        // Detailed error handling
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          console.error('Error Response Details:', {
+            status: error.response.status,
+            data: error.response.data,
+            headers: error.response.headers
+          });
+          
+          this.error = error.response.data.message || 
+                       `Error ${error.response.status}: Failed to fetch job applications`;
+          
+          // Specific error handling
+          if (error.response.status === 403) {
+            // Log details about the forbidden error
+            console.error('Forbidden Access Details:', {
+              userType: this.userType,
+              userId: this.currentUser?.id,
+              jobId: this.jobId
+            });
+            
+            this.$router.push('/dashboard/employer');
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('No response received:', error.request);
+          this.error = 'No response from server. Please check your network connection.';
         } else {
-          this.errorMessage = 'Failed to load job applications. Please try again.';
+          // Something happened in setting up the request
+          console.error('Error setting up request:', error.message);
+          this.error = error.message || 'An unexpected error occurred';
         }
       } finally {
-        this.isLoading = false;
+        this.loading = false;
       }
     },
-
-    // Handle application status update
-    async handleApplicationStatus(applicationId, status) {
+    async updateApplicationStatus(applicationId, status) {
       try {
-        const jobId = this.$route.params.id;
-        await this.updateApplicationStatus(jobId, applicationId, status);
-        
-        // Reload job data to refresh applications
-        await this.loadJobData();
+        await api.patch(`/job-applications/${applicationId}/status`, 
+          { status }
+        );
+        // Update local state
+        const application = this.applications.find(app => app.id === applicationId);
+        if (application) {
+          application.status = status;
+        }
       } catch (error) {
-        console.error('Error updating application status:', error);
-        this.errorMessage = 'Failed to update application status. Please try again.';
+        this.$toast.error(error.response?.data?.message || 'Failed to update application status');
       }
     },
-
-    // Format date for display
     formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
+      return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       });
     },
-
-    // Set filter for applications
-    setFilter(filterType) {
-      this.filter = filterType;
-    },
-
-    // Clear error message
-    clearErrorMessage() {
-      this.errorMessage = '';
-    },
-
-    // Navigate back to dashboard
-    goToDashboard() {
-      this.$router.push('/dashboard/employer');
+    getStatusClass(status) {
+      switch(status.toLowerCase()) {
+        case 'pending': return 'bg-warning text-dark';
+        case 'accepted': return 'bg-success';
+        case 'rejected': return 'bg-danger';
+        default: return 'bg-secondary';
+      }
     }
   }
-};
+}
 </script>
 
 <style scoped>
 .job-applications-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.btn-group .btn.active {
-  z-index: 0;
+  max-width: 1200px;
 }
 </style>

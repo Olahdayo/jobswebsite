@@ -53,9 +53,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/jobs/{job}', [JobController::class, 'update']);
     Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
 
+    // Job Applications Routes
+    Route::get('/jobs/{job}/applications', [JobController::class, 'getJobApplications']);
+    Route::patch('/job-applications/{applicationId}/status', [JobController::class, 'updateApplicationStatus']);
+
     // Application management
-    Route::get('/jobs/{job}/applications', [EmployerController::class, 'applications']);
-    Route::put('/applications/{application}/status', [EmployerController::class, 'updateApplicationStatus']);
+    // Removed duplicate route
 });
 
 // Protected routes for job seekers

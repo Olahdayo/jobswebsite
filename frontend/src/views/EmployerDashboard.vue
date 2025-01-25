@@ -580,7 +580,10 @@ export default {
     },
 
     viewJob(jobId) {
-      this.$router.push({ name: 'job-details', params: { id: jobId } })
+      this.$router.push({ 
+        name: 'JobApplications', 
+        params: { jobId: jobId } 
+      });
     },
   },
 
