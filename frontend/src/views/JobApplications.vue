@@ -41,13 +41,19 @@
                 </thead>
                 <tbody>
                   <tr v-for="application in applications" :key="application.id">
-                    <td>{{ application.name }}</td>
-                    <td>{{ application.email }}</td>
-                    <td>{{ application.phone }}</td>
+                    <td>{{ getApplicantName(application) }}</td>
+                    <td>{{ getApplicantEmail(application) }}</td>
+                    <td>
+                      {{ 
+                        (application.job_seeker && application.job_seeker.phone) || 
+                        (application.phone) || 
+                        'Not provided' 
+                      }}
+                    </td>
                     <td>
                       <a 
-                        v-if="application.resume_path" 
-                        :href="application.resume_path" 
+                        v-if="application.resume_url || (application.job_seeker && application.job_seeker.resume_url)" 
+                        :href="application.resume_url || application.job_seeker.resume_url" 
                         target="_blank" 
                         class="btn btn-sm btn-outline-primary"
                       >
@@ -55,12 +61,12 @@
                       </a>
                       <span v-else class="text-muted">No Resume</span>
                     </td>
-                    <td>{{ formatDate(application.created_at) }}</td>
+                    <td>{{ new Date(application.created_at).toLocaleDateString() }}</td>
                     <td>
                       <span 
                         :class="[
                           'badge', 
-                          getStatusClass(application.status)
+                          getStatusBadgeClass(application.status)
                         ]"
                       >
                         {{ application.status }}
@@ -94,27 +100,17 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
 import { useJobApplicationsStore } from '@/stores/job-applications';
 import { useAuthStore } from '@/stores/auth';
 
-
-export default defineComponent({
+export default {
   name: 'JobApplications',
   
-  setup() {
-    const jobApplicationsStore = useJobApplicationsStore();
-    const authStore = useAuthStore();
-
-    return {
-      jobApplicationsStore,
-      authStore
-    };
-  },
-
   data() {
     return {
-      jobId: this.$route.params.jobId
+      jobId: this.$route.params.jobId,
+      jobApplicationsStore: useJobApplicationsStore(),
+      authStore: useAuthStore()
     };
   },
 
@@ -155,30 +151,86 @@ export default defineComponent({
     },
     async updateApplicationStatus(applicationId, status) {
       try {
-        await api.patch(`/job-applications/${applicationId}/status`, 
-          { status }
-        );
-        // Update local state
-        const application = this.applications.find(app => app.id === applicationId);
-        if (application) {
-          application.status = status;
-        }
+        // Implement actual status update logic
+        console.log(`Updating application ${applicationId} to status: ${status}`);
+        
+        // Placeholder for actual API call
+        // await this.jobApplicationsStore.updateApplicationStatus(applicationId, status);
+        
+        // Optional: show success toast
+        // this.$toast.success(`Application ${status} successfully`);
       } catch (error) {
-        this.$toast.error(error.response?.data?.message || 'Failed to update application status');
+        console.error('Failed to update application status', error);
+        // Optional: show error toast
+        // this.$toast.error('Failed to update application status');
       }
     },
-    formatDate(dateString) {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+    getApplicantName(application) {
+      // Log the entire application object for debugging
+      console.log('Application Object for Name Retrieval:', {
+        id: application.id,
+        jobSeeker: application.job_seeker,
+        jobSeekerId: application.job_seeker_id
       });
+
+      // Prioritize full name from job_seeker
+      if (application.job_seeker) {
+        console.log('Job Seeker Details:', {
+          firstName: application.job_seeker.first_name,
+          lastName: application.job_seeker.last_name,
+          fullName: application.job_seeker.name
+        });
+
+        // Combine first and last name from job_seeker
+        const firstName = application.job_seeker.first_name || '';
+        const lastName = application.job_seeker.last_name || '';
+        
+        // Prefer full name if both first and last names exist
+        if (firstName && lastName) {
+          const fullName = `${firstName} ${lastName}`.trim();
+          console.log('Constructed Full Name:', fullName);
+          return fullName;
+        }
+        
+        // Fallback to full name if available
+        if (application.job_seeker.name) {
+          console.log('Using job_seeker name:', application.job_seeker.name);
+          return application.job_seeker.name;
+        }
+      }
+
+      // Fallback to application name if exists
+      if (application.name) {
+        return application.name;
+      }
+
+      // Fallback to email username
+      if (application.job_seeker && application.job_seeker.email) {
+        return application.job_seeker.email.split('@')[0];
+      }
+
+      // Absolute last resort
+      return `Applicant #${application.id}`;
     },
-    getStatusClass(status) {
-      switch(status.toLowerCase()) {
-        case 'pending': return 'bg-warning text-dark';
+    getApplicantEmail(application) {
+      // Check if job_seeker exists and has an email
+      if (application.job_seeker && application.job_seeker.email) {
+        return application.job_seeker.email;
+      }
+
+      // Check for application email
+      if (application.email) {
+        return application.email;
+      }
+
+      // Return a default message if no email found
+      return 'Email not provided';
+    },
+    getStatusBadgeClass(status) {
+      switch (status ? status.toLowerCase() : '') {
         case 'accepted': return 'bg-success';
         case 'rejected': return 'bg-danger';
+        case 'pending': return 'bg-warning';
         default: return 'bg-secondary';
       }
     }
@@ -193,7 +245,7 @@ export default defineComponent({
   beforeUnmount() {
     this.jobApplicationsStore.clearJobApplications();
   }
-});
+};
 </script>
 
 <style scoped>

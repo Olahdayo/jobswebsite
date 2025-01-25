@@ -467,81 +467,31 @@ class JobController extends Controller
         // Get the authenticated user
         $user = Auth::user();
 
-        // Enhanced logging for debugging
-        Log::error('Job Applications Authorization Attempt', [
-            'job_id' => $job->id,
-            'job_title' => $job->title,
-            'job_employer_id' => $job->employer_id,
-            'user_id' => $user->id,
-            'user_type' => $user->user_type ?? 'null',
-            'user_email' => $user->email,
-            'request_headers' => request()->headers->all()
-        ]);
-
         // Authorize that only the job's employer or admin can view the applications
-        try {
-            $this->authorize('viewApplications', $job);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            // Log detailed authorization failure
-            Log::error('Job Applications Authorization Failed', [
-                'error_message' => $e->getMessage(),
-                'job_id' => $job->id,
-                'user_id' => $user->id,
-                'user_type' => $user->user_type ?? 'null'
-            ]);
-
-            // Rethrow the exception with more context
-            throw new \Illuminate\Auth\Access\AuthorizationException(
-                "You are not authorized to view applications for this job. " .
-                "Required: employer of job or admin. " .
-                "Current: user type {$user->user_type}, user ID {$user->id}, job employer ID {$job->employer_id}"
-            );
-        }
-
-        // Log the job details
-        Log::info('Retrieving job applications', [
-            'job_id' => $job->id,
-            'job_title' => $job->title,
-            'user_id' => $user->id,
-            'user_type' => $user->user_type
-        ]);
+        $this->authorize('viewApplications', $job);
 
         // Fetch applications with related job seeker details
         $applications = $job->applications()->with('jobSeeker')->get();
 
-        // Log the applications count
-        Log::info('Job Applications Retrieved', [
-            'job_id' => $job->id,
-            'applications_count' => $applications->count()
-        ]);
+        // Log the applications to verify relationship loading
+        // Log::info('Job Applications Fetched', [
+        //     'job_id' => $job->id,
+        //     'applications_count' => $applications->count(),
+        //     'applications_details' => $applications->map(function($application) {
+        //         return [
+        //             'id' => $application->id,
+        //             'job_seeker_id' => $application->job_seeker_id,
+        //             'job_seeker_name' => $application->jobSeeker ? 
+        //                 ($application->jobSeeker->first_name . ' ' . $application->jobSeeker->last_name) : 
+        //                 'No Job Seeker'
+        //         ];
+        //     })
+        // ]);
 
-        $formattedApplications = $applications->map(function ($application) {
-            Log::info('Individual Application', [
-                'application_id' => $application->id,
-                'job_seeker_id' => $application->job_seeker_id,
-                'status' => $application->status
-            ]);
-
-            return [
-                'id' => $application->id,
-                'job_id' => $application->job_id,
-                'name' => $application->jobSeeker->name,
-                'email' => $application->jobSeeker->email,
-                'phone' => $application->jobSeeker->phone,
-                'resume_path' => $application->resume_url ? url($application->resume_url) : null,
-                'status' => $application->status,
-                'created_at' => $application->created_at,
-            ];
-        });
-
+        // Return the job and its applications
         return response()->json([
-            'job' => [
-                'id' => $job->id,
-                'title' => $job->title,
-                'location' => $job->location,
-                'type' => $job->type,
-            ],
-            'applications' => $formattedApplications
+            'job' => $job,
+            'applications' => $applications
         ]);
     }
 
