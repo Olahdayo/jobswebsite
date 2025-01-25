@@ -94,149 +94,63 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
+import { useJobApplicationsStore } from '@/stores/job-applications';
 import { useAuthStore } from '@/stores/auth';
-import api from '@/services/api';
 
-export default {
+
+export default defineComponent({
   name: 'JobApplications',
-  props: {
-    jobId: {
-      type: [String, Number],
-      required: true
-    }
-  },
-  data() {
+  
+  setup() {
+    const jobApplicationsStore = useJobApplicationsStore();
+    const authStore = useAuthStore();
+
     return {
-      applications: [], 
-      job: null,
-      loading: true,
-      error: null,
+      jobApplicationsStore,
+      authStore
     };
   },
-  created() {
-    this.fetchJobApplications();
+
+  data() {
+    return {
+      jobId: this.$route.params.jobId
+    };
   },
+
+  computed: {
+    applications() {
+      return this.jobApplicationsStore.applications;
+    },
+    job() {
+      return this.jobApplicationsStore.job;
+    },
+    loading() {
+      return this.jobApplicationsStore.loading;
+    },
+    error() {
+      return this.jobApplicationsStore.error;
+    }
+  },
+
   methods: {
     async fetchJobApplications() {
       try {
-        this.loading = true;
-        this.error = null;
-
-        // Ensure jobId is valid
-        if (!this.jobId) {
-          throw new Error('Invalid Job ID');
-        }
-
-        // Get current user from auth store
-        const authStore = useAuthStore();
-        const currentUser = authStore.user;
-        const userType = authStore.userType;
-
-        // Detailed logging of authentication state
-        // console.log('Authentication State:', {
-        //   isAuthenticated: authStore.isAuthenticated,
-        //   userType: userType,
-        //   user: currentUser,
-        //   tokenPresent: !!authStore.token
-        // });
-
-        // Enhanced user type validation
+        // Validate user type before fetching
+        const userType = this.authStore.userType;
         const validUserTypes = ['employer', 'admin'];
-        const normalizedUserType = userType ? userType.toLowerCase() : null;
 
-        if (!normalizedUserType || !validUserTypes.includes(normalizedUserType)) {
-          console.warn('Invalid User Type Check', {
-            originalUserType: userType,
-            normalizedUserType: normalizedUserType,
-            validTypes: validUserTypes
-          });
-          
-          // Log the entire user object for debugging
-          console.log('Full User Object:', currentUser);
-          
-          // Provide more context about the authorization failure
+        if (!userType || !validUserTypes.includes(userType)) {
           throw new Error(`Unauthorized access. Invalid user type '${userType}'.`);
         }
 
-        // Fetch job applications with detailed error handling
-        const response = await api.get(`/jobs/${this.jobId}/applications`, {
-          // Add extra headers for debugging
-          headers: {
-            'X-User-Type': normalizedUserType,
-            'X-User-ID': currentUser?.id
-          }
-        });
-
-        // console.log('Full API Response:', {
-        //   status: response.status,
-        //   headers: response.headers,
-        //   data: response.data
-        // });
-
-        // Log raw response data for debugging
-        // console.log('Raw Response Data:', JSON.stringify(response.data));
-
-        // Validate response structure
-        if (!response.data || !response.data.job || !response.data.applications) {
-          throw new Error('Invalid response format: Missing job or applications data');
-        }
-
-        // Set job details
-        this.job = response.data.job;
-
-        // Ensure response has applications array
-        this.applications = response.data.applications || [];
-
-        // console.log('Parsed Applications:', {
-        //   count: this.applications.length,
-        //   details: this.applications
-        // });
-
-        // Additional validation
-        if (this.applications.length === 0) {
-          this.error = 'No applications found for this job.';
-        }
+        // Use the store method to fetch job applications
+        await this.jobApplicationsStore.fetchJobApplications(this.jobId);
       } catch (error) {
-        console.error('Job Applications Error:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        
-        // Detailed error handling
-        if (error.response) {
-          // The request was made and the server responded with a status code
-          console.error('Error Response Details:', {
-            status: error.response.status,
-            data: error.response.data,
-            headers: error.response.headers
-          });
-          
-          this.error = error.response.data.message || 
-                       `Error ${error.response.status}: Failed to fetch job applications`;
-          
-          // Specific error handling
-          if (error.response.status === 403) {
-            // Log details about the forbidden error
-            console.error('Forbidden Access Details:', {
-              userType: this.userType,
-              userId: this.currentUser?.id,
-              jobId: this.jobId
-            });
-            
-            this.$router.push('/dashboard/employer');
-          }
-        } else if (error.request) {
-          // The request was made but no response was received
-          console.error('No response received:', error.request);
-          this.error = 'No response from server. Please check your network connection.';
-        } else {
-          // Something happened in setting up the request
-          console.error('Error setting up request:', error.message);
-          this.error = error.message || 'An unexpected error occurred';
+        // Handle navigation for unauthorized access
+        if (error.response && error.response.status === 403) {
+          this.$router.push('/dashboard/employer');
         }
-      } finally {
-        this.loading = false;
       }
     },
     async updateApplicationStatus(applicationId, status) {
@@ -268,8 +182,18 @@ export default {
         default: return 'bg-secondary';
       }
     }
+  },
+
+  created() {
+    // Fetch job applications when component is created
+    this.fetchJobApplications();
+  },
+
+  // Optional: Clear store state when component is destroyed
+  beforeUnmount() {
+    this.jobApplicationsStore.clearJobApplications();
   }
-}
+});
 </script>
 
 <style scoped>
