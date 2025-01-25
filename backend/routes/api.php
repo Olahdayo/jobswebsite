@@ -56,6 +56,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Job Applications Routes
     Route::get('/jobs/{job}/applications', [JobController::class, 'getJobApplications']);
     Route::patch('/job-applications/{applicationId}/status', [JobController::class, 'updateApplicationStatus']);
+    Route::get('/job-applications/{application}/download-resume', 
+        [JobController::class, 'downloadResume']
+    )->name('job-applications.download-resume');
 
     // Application management
     // Removed duplicate route

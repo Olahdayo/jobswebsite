@@ -51,14 +51,13 @@
                       }}
                     </td>
                     <td>
-                      <a 
+                      <button 
                         v-if="application.resume_url || (application.job_seeker && application.job_seeker.resume_url)" 
-                        :href="application.resume_url || application.job_seeker.resume_url" 
-                        target="_blank" 
+                        @click="downloadResume(application)"
                         class="btn btn-sm btn-outline-primary"
                       >
-                        View Resume
-                      </a>
+                        Download Resume
+                      </button>
                       <span v-else class="text-muted">No Resume</span>
                     </td>
                     <td>{{ new Date(application.created_at).toLocaleDateString() }}</td>
@@ -155,14 +154,76 @@ export default {
         console.log(`Updating application ${applicationId} to status: ${status}`);
         
         // Placeholder for actual API call
-        // await this.jobApplicationsStore.updateApplicationStatus(applicationId, status);
+        await this.jobApplicationsStore.updateApplicationStatus(applicationId, status);
         
         // Optional: show success toast
-        // this.$toast.success(`Application ${status} successfully`);
+        this.$toast.success(`Application ${status} successfully`);
       } catch (error) {
         console.error('Failed to update application status', error);
         // Optional: show error toast
-        // this.$toast.error('Failed to update application status');
+        this.$toast.error('Failed to update application status');
+      }
+    },
+    async downloadResume(application) {
+      try {
+        console.log('Attempting to download resume for application:', {
+          applicationId: application.id,
+          applicationResumeUrl: application.resume_url,
+          jobSeekerResumeUrl: application.job_seeker?.resume_url
+        });
+
+        const applicationId = application.id;
+        
+        // Fetch the file
+        const response = await this.jobApplicationsStore.downloadResume(applicationId);
+
+        console.log('Resume download response:', {
+          status: response.status,
+          headers: response.headers,
+          data: response.data
+        });
+
+        // Check if response contains error
+        if (response.data instanceof Blob) {
+          // Create a blob from the response
+          const blob = response.data;
+          
+          // Create a link element and trigger download
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          
+          // Generate filename based on applicant name
+          const applicantName = this.getApplicantName(application)
+            .toLowerCase()
+            .replace(/\s+/g, '-');
+          link.download = `${applicantName}-resume.pdf`;
+          
+          // Append to body, click, and remove
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          // Handle error response
+          const errorMessage = response.data?.message || 'Failed to download resume';
+          console.error('Resume download error:', {
+            message: errorMessage,
+            responseData: response.data
+          });
+          this.$toast.error(errorMessage);
+        }
+      } catch (error) {
+        console.error('Failed to download resume:', {
+          error: error,
+          errorMessage: error.message,
+          responseData: error.response?.data
+        });
+        
+        // Check if error has response data
+        const errorMessage = error.response?.data?.message || 
+                             error.message || 
+                             'Failed to download resume';
+        
+        this.$toast.error(errorMessage);
       }
     },
     getApplicantName(application) {

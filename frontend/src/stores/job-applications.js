@@ -106,7 +106,35 @@ export const useJobApplicationsStore = defineStore('jobApplications', {
       this.job = null;
       this.loading = false;
       this.error = null;
-    }
+    },
+
+    // Method to download resume
+    downloadResume(applicationId) {
+      return api.get(`/job-applications/${applicationId}/download-resume`, {
+        responseType: 'blob',
+        // Add error handling
+        validateStatus: function (status) {
+          // Accept successful status codes and 404
+          return (status >= 200 && status < 300) || status === 404;
+        },
+        // Intercept the response to handle error responses
+        transformResponse: [function (data, headers) {
+          // If the response is a blob, it's a successful file download
+          if (data instanceof Blob) {
+            return data;
+          }
+          
+          // Try to parse the error response
+          try {
+            const parsedData = JSON.parse(data);
+            return parsedData;
+          } catch (e) {
+            // If parsing fails, return the original data
+            return data;
+          }
+        }]
+      });
+    },
   },
 
   // Getters for easy access to job application data

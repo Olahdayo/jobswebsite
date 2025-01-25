@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -517,5 +518,141 @@ class JobController extends Controller
             'message' => 'Application status updated successfully',
             'application' => $application
         ]);
+    }
+
+    /**
+     * Download resume for a job application
+     */
+    public function downloadResume(JobApplication $application)
+    {
+        // Log detailed application information
+        Log::info('Resume Download Attempt', [
+            'application_id' => $application->id,
+            'job_seeker_id' => $application->job_seeker_id,
+            'application_resume_url' => $application->resume_url,
+            'job_seeker_resume_url' => $application->jobSeeker ? $application->jobSeeker->resume_url : null,
+            'authenticated_user_id' => Auth::id(),
+            'authenticated_user_type' => Auth::user()->user_type ?? 'unknown'
+        ]);
+
+        // Authorize the user to view this application
+        $this->authorize('view', $application);
+
+        // Get the resume path (either from application or associated job seeker)
+        $resumePath = $application->resume_url ?? 
+                      ($application->jobSeeker ? $application->jobSeeker->resume_url : null);
+
+        // Comprehensive logging
+        // Log::info('Resume Path Resolution', [
+        //     'resolved_resume_path' => $resumePath,
+        //     'application_resume_url' => $application->resume_url,
+        //     'job_seeker_resume_url' => $application->jobSeeker ? $application->jobSeeker->resume_url : null
+        // ]);
+
+        // Check if resume exists
+        if (!$resumePath) {
+            // Log::warning('No Resume Found', [
+            //     'application_id' => $application->id,
+            //     'job_seeker_id' => $application->job_seeker_id
+            // ]);
+
+            return response()->json([
+                'message' => 'No resume found for this application',
+                'details' => [
+                    'application_resume_url' => $application->resume_url,
+                    'job_seeker_resume_url' => $application->jobSeeker ? $application->jobSeeker->resume_url : null
+                ]
+            ], 404);
+        }
+
+        // Normalize the path for local files
+        $fullLocalPath = storage_path('app/' . $resumePath);
+
+        // Check if file exists
+        if (!file_exists($fullLocalPath)) {
+            // Log::error('Resume File Not Found', [
+            //     'application_id' => $application->id,
+            //     'attempted_path' => $fullLocalPath,
+            //     'original_path' => $resumePath
+            // ]);
+
+            return response()->json([
+                'message' => 'Resume file not found',
+                'details' => [
+                    'attempted_path' => $fullLocalPath,
+                    'original_path' => $resumePath
+                ]
+            ], 404);
+        }
+
+        // If it's a full URL, attempt to download from external source
+        if (filter_var($resumePath, FILTER_VALIDATE_URL)) {
+            try {
+                $fileContents = file_get_contents($resumePath);
+                
+                if ($fileContents === false) {
+                    // Log::error('Unable to Download Resume from URL', [
+                    //     'resume_url' => $resumePath,
+                    //     'application_id' => $application->id
+                    // ]);
+
+                    return response()->json([
+                        'message' => 'Unable to download resume from provided URL',
+                        'url' => $resumePath
+                    ], 404);
+                }
+
+                // Generate a filename
+                $applicantName = $application->jobSeeker ? 
+                    Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) : 
+                    'applicant-' . $application->id;
+            
+                $fileExtension = pathinfo(parse_url($resumePath, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'pdf';
+                $filename = "{$applicantName}-resume.{$fileExtension}";
+
+                // Return file download
+                return response($fileContents, 200, [
+                    'Content-Type' => 'application/octet-stream',
+                    'Content-Disposition' => "attachment; filename={$filename}"
+                ]);
+            } catch (\Exception $e) {
+                // Log::error('Resume Download Error', [
+                //     'message' => $e->getMessage(),
+                //     'resume_path' => $resumePath,
+                //     'application_id' => $application->id
+                // ]);
+
+                return response()->json([
+                    'message' => 'Error downloading resume',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        }
+
+        // For local files, use the full local path
+        try {
+            // Generate a filename
+            $applicantName = $application->jobSeeker ? 
+                Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) : 
+                'applicant-' . $application->id;
+        
+            $fileExtension = pathinfo($resumePath, PATHINFO_EXTENSION);
+            $filename = "{$applicantName}-resume.{$fileExtension}";
+
+            // Return file download
+            return response()->download($fullLocalPath, $filename);
+        } catch (\Exception $e) {
+            // Log::error('Local Resume Download Error', [
+            //     'message' => $e->getMessage(),
+            //     'full_path' => $fullLocalPath,
+            //     'original_path' => $resumePath,
+            //     'application_id' => $application->id
+            // ]);
+
+            return response()->json([
+                'message' => 'Error downloading local resume',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
