@@ -260,16 +260,8 @@ class JobController extends Controller
             $query->where('experience_level', $request->experience_level);
         }
 
-        // Filter by salary range
-        if ($request->filled('min_salary')) {
-            $query->where('min_salary', '>=', $request->min_salary);
-        }
-        if ($request->filled('max_salary')) {
-            $query->where('max_salary', '<=', $request->max_salary);
-        }
-
-        // Filter featured jobs
-        if ($request->filled('is_featured') && $request->is_featured) {
+        // Filter featured jobs only if is_featured is true
+        if ($request->boolean('is_featured')) {
             $query->where('is_featured', true);
         }
 

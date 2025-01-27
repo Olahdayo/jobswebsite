@@ -229,7 +229,7 @@
           :class="{ 'show-mobile': showMobileSearch }"
         >
           <SearchFilter
-            :initial-filters="filters"
+            :initial-filters="jobsStore.searchFilters"
             @search="handleSearch"
             @reset="resetAndLoadAllJobs"
           />
@@ -241,67 +241,68 @@
 
 <script>
 import SearchFilter from "@/components/SearchFilter.vue";
-import { jobService } from "@/services/jobService";
+import { useJobsStore } from '@/stores/jobs';
 
 export default {
   name: "JobListings",
+  
   components: {
     SearchFilter,
   },
 
   data() {
     return {
-      allJobs: [], // Store all jobs
+      showMobileSearch: false,
       pagination: {
         currentPage: 1,
         perPage: 10,
-        total: 0
       },
-      isLoading: false,
-      error: null,
-      showMobileSearch: false,
-      filters: {
-        keyword: "",
-        location: "",
-        category: "",
-        type: "",
-        experience_level: "",
-        min_salary: "",
-        max_salary: "",
-        is_featured: false
-      }
+      error: null
     };
   },
 
   computed: {
+    jobsStore() {
+      return useJobsStore();
+    },
+
+    isLoading() {
+      return this.jobsStore.loading;
+    },
+
+    error() {
+      return this.jobsStore.error;
+    },
+
+    allJobs() {
+      // Use filteredJobs from store
+      return this.jobsStore.filteredJobs || [];
+    },
+
     paginatedJobs() {
       const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
       const end = start + this.pagination.perPage;
       return this.allJobs.slice(start, end);
     },
-    
+
     totalPages() {
       return Math.ceil(this.allJobs.length / this.pagination.perPage);
     },
 
     paginationInfo() {
-      const start = (this.pagination.currentPage - 1) * this.pagination.perPage + 1;
-      const end = Math.min(start + this.pagination.perPage - 1, this.allJobs.length);
+      const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
+      const end = Math.min(start + this.pagination.perPage, this.allJobs.length);
       return {
-        currentPage: this.pagination.currentPage,
-        lastPage: this.totalPages,
-        total: this.allJobs.length,
-        from: start,
-        to: end
+        from: this.allJobs.length ? start + 1 : 0,
+        to: end,
+        total: this.allJobs.length
       };
     },
 
     hasActiveFilters() {
-      return Object.values(this.filters).some(value => {
-        if (typeof value === 'boolean') {
-          return value;
-        }
-        return value && value.length > 0;
+      return Object.values(this.jobsStore.searchFilters).some(value => {
+        if (typeof value === 'boolean') return value;
+        return value && value !== '';
       });
     }
   },
@@ -309,158 +310,83 @@ export default {
   methods: {
     async loadJobs() {
       try {
-        this.isLoading = true;
-        this.error = null;
-        const response = await jobService.getAllJobs();
-        
-        if (response?.data) {
-          this.allJobs = response.data;
-          this.pagination.total = response.total || this.allJobs.length;
-        } else {
-          throw new Error('Invalid response format');
-        }
+        await this.jobsStore.fetchJobs();
       } catch (error) {
         console.error('Error loading jobs:', error);
-        this.error = 'Failed to load jobs. Please try again.';
-        this.allJobs = [];
-      } finally {
-        this.isLoading = false;
       }
     },
 
     changePage(newPage) {
-      const page = parseInt(newPage);
-      if (!isNaN(page) && page >= 1 && page <= this.totalPages) {
-        this.pagination.currentPage = page;
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
+      if (newPage >= 1 && newPage <= this.totalPages) {
+        this.pagination.currentPage = newPage;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
 
     toggleMobileSearch() {
       this.showMobileSearch = !this.showMobileSearch;
+      const searchFilter = document.querySelector('.search-filter');
+      if (searchFilter) {
+        searchFilter.classList.toggle('show');
+      }
     },
 
     formatDate(date) {
-      if (!date) return "";
-      const options = { year: "numeric", month: "short", day: "numeric" };
-      return new Date(date).toLocaleDateString("en-US", options);
-    },
-
-    formatSalary(salary) {
-      if (!salary) return "0.00";
-      return Number(salary).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-        style: 'currency',
-        currency: 'NGN'
+      if (!date) return 'N/A';
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
     },
 
+    formatSalary(salary) {
+      if (!salary) return 'Not specified';
+      return new Intl.NumberFormat('en-NG', {
+        maximumFractionDigits: 0
+      }).format(salary);
+    },
+
     async handleSearch(searchFilters) {
-      this.isLoading = true;
-      this.error = null;
-      
+      this.pagination.currentPage = 1;
       try {
-        const response = await jobService.searchJobs(searchFilters);
-        
-        if (response?.data) {
-          this.allJobs = response.data;
-          this.pagination = {
-            currentPage: response.current_page || 1,
-            perPage: response.per_page || 10,
-            total: response.total || this.allJobs.length
-          };
-          this.filters = { ...searchFilters };
-        } else {
-          throw new Error('Invalid response format');
-        }
+        await this.jobsStore.updateSearchFilters(searchFilters);
       } catch (error) {
         console.error('Error searching jobs:', error);
-        this.error = error.response?.data?.message || 'Failed to search jobs. Please try again.';
-        this.allJobs = [];
-      } finally {
-        this.isLoading = false;
-        // Close mobile search if open
-        if (this.showMobileSearch) {
-          this.toggleMobileSearch();
-        }
+      }
+      if (window.innerWidth < 992) {
+        this.toggleMobileSearch();
       }
     },
 
     async resetAndLoadAllJobs() {
-      this.isLoading = true;
-      this.error = null;
-
+      this.pagination.currentPage = 1;
       try {
-        // Reset filters
-        this.filters = {
-          keyword: "",
-          location: "",
-          category: "",
-          type: "",
-          experience_level: "",
-          min_salary: "",
-          max_salary: "",
-          is_featured: false
-        };
-
-        // Load all jobs
-        const response = await jobService.getAllJobs();
-        if (response?.data) {
-          this.allJobs = response.data;
-          this.pagination.total = response.total || this.allJobs.length;
-        } else {
-          throw new Error('Invalid response format');
-        }
+        await this.jobsStore.resetState();
       } catch (error) {
-        console.error('Error loading jobs:', error);
-        this.error = 'Failed to load jobs. Please try again.';
-        this.allJobs = [];
-      } finally {
-        this.isLoading = false;
+        console.error('Error resetting search:', error);
       }
-    },
+    }
   },
   
-  mounted() {
-    this.loadJobs();
+  async created() {
+    await this.jobsStore.initialize();
   }
 };
 </script>
 
 <style scoped>
 .job-listings-container {
-  background-color: #f8f9fa;
+  background-color: #f9fafb;
   min-height: 100vh;
-  padding-top: 2rem;
 }
 
-.page-header {
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 1rem;
+.page-header h1 {
+  color: #1f2937;
 }
 
 .search-sidebar-wrapper {
   position: relative;
-  z-index: 1030;
-}
-
-.search-sidebar {
-  position: sticky;
-  top: 2rem;
-  background: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.jobs-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: 1fr;
 }
 
 .job-card {
@@ -471,30 +397,21 @@ export default {
 }
 
 .job-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
 .job-card .card {
   border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.2s;
 }
 
 .job-card:hover .card {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .company-logo {
-  border-radius: 8px;
   object-fit: cover;
-  background-color: white;
-  padding: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.card-title {
-  color: #1f2937;
-  font-weight: 600;
+  border-radius: 8px;
 }
 
 .company-name {
@@ -503,39 +420,29 @@ export default {
 }
 
 .featured-badge {
-  background: #fef3c7;
-  color: #92400e;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
+  background-color: #fef3c7;
+  color: #d97706;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
   font-weight: 500;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.featured-badge i {
-  color: #f59e0b;
+  gap: 0.25rem;
 }
 
 .job-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
 .meta-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #4b5563;
-  font-size: 0.875rem;
-}
-
-.meta-item i {
-  color: #3b82f6;
-  width: 16px;
 }
 
 .job-description {
@@ -547,197 +454,54 @@ export default {
 .job-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .tag {
-  background: #e5e7eb;
-  color: #374151;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.tag i {
-  color: #3b82f6;
+  gap: 0.25rem;
 }
 
 .job-dates {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #6b7280;
 }
 
+.posted-date,
 .deadline-date {
-  color: #ef4444;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.posted-date i,
-.deadline-date i {
-  margin-right: 0.5rem;
-}
-
-.pagination {
-  margin-bottom: 2rem;
+.pagination-wrapper {
+  margin-top: 2rem;
 }
 
 .page-link {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50% !important;
-  margin: 0 0.25rem;
-  color: #2c3e50;
-  border: none;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.page-link:hover {
-  background-color: #e9ecef;
-  color: #2c3e50;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  color: #3b82f6;
+  padding: 0.5rem 0.75rem;
 }
 
 .page-item.active .page-link {
-  background-color: #2c3e50;
-  color: white;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
-.page-item.disabled .page-link {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
-@media (max-width: 991px) {
-  .search-sidebar-wrapper {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 100%;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    visibility: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .search-sidebar-wrapper.show-mobile {
-    right: 0;
-    visibility: visible;
-  }
-
-  .search-sidebar {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 300px;
-    height: 100%;
-    margin: 0;
-    border-radius: 0;
-    overflow-y: auto;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-  }
-
-  .show-mobile .search-sidebar {
-    transform: translateX(0);
-  }
-
-  .search-sidebar-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-}
-
-/* Responsive Job Cards */
-.job-card {
-  height: 100%;
-}
-
-.job-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.meta-item {
+.results-summary {
+  color: #6b7280;
   font-size: 0.875rem;
-  white-space: nowrap;
 }
 
-@media (max-width: 576px) {
-  .job-card .company-logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  .card-title {
-    font-size: 1rem;
-  }
-
-  .company-name {
-    font-size: 0.875rem;
-  }
-
-  .job-meta {
-    font-size: 0.75rem;
-  }
-
-  .posted-date {
-    font-size: 0.75rem;
-  }
-}
-
-/* Pagination Responsive */
-@media (max-width: 576px) {
-  .pagination {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-
-  .page-link {
-    width: 35px;
-    height: 35px;
-    font-size: 0.875rem;
-  }
-}
-
-/* Quick Actions Responsive */
-@media (max-width: 768px) {
-  .results-summary {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-
-  .sort-options {
-    width: 100%;
-  }
-
-  .active-filters {
-    justify-content: center;
-  }
-
-  .job-meta {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .job-dates {
-    flex-direction: column;
-    gap: 0.5rem;
+@media (max-width: 991.98px) {
+  .search-sidebar-wrapper {
+    margin-bottom: 2rem;
   }
 }
 </style>

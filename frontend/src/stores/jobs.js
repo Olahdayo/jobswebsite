@@ -29,11 +29,12 @@ export const useJobsStore = defineStore("jobs", {
     
     // Search filters for job seekers
     searchFilters: {
-      query: "",
+      keyword: "",
       location: "",
-      field: "",
-      education: "",
-      jobType: "",
+      category: "",
+      type: "",
+      experience_level: "",
+      is_featured: false
     },
     
     // UI state
@@ -66,6 +67,8 @@ export const useJobsStore = defineStore("jobs", {
           this.fetchFilterOptions(),
           this.fetchJobs()
         ]);
+        // Set filtered jobs to all jobs initially
+        this.filteredJobs = [...this.jobs];
       } catch (error) {
         console.error('Error initializing jobs store:', error);
         this.error = error.message;
@@ -195,79 +198,67 @@ export const useJobsStore = defineStore("jobs", {
         this.loading = true;
         const response = await jobService.getAllJobs(page);
         this.jobs = response.data || [];
-        this.filterJobs();
+        // Set filtered jobs to all jobs when fetching
+        this.filteredJobs = [...this.jobs];
       } catch (error) {
         console.error('Error fetching jobs:', error);
         this.error = error.message;
         this.jobs = [];
+        this.filteredJobs = [];
       } finally {
         this.loading = false;
       }
     },
 
-    async searchJobs(filters, page = 1) {
+    async updateSearchFilters(filters) {
       try {
         this.loading = true;
-        const response = await jobService.searchJobs(filters, page);
+        // Update searchFilters state with the new filters
+        this.searchFilters = {
+          // Use filters.keyword directly since that's what the backend expects
+          keyword: filters.keyword || '',
+          location: filters.location || '',
+          category: filters.category || '',
+          type: filters.type || '',
+          experience_level: filters.experience_level || '',
+          is_featured: filters.is_featured || false
+        };
+
+        // Use the backend search API instead of local filtering
+        const response = await jobService.searchJobs(this.searchFilters);
         this.filteredJobs = response.data || [];
-        return response;
       } catch (error) {
         console.error('Error searching jobs:', error);
         this.error = error.message;
         this.filteredJobs = [];
-        throw error;
       } finally {
         this.loading = false;
       }
     },
 
-    // Update search filters
-    updateSearchFilters(filters) {
+    async resetState() {
       this.searchFilters = {
-        ...this.searchFilters,
-        ...filters
-      };
-      this.filterJobs();
-    },
-
-    // Filter jobs based on search filters
-    filterJobs() {
-      this.filteredJobs = this.jobs.filter(job => {
-        const matchQuery = !this.searchFilters.query ||
-          job.title.toLowerCase().includes(this.searchFilters.query.toLowerCase()) ||
-          job.company.toLowerCase().includes(this.searchFilters.query.toLowerCase());
-
-        const matchLocation = !this.searchFilters.location ||
-          job.location === this.searchFilters.location;
-
-        const matchField = !this.searchFilters.field ||
-          job.category === this.searchFilters.field;
-
-        const matchType = !this.searchFilters.jobType ||
-          job.type === this.searchFilters.jobType;
-
-        const matchEducation = !this.searchFilters.education ||
-          job.educationLevel === this.searchFilters.education;
-
-        return matchQuery && matchLocation && matchField && matchType && matchEducation;
-      });
-    },
-
-    // Reset store state
-    resetState() {
-      this.jobs = [];
-      this.filteredJobs = [];
-      this.employerJobs = [];
-      this.jobStats = {
-        totalJobs: 0,
-        activeJobs: 0,
-        totalApplications: 0,
-        pendingApplications: 0,
-        acceptedApplications: 0,
-        rejectedApplications: 0
+        keyword: "",
+        location: "",
+        category: "",
+        type: "",
+        experience_level: "",
+        is_featured: false
       };
       this.error = null;
-      this.loading = false;
-    }
+      
+      // Fetch all jobs when filters are reset
+      try {
+        this.loading = true;
+        const response = await jobService.getAllJobs();
+        this.filteredJobs = response.data || [];
+      } catch (error) {
+        console.error('Error fetching all jobs:', error);
+        this.error = error.message;
+        this.filteredJobs = [];
+      } finally {
+        this.loading = false;
+      }
+    },
   }
 });

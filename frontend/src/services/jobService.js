@@ -64,16 +64,19 @@ export const jobService = {
 
   // Search jobs
 
-  searchJobs: async (filters, page = 1) => {
+  searchJobs: async (filters) => {
     try {
-      const currentPage = Math.max(1, parseInt(page));
       const response = await api.get("/jobs/search", {
         params: {
-          ...filters,
-          page: currentPage,
-          per_page: 10,
+          keyword: filters.keyword,
+          location: filters.location,
+          category: filters.category,
+          type: filters.type,
+          experience_level: filters.experience_level,
+          is_featured: filters.is_featured,
         },
       });
+
       return {
         data: response.data.data || [],
         total: response.data.total || 0,
