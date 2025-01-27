@@ -90,30 +90,20 @@
                 <h3>Responsibilities</h3>
                 <div v-if="job.responsibilities">
                   <ul class="requirements-list">
-                  <li
-                    v-for="(resp, index) in parseList(job.responsibilities)"
-                    :key="index"
-                  >
-                      <i class="fas fa-check-circle"></i>
-                      <span>{{ resp }}</span>
+                    <li v-for="(resp, index) in parseList(job.responsibilities)" :key="index">
+                      {{ resp }}
                     </li>
                   </ul>
                 </div>
-              <p v-else class="text-muted">
-                No specific responsibilities listed.
-              </p>
+                <p v-else class="text-muted">No specific responsibilities listed.</p>
               </div>
 
               <div class="job-section">
                 <h3>Requirements</h3>
                 <div v-if="job.requirements">
                   <ul class="requirements-list">
-                  <li
-                    v-for="(req, index) in parseList(job.requirements)"
-                    :key="index"
-                  >
-                      <i class="fas fa-check-circle"></i>
-                      <span>{{ req }}</span>
+                    <li v-for="(req, index) in parseList(job.requirements)" :key="index">
+                      {{ req }}
                     </li>
                   </ul>
                 </div>
@@ -563,17 +553,30 @@ export default {
 
     parseList(text) {
       if (!text) return [];
-      if (Array.isArray(text)) return text;
       
-      // Split by periods, semicolons, or newlines
-      const items = text
-        .split(/[.;\n]+/)
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0)
-        .map((item) => {
-          // Capitalize first letter if it's not already
-          return item.charAt(0).toUpperCase() + item.slice(1);
+      // If it's already an array, clean and return it
+      if (Array.isArray(text)) {
+        return text.map(item => {
+          // Remove brackets, quotes, and trim
+          return item
+            .replace(/^\[|\]$/g, '')
+            .replace(/"/g, '')
+            .trim();
         });
+      }
+      
+      // Split by commas, periods, semicolons, or newlines
+      const items = text
+        .split(/[,;\n.]+/)
+        .map(item => {
+          // Remove brackets, quotes, trim, and capitalize first letter
+          return item
+            .replace(/^\[|\]$/g, '')
+            .replace(/"/g, '')
+            .trim()
+            .replace(/^[a-z]/, char => char.toUpperCase());
+        })
+        .filter(item => item.length > 0);
       
       return items;
     },
@@ -757,23 +760,20 @@ export default {
 }
 
 .requirements-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
 }
 
 .requirements-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
   color: #4b5563;
-  line-height: 1.5;
+  padding-left: 0.5rem;
 }
 
-.requirements-list li i {
-  color: #3b82f6;
-  margin-top: 0.25rem;
+.requirements-list li:last-child {
+  margin-bottom: 0;
 }
 
 .modal .bi {

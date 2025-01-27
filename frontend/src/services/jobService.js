@@ -5,7 +5,6 @@ export const jobService = {
   // Get all jobs with pagination
   getAllJobs: async (page = 1) => {
     try {
-      // console.log("JobService: Making request for page:", page);
 
       // Make the API call with axios config
       const response = await api.get("/jobs", {
