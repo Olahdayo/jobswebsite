@@ -46,7 +46,7 @@ export const useJobsStore = defineStore("jobs", {
     // Job seeker getters
     getFilteredJobs: (state) => state.filteredJobs,
     getActiveJobs: (state) => state.jobs.filter(job => job.status === 'active'),
-    getFeaturedJobs: (state) => state.jobs.filter(job => job.featured && job.status === 'active'),
+    getFeaturedJobs: (state) => state.jobs.filter(job => job.is_featured),
     
     // Employer getters
     getEmployerJobs: (state) => state.employerJobs,
