@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Class JobController
@@ -501,23 +502,60 @@ class JobController extends Controller
      */
     public function updateApplicationStatus(Request $request, $applicationId)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,rejected'
-        ]);
+        try {
+           
 
-        $application = JobApplication::findOrFail($applicationId);
+            // Validate request
+            $validated = $request->validate([
+                'status' => 'required|in:pending,reviewed,shortlisted,rejected,accepted,cancelled,withdrawn'
+            ]);
 
-        // Authorize that only the job's employer can update application status
-        $this->authorize('updateApplicationStatus', $application);
+            // Find the application
+            $application = JobApplication::with('jobListing')->findOrFail($applicationId);
 
-        $application->update([
-            'status' => $validated['status']
-        ]);
+            // Authorize that only the job's employer can update application status
+            $this->authorize('updateStatus', $application);
 
-        return response()->json([
-            'message' => 'Application status updated successfully',
-            'application' => $application
-        ]);
+            // Update the status
+            $application->update([
+                'status' => $validated['status']
+            ]);
+
+
+            // Return success response
+            return response()->json([
+                'message' => 'Application status updated successfully',
+                'application' => $application
+            ]);
+
+        } catch (ModelNotFoundException $e) {
+            
+            return response()->json([
+                'message' => 'Job application not found',
+                'error' => $e->getMessage()
+            ], 404);
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            
+            return response()->json([
+                'message' => 'This action is unauthorized',
+                'error' => $e->getMessage()
+            ], 403);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+           
+            return response()->json([
+                'message' => 'Invalid status value',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+           
+            return response()->json([
+                'message' => 'An error occurred while updating the application status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -525,16 +563,7 @@ class JobController extends Controller
      */
     public function downloadResume(JobApplication $application)
     {
-        // Log detailed application information
-        Log::info('Resume Download Attempt', [
-            'application_id' => $application->id,
-            'job_seeker_id' => $application->job_seeker_id,
-            'application_resume_url' => $application->resume_url,
-            'job_seeker_resume_url' => $application->jobSeeker ? $application->jobSeeker->resume_url : null,
-            'authenticated_user_id' => Auth::id(),
-            'authenticated_user_type' => Auth::user()->user_type ?? 'unknown'
-        ]);
-
+     
         // Authorize the user to view this application
         $this->authorize('view', $application);
 
@@ -542,19 +571,11 @@ class JobController extends Controller
         $resumePath = $application->resume_url ?? 
                       ($application->jobSeeker ? $application->jobSeeker->resume_url : null);
 
-        // Comprehensive logging
-        // Log::info('Resume Path Resolution', [
-        //     'resolved_resume_path' => $resumePath,
-        //     'application_resume_url' => $application->resume_url,
-        //     'job_seeker_resume_url' => $application->jobSeeker ? $application->jobSeeker->resume_url : null
-        // ]);
+        
 
         // Check if resume exists
         if (!$resumePath) {
-            // Log::warning('No Resume Found', [
-            //     'application_id' => $application->id,
-            //     'job_seeker_id' => $application->job_seeker_id
-            // ]);
+            
 
             return response()->json([
                 'message' => 'No resume found for this application',
@@ -570,11 +591,7 @@ class JobController extends Controller
 
         // Check if file exists
         if (!file_exists($fullLocalPath)) {
-            // Log::error('Resume File Not Found', [
-            //     'application_id' => $application->id,
-            //     'attempted_path' => $fullLocalPath,
-            //     'original_path' => $resumePath
-            // ]);
+          
 
             return response()->json([
                 'message' => 'Resume file not found',
@@ -591,10 +608,7 @@ class JobController extends Controller
                 $fileContents = file_get_contents($resumePath);
                 
                 if ($fileContents === false) {
-                    // Log::error('Unable to Download Resume from URL', [
-                    //     'resume_url' => $resumePath,
-                    //     'application_id' => $application->id
-                    // ]);
+                    
 
                     return response()->json([
                         'message' => 'Unable to download resume from provided URL',
@@ -616,11 +630,7 @@ class JobController extends Controller
                     'Content-Disposition' => "attachment; filename={$filename}"
                 ]);
             } catch (\Exception $e) {
-                // Log::error('Resume Download Error', [
-                //     'message' => $e->getMessage(),
-                //     'resume_path' => $resumePath,
-                //     'application_id' => $application->id
-                // ]);
+               
 
                 return response()->json([
                     'message' => 'Error downloading resume',
@@ -642,12 +652,7 @@ class JobController extends Controller
             // Return file download
             return response()->download($fullLocalPath, $filename);
         } catch (\Exception $e) {
-            // Log::error('Local Resume Download Error', [
-            //     'message' => $e->getMessage(),
-            //     'full_path' => $fullLocalPath,
-            //     'original_path' => $resumePath,
-            //     'application_id' => $application->id
-            // ]);
+           
 
             return response()->json([
                 'message' => 'Error downloading local resume',

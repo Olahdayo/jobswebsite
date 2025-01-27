@@ -39,7 +39,7 @@ Route::prefix('jobs')->group(function () {
 });
 
 // Protected routes for employers
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum,employer'])->group(function () {
     Route::post('/employer/logout', [AuthController::class, 'logout']);
 
     // Profile management
@@ -60,8 +60,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         [JobController::class, 'downloadResume']
     )->name('job-applications.download-resume');
 
-    // Application management
-    // Removed duplicate route
 });
 
 // Protected routes for job seekers

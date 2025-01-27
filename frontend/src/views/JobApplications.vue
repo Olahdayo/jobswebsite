@@ -149,19 +149,25 @@ export default {
       }
     },
     async updateApplicationStatus(applicationId, status) {
+      // Show confirmation prompt
+      const applicant = this.applications.find(app => app.id === applicationId);
+      const applicantName = this.getApplicantName(applicant);
+      const action = status === 'accepted' ? 'accept' : 'reject';
+      
+      if (!confirm(`Are you sure you want to ${action} ${applicantName}'s application?`)) {
+        return;
+      }
+
       try {
-        // Implement actual status update logic
-        console.log(`Updating application ${applicationId} to status: ${status}`);
-        
-        // Placeholder for actual API call
         await this.jobApplicationsStore.updateApplicationStatus(applicationId, status);
-        
-        // Optional: show success toast
-        this.$toast.success(`Application ${status} successfully`);
+        // Show success message
+        this.$toast?.success(`Application ${status} successfully`) || 
+          alert(`Application ${status} successfully`);
       } catch (error) {
         console.error('Failed to update application status', error);
-        // Optional: show error toast
-        this.$toast.error('Failed to update application status');
+        // Show error message from the API if available, otherwise show a generic message
+        const errorMessage = error?.details?.message || error?.message || 'Failed to update application status';
+        this.$toast?.error(errorMessage) || alert(errorMessage);
       }
     },
     async downloadResume(application) {
@@ -227,20 +233,10 @@ export default {
       }
     },
     getApplicantName(application) {
-      // Log the entire application object for debugging
-      console.log('Application Object for Name Retrieval:', {
-        id: application.id,
-        jobSeeker: application.job_seeker,
-        jobSeekerId: application.job_seeker_id
-      });
 
       // Prioritize full name from job_seeker
       if (application.job_seeker) {
-        console.log('Job Seeker Details:', {
-          firstName: application.job_seeker.first_name,
-          lastName: application.job_seeker.last_name,
-          fullName: application.job_seeker.name
-        });
+       
 
         // Combine first and last name from job_seeker
         const firstName = application.job_seeker.first_name || '';
@@ -249,28 +245,11 @@ export default {
         // Prefer full name if both first and last names exist
         if (firstName && lastName) {
           const fullName = `${firstName} ${lastName}`.trim();
-          console.log('Constructed Full Name:', fullName);
           return fullName;
         }
-        
-        // Fallback to full name if available
-        if (application.job_seeker.name) {
-          console.log('Using job_seeker name:', application.job_seeker.name);
-          return application.job_seeker.name;
-        }
       }
 
-      // Fallback to application name if exists
-      if (application.name) {
-        return application.name;
-      }
-
-      // Fallback to email username
-      if (application.job_seeker && application.job_seeker.email) {
-        return application.job_seeker.email.split('@')[0];
-      }
-
-      // Absolute last resort
+      // faalback to user id
       return `Applicant #${application.id}`;
     },
     getApplicantEmail(application) {

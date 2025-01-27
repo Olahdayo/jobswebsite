@@ -56,10 +56,10 @@ export const useJobApplicationsStore = defineStore('jobApplications', {
         this.applications = response.data.applications || [];
 
         // Log successful fetch
-        console.log('Job Applications Fetched', {
-          jobId,
-          applicationCount: this.applications.length
-        });
+        // console.log('Job Applications Fetched', {
+        //   jobId,
+        //   applicationCount: this.applications.length
+        // });
 
         // Handle empty applications
         if (this.applications.length === 0) {
@@ -106,6 +106,75 @@ export const useJobApplicationsStore = defineStore('jobApplications', {
       this.job = null;
       this.loading = false;
       this.error = null;
+    },
+
+    /**
+     * Update job application status
+     * @param {number} applicationId - ID of the job application
+     * @param {string} status - New status (pending, reviewed, shortlisted, rejected, accepted, cancelled, withdrawn)
+     */
+    async updateApplicationStatus(applicationId, status) {
+      try {
+        // Validate input
+        const validStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'accepted', 'cancelled', 'withdrawn'];
+        if (!validStatuses.includes(status)) {
+          throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+        }
+
+        // Make API call to update status
+        const response = await api.patch(`/job-applications/${applicationId}/status`, { status }, {
+          // Enhanced error handling
+          validateStatus: function (status) {
+            // Accept successful status codes
+            return status >= 200 && status < 300;
+          }
+        });
+
+        // Ensure response data exists
+        if (!response.data) {
+          throw new Error('No response data received from server');
+        }
+
+        // Update local state
+        const updatedApplicationIndex = this.applications.findIndex(app => app.id === applicationId);
+        if (updatedApplicationIndex !== -1) {
+          // Update the status in the local applications array
+          this.applications[updatedApplicationIndex].status = status;
+        }
+
+        return response.data;
+      } catch (error) {
+        // Comprehensive error logging
+        console.error('Update Job Application Status Error', {
+          applicationId,
+          status,
+          error: error,
+          name: error.name,
+          message: error.message,
+          response: error.response
+        });
+
+        // Determine error message
+        let errorMessage = 'Failed to update application status';
+        let errorDetails = error.message;
+
+        // Check for different error types
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          errorMessage = error.response.data?.message || 
+                        error.response.data?.error || 
+                        `Error ${error.response.status}: ${error.response.statusText}`;
+          errorDetails = error.response.data?.details || error.response.data?.errors || error.message;
+        } else if (error.request) {
+          // The request was made but no response was received
+          errorMessage = 'No response received from server. Please check your connection.';
+        }
+
+        // Rethrow with more context
+        const enhancedError = new Error(errorMessage);
+        enhancedError.details = { message: errorMessage, details: errorDetails };
+        throw enhancedError;
+      }
     },
 
     // Method to download resume
