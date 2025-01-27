@@ -105,6 +105,22 @@
             </div>
           </div>
         </div>
+
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon rejected">
+                  <i class="fas fa-times"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Rejected Applications</h6>
+                  <h2 class="card-title mb-0">{{ jobStats.rejectedApplications }}</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Posted Jobs -->
@@ -643,6 +659,11 @@ export default {
 .stat-icon.accepted {
   background-color: rgba(40, 167, 69, 0.1);
   color: #28a745;
+}
+
+.stat-icon.rejected {
+  background-color: #fecaca;
+  color: #dc2626;
 }
 
 .card {

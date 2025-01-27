@@ -172,22 +172,22 @@ export default {
     },
     async downloadResume(application) {
       try {
-        console.log('Attempting to download resume for application:', {
-          applicationId: application.id,
-          applicationResumeUrl: application.resume_url,
-          jobSeekerResumeUrl: application.job_seeker?.resume_url
-        });
+        // console.log('Attempting to download resume for application:', {
+        //   applicationId: application.id,
+        //   applicationResumeUrl: application.resume_url,
+        //   jobSeekerResumeUrl: application.job_seeker?.resume_url
+        // });
 
         const applicationId = application.id;
         
         // Fetch the file
         const response = await this.jobApplicationsStore.downloadResume(applicationId);
 
-        console.log('Resume download response:', {
-          status: response.status,
-          headers: response.headers,
-          data: response.data
-        });
+        // console.log('Resume download response:', {
+        //   status: response.status,
+        //   headers: response.headers,
+        //   data: response.data
+        // });
 
         // Check if response contains error
         if (response.data instanceof Blob) {

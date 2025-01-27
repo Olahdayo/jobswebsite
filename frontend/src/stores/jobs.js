@@ -14,7 +14,8 @@ export const useJobsStore = defineStore("jobs", {
       activeJobs: 0,
       totalApplications: 0,
       pendingApplications: 0,
-      acceptedApplications: 0
+      acceptedApplications: 0,
+      rejectedApplications: 0
     },
     
     // Filter options for job forms
@@ -98,7 +99,8 @@ export const useJobsStore = defineStore("jobs", {
             activeJobs: response.data.activeJobs || 0,
             totalApplications: response.data.totalApplications || 0,
             pendingApplications: response.data.pendingApplications || 0,
-            acceptedApplications: response.data.acceptedApplications || 0
+            acceptedApplications: response.data.acceptedApplications || 0,
+            rejectedApplications: response.data.rejectedApplications || 0
           };
         }
       } catch (error) {
@@ -261,7 +263,8 @@ export const useJobsStore = defineStore("jobs", {
         activeJobs: 0,
         totalApplications: 0,
         pendingApplications: 0,
-        acceptedApplications: 0
+        acceptedApplications: 0,
+        rejectedApplications: 0
       };
       this.error = null;
       this.loading = false;
