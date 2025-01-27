@@ -28,6 +28,7 @@
       </div>
 
       <form @submit.prevent="handleSubmit" class="filter-form">
+        <!-- Search by keyword -->
         <div class="mb-3">
           <label for="keyword" class="form-label">Search</label>
           <input
@@ -35,16 +36,17 @@
             id="keyword"
             v-model="filters.keyword"
             class="form-control"
-            placeholder="Search jobs by title, company, or keywords"
+            placeholder="Search jobs by title or company"
           />
         </div>
 
+        <!-- Location -->
         <div class="mb-3">
           <label for="location" class="form-label">Location</label>
           <select id="location" v-model="filters.location" class="form-select">
             <option value="">All Locations</option>
             <option
-              v-for="location in filterOptions.locations"
+              v-for="location in jobsStore.filterOptions.locations"
               :key="location"
               :value="location"
             >
@@ -53,12 +55,13 @@
           </select>
         </div>
 
+        <!-- Category -->
         <div class="mb-3">
           <label for="category" class="form-label">Category</label>
           <select id="category" v-model="filters.category" class="form-select">
             <option value="">All Categories</option>
             <option
-              v-for="category in filterOptions.categories"
+              v-for="category in jobsStore.filterOptions.categories"
               :key="category"
               :value="category"
             >
@@ -67,20 +70,18 @@
           </select>
         </div>
 
+        <!-- Job Type -->
         <div class="mb-3">
           <label for="type" class="form-label">Job Type</label>
           <select id="type" v-model="filters.type" class="form-select">
             <option value="">Any Job Type</option>
-            <option
-              v-for="type in filterOptions.jobTypes"
-              :key="type"
-              :value="type"
-            >
-              {{ type }}
-            </option>
+            <option value="full-time">Full Time</option>
+            <option value="part-time">Part Time</option>
+            <option value="contract">Contract</option>
           </select>
         </div>
 
+        <!-- Experience Level -->
         <div class="mb-3">
           <label for="experience" class="form-label">Experience Level</label>
           <select
@@ -90,7 +91,7 @@
           >
             <option value="">Any Experience Level</option>
             <option
-              v-for="level in filterOptions.experienceLevels"
+              v-for="level in jobsStore.filterOptions.experienceLevels"
               :key="level"
               :value="level"
             >
@@ -99,30 +100,7 @@
           </select>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Salary Range</label>
-          <div class="row g-2">
-            <div class="col">
-              <input
-                type="number"
-                class="form-control"
-                v-model.number="filters.min_salary"
-                placeholder="Min Salary"
-                min="0"
-              />
-            </div>
-            <div class="col">
-              <input
-                type="number"
-                class="form-control"
-                v-model.number="filters.max_salary"
-                placeholder="Max Salary"
-                min="0"
-              />
-            </div>
-          </div>
-        </div>
-
+        <!-- Featured Jobs -->
         <div class="mb-3">
           <div class="form-check">
             <input
@@ -138,7 +116,7 @@
         </div>
 
         <div class="d-grid gap-2">
-          <button type="submit" class="btn btn-primary" :disabled="isLoading">
+          <button type="submit" class="btn btn-primary" :disabled="jobsStore.loading">
             <i class="fas fa-search me-2"></i>Apply Filters
           </button>
         </div>
@@ -148,7 +126,7 @@
 </template>
 
 <script>
-import { jobService } from "@/services/jobService";
+import { useJobsStore } from '@/stores/jobs';
 
 export default {
   name: 'SearchFilter',
@@ -170,122 +148,92 @@ export default {
         category: "",
         type: "",
         experience_level: "",
-        min_salary: "",
-        max_salary: "",
         is_featured: false
-      },
-      filterOptions: {
-        locations: [],
-        categories: [],
-        jobTypes: [
-          "Full-time",
-          "Part-time",
-          "Contract",
-          "Remote",
-          "Internship",
-          "Graduate Trainee"
-        ],
-        experienceLevels: [
-          "Entry Level",
-          "Junior Level",
-          "Mid Level",
-          "Senior Level",
-          "Lead/Manager",
-          "Executive"
-        ]
-      },
-      activeFilters: [],
-      isLoading: false
+      }
     };
   },
 
+  computed: {
+    jobsStore() {
+      return useJobsStore();
+    },
+
+    activeFilters() {
+      return Object.entries(this.filters)
+        .filter(([key, value]) => {
+          if (key === 'is_featured') return value === true;
+          return value && value !== '';
+        })
+        .map(([key, value]) => ({
+          key,
+          label: this.formatFilterLabel(key, value)
+        }));
+    }
+  },
+
   methods: {
-    // Handle form submission
-    handleSubmit() {
-      this.isLoading = true;
+    async handleSubmit() {
       try {
-        // Emit search event with current filters
-        this.$emit('search', { ...this.filters });
-        this.updateActiveFilters();
+        // Map the filters to match the backend's expected format
+        const mappedFilters = {
+          keyword: this.filters.keyword,
+          location: this.filters.location,
+          category: this.filters.category,
+          type: this.filters.type,
+          experience_level: this.filters.experience_level,
+          is_featured: this.filters.is_featured
+        };
+
+        // Update store filters
+        await this.jobsStore.updateSearchFilters(mappedFilters);
+        
+        // Emit search event with filters
+        this.$emit('search', mappedFilters);
       } catch (error) {
-        console.error('Error in search filter:', error);
-      } finally {
-        this.isLoading = false;
+        console.error('Error applying filters:', error);
       }
     },
 
-    // Remove a single filter
     removeFilter(key) {
       this.filters[key] = '';
-      this.updateActiveFilters();
-      this.handleSubmit(); // Trigger search with updated filters
+      this.handleSubmit();
     },
 
-    // Clear all filters
     clearAllFilters() {
-      // Reset all filter values to default
       this.filters = {
         keyword: "",
         location: "",
         category: "",
         type: "",
         experience_level: "",
-        min_salary: "",
-        max_salary: "",
         is_featured: false
       };
       
-      // Update active filters
-      this.activeFilters = [];
-      
-      // Emit reset event to load all jobs
+      this.jobsStore.resetState();
       this.$emit('reset');
     },
 
-    // Update active filters list
-    updateActiveFilters() {
-      this.activeFilters = Object.entries(this.filters)
-        .filter(([_, value]) => value && value !== '')
-        .map(([key, value]) => ({
-          key,
-          label: this.formatFilterLabel(key, value)
-        }));
-    },
-
-    // Format filter label for display
     formatFilterLabel(key, value) {
       const labels = {
-        keyword: `Keyword: ${value}`,
-        location: `Location: ${value}`,
-        category: `Category: ${value}`,
-        type: `Type: ${value}`,
-        experience_level: `Experience: ${value}`,
-        min_salary: `Min Salary: ₦${value}`,
-        max_salary: `Max Salary: ₦${value}`,
+        keyword: 'Search',
+        location: 'Location',
+        category: 'Category',
+        type: 'Job Type',
+        experience_level: 'Experience Level',
         is_featured: 'Featured Only'
       };
-      return labels[key] || `${key}: ${value}`;
-    },
 
-    // Load filter options from API
-    async loadFilterOptions() {
-      try {
-        const options = await jobService.getFilterOptions();
-        this.filterOptions = {
-          ...this.filterOptions,
-          locations: options.locations || [],
-          categories: options.categories || []
-        };
-      } catch (error) {
-        console.error('Error loading filter options:', error);
-      }
+      return `${labels[key]}: ${value}`;
     }
   },
 
-  mounted() {
-    this.loadFilterOptions();
-    if (Object.keys(this.initialFilters).some(key => this.initialFilters[key])) {
-      this.updateActiveFilters();
+  created() {
+    // Initialize with any provided filters
+    if (this.initialFilters) {
+      this.filters = {
+        ...this.filters,
+        ...this.initialFilters
+      };
     }
   }
 };
@@ -293,110 +241,123 @@ export default {
 
 <style scoped>
 .search-filter {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1.5rem;
-  max-height: calc(100vh - 100px);
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .filter-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .filter-content {
-  padding: 1.5rem;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e0 #f8fafc;
-}
-
-.filter-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.filter-content::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
-
-.filter-content::-webkit-scrollbar-thumb {
-  background-color: #cbd5e0;
-  border-radius: 3px;
+  padding: 1rem;
 }
 
 .active-filters {
-  background: #f8fafc;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-}
-
-.badge {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
-
-.btn-close {
-  font-size: 0.75rem;
-  padding: 0.25rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  margin-bottom: 1rem;
 }
 
 .filter-form label {
   font-weight: 500;
-  color: #4a5568;
+  color: #374151;
   margin-bottom: 0.5rem;
 }
 
 .form-control,
 .form-select {
-  border-color: #e2e8f0;
+  border-color: #e5e7eb;
   padding: 0.625rem;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 1px #3182ce;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
 }
 
 .btn-primary {
-  background-color: #3182ce;
-  border-color: #3182ce;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
   padding: 0.625rem 1rem;
 }
 
 .btn-primary:hover {
-  background-color: #2c5282;
-  border-color: #2c5282;
+  background-color: #2563eb;
+  border-color: #2563eb;
 }
 
-.btn-outline-secondary {
-  color: #4a5568;
-  border-color: #e2e8f0;
+.badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
 }
 
-.btn-outline-secondary:hover {
-  background-color: #f8fafc;
-  color: #2d3748;
+.btn-close {
+  font-size: 0.75rem;
 }
 
 .form-check-input:checked {
-  background-color: #3182ce;
-  border-color: #3182ce;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
-@media (max-width: 768px) {
+/* Scrollbar styling */
+.search-filter::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-filter::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.search-filter::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.search-filter::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Media Queries */
+@media (max-width: 991.98px) {
   .search-filter {
-    position: relative;
+    position: fixed;
     top: 0;
-    max-height: none;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    border-radius: 0;
+    max-height: 100vh;
+    display: none;
   }
 
-  .filter-content {
-    max-height: 400px;
+  .search-filter.show {
+    display: block;
+  }
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filter-header .close-button {
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
   }
 }
 </style>

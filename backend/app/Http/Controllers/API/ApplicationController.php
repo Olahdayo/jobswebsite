@@ -37,13 +37,6 @@ class ApplicationController extends Controller
             // Get authenticated user
             $jobSeeker = $request->user();
 
-            Log::info('Starting application submission', [
-                'job_id' => $request->job_id,
-                'job_seeker_id' => $jobSeeker->id,
-                'request_data' => $request->except(['resume']), // Don't log file contents
-                'has_resume' => $request->hasFile('resume')
-            ]);
-
             // Validate request first
             $validator = Validator::make($request->all(), [
                 'job_id' => ['required', 'exists:job_listings,id'],
@@ -59,10 +52,10 @@ class ApplicationController extends Controller
             ]);
 
             if ($validator->fails()) {
-                Log::warning('Application validation failed', [
-                    'errors' => $validator->errors()->toArray(),
-                    'request_data' => $request->except(['resume']),
-                ]);
+                // Log::warning('Application validation failed', [
+                //     'errors' => $validator->errors()->toArray(),
+                //     'request_data' => $request->except(['resume']),
+                // ]);
                 return response()->json([
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
@@ -72,7 +65,7 @@ class ApplicationController extends Controller
             // Check if job exists
             $job = Job::find($request->job_id);
             if (!$job) {
-                Log::warning('Job not found after validation', ['job_id' => $request->job_id]);
+                // Log::warning('Job not found after validation', ['job_id' => $request->job_id]);
                 return response()->json([
                     'message' => 'The selected job is no longer available'
                 ], 404);
@@ -84,10 +77,7 @@ class ApplicationController extends Controller
                 ->first();
 
             if ($existingApplication) {
-                Log::info('Duplicate application attempt', [
-                    'job_id' => $request->job_id,
-                    'job_seeker_id' => $jobSeeker->id
-                ]);
+               
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You have already applied for this job.',
@@ -133,10 +123,6 @@ class ApplicationController extends Controller
                         'data' => $application
                     ], 201);
                 } catch (\Exception $e) {
-                    Log::error('File upload failed', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
                     return response()->json([
                         'message' => 'Failed to upload resume file',
                         'error' => $e->getMessage()
@@ -148,12 +134,6 @@ class ApplicationController extends Controller
                 'message' => 'Resume file is required'
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Application submission failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'job_id' => $request->job_id,
-                'job_seeker_id' => optional($request->user())->id
-            ]);
 
             return response()->json([
                 'message' => 'Failed to submit application',
@@ -178,16 +158,6 @@ class ApplicationController extends Controller
                 ])
                 ->latest()
                 ->get();
-
-            // Log the results
-            \Log::info('Applications retrieved', [
-                'job_seeker_id' => $user->id,
-                'application_count' => $applications->count(),
-                'first_application' => $applications->first() ? [
-                    'id' => $applications->first()->id,
-                    'has_job' => $applications->first()->job ? true : false
-                ] : null
-            ]);
 
             // Return structured response
             return response()->json([
@@ -215,15 +185,7 @@ class ApplicationController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            // Log the full error details
-            \Log::error('Error retrieving applications', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => optional(request()->user())->id,
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ]);
-
+           
             // Return a generic error response
             return response()->json([
                 'status' => 'error',
@@ -244,10 +206,7 @@ class ApplicationController extends Controller
 
             return response()->json($application);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch application details', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+           
             return response()->json([
                 'message' => 'Failed to fetch application details',
                 'error' => $e->getMessage()

@@ -5,7 +5,6 @@ export const jobService = {
   // Get all jobs with pagination
   getAllJobs: async (page = 1) => {
     try {
-      // console.log("JobService: Making request for page:", page);
 
       // Make the API call with axios config
       const response = await api.get("/jobs", {
@@ -65,16 +64,19 @@ export const jobService = {
 
   // Search jobs
 
-  searchJobs: async (filters, page = 1) => {
+  searchJobs: async (filters) => {
     try {
-      const currentPage = Math.max(1, parseInt(page));
       const response = await api.get("/jobs/search", {
         params: {
-          ...filters,
-          page: currentPage,
-          per_page: 10,
+          keyword: filters.keyword,
+          location: filters.location,
+          category: filters.category,
+          type: filters.type,
+          experience_level: filters.experience_level,
+          is_featured: filters.is_featured,
         },
       });
+
       return {
         data: response.data.data || [],
         total: response.data.total || 0,
@@ -93,8 +95,7 @@ export const jobService = {
   getJob: async (id) => {
     try {
       const response = await api.get(`/jobs/${id}`);
-      // Log the response structure for debugging
-      // console.log("Job response:", response);
+      console.log("Job API response:", response);
       return response.data; // Return just the data portion
     } catch (error) {
       console.error("Error fetching job details:", error);
@@ -103,7 +104,7 @@ export const jobService = {
   },
 
   // Apply for a job
-  applyForJob: async (formData) => {
+  applyForJob: async (jobId, formData) => {
     try {
       // Log FormData contents for debugging (excluding file contents)
       const formDataEntries = {};
@@ -116,7 +117,10 @@ export const jobService = {
       }
       console.log('Submitting application with data:', formDataEntries);
 
-      const response = await api.post("/applications", formData, {
+      // Add job_id to formData
+      formData.append('job_id', jobId);
+
+      const response = await api.post(`/applications`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",

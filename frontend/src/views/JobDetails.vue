@@ -18,28 +18,40 @@
           <div class="hero-content">
             <div class="company-brand">
               <img
-                :src="job.employer?.logo || defaultCompanyLogo"
-                :alt="job.employer?.company_name"
+                :src="companyLogo"
+                :alt="job?.employer?.company_name"
                 class="company-logo"
                 loading="lazy"
+                @error="handleImageError"
               />
               <div class="company-info">
-                <h1 class="job-title">{{ job.title }}</h1>
-                <p class="company-name">
-                  <i class="fas fa-building"></i>
-                  {{ job.employer?.company_name }}
-                </p>
+                <h1 class="job-title">{{ job?.title }}</h1>
+                <h2 class="company-name">
+                  <i class="bi bi-building"></i>
+                  {{ job?.employer?.company_name }}
+                </h2>
+                <div class="job-meta">
+                  <p class="meta-item">
+                    <i class="bi bi-geo-alt"></i>
+                    {{ job?.location }}
+                  </p>
+                  <p class="meta-item">
+                    <i class="bi bi-briefcase"></i>
+                    {{ job?.type }}
+                  </p>
+                  <p class="meta-item" v-if="job?.salary_range">
+                    <i class="bi bi-cash"></i>
+                    {{ formatSalary(job?.salary_range) }}
+                  </p>
+                </div>
                 <div class="job-tags">
-                  <span class="tag" :class="{ 'tag-featured': job.is_featured }">
-                  <i
-                    class="fas"
-                    :class="job.is_featured ? 'fa-star' : 'fa-briefcase'"
-                  ></i>
-                    {{ job.is_featured ? "Featured" : "Active" }}
+                  <span class="tag" :class="{ 'tag-featured': job?.is_featured }">
+                    <i class="bi" :class="job?.is_featured ? 'bi-star-fill' : 'bi-star'"></i>
+                    {{ job?.is_featured ? 'Featured' : 'Standard' }}
                   </span>
-                  <span class="tag tag-type">
-                    <i class="fas fa-clock"></i>
-                    {{ job.type }}
+                  <span class="tag tag-level">
+                    <i class="bi bi-bar-chart"></i>
+                    {{ job?.experience_level }}
                   </span>
                 </div>
               </div>
@@ -59,10 +71,6 @@
               Deadline: {{ formatDate(job.deadline) }}
             </span>
             <span class="meta-item">
-              <i class="bi bi-geo-alt"></i>
-              {{ job.location }}
-            </span>
-            <span class="meta-item">
               <i class="bi bi-cash"></i>
             ₦{{ formatSalary(job.min_salary) }} - ₦{{
               formatSalary(job.max_salary)
@@ -74,51 +82,37 @@
         <div class="content-grid">
           <div class="main-content">
             <div class="content-card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <i class="fas fa-file-alt"></i>
+              <section class="job-section">
+                <h3 class="section-title">
+                  <i class="bi bi-file-text"></i>
                   Job Description
-                </h2>
-              </div>
+                </h3>
+                <div class="section-content" v-html="job?.description"></div>
+              </section>
 
-              <div class="job-section">
-                <h3>Job Description</h3>
-                <p>{{ job.description }}</p>
-              </div>
+              <section class="job-section">
+                <h3 class="section-title">
+                  <i class="bi bi-list-task"></i>
+                  Key Responsibilities
+                </h3>
+                <ul class="requirements-list">
+                  <li v-for="(item, index) in parseList(job?.responsibilities)" :key="'resp-'+index">
+                    {{ item }}
+                  </li>
+                </ul>
+              </section>
 
-              <div class="job-section">
-                <h3>Responsibilities</h3>
-                <div v-if="job.responsibilities">
-                  <ul class="requirements-list">
-                  <li
-                    v-for="(resp, index) in parseList(job.responsibilities)"
-                    :key="index"
-                  >
-                      <i class="fas fa-check-circle"></i>
-                      <span>{{ resp }}</span>
-                    </li>
-                  </ul>
-                </div>
-              <p v-else class="text-muted">
-                No specific responsibilities listed.
-              </p>
-              </div>
-
-              <div class="job-section">
-                <h3>Requirements</h3>
-                <div v-if="job.requirements">
-                  <ul class="requirements-list">
-                  <li
-                    v-for="(req, index) in parseList(job.requirements)"
-                    :key="index"
-                  >
-                      <i class="fas fa-check-circle"></i>
-                      <span>{{ req }}</span>
-                    </li>
-                  </ul>
-                </div>
-                <p v-else class="text-muted">No specific requirements listed.</p>
-              </div>
+              <section class="job-section">
+                <h3 class="section-title">
+                  <i class="bi bi-check-circle"></i>
+                  Requirements
+                </h3>
+                <ul class="requirements-list">
+                  <li v-for="(item, index) in parseList(job?.requirements)" :key="'req-'+index">
+                    {{ item }}
+                  </li>
+                </ul>
+              </section>
             </div>
 
             <div class="mt-4">
@@ -210,9 +204,9 @@
                 <div class="invalid-feedback" v-if="formErrors.resume">
                   {{ formErrors.resume }}
                 </div>
-                <div class="form-text mt-1" v-if="applicationForm.resumeFile">
-                  Selected file: {{ applicationForm.resumeFile.name }} ({{
-                    formatFileSize(applicationForm.resumeFile.size)
+                <div class="form-text mt-1" v-if="applicationForm.resume">
+                  Selected file: {{ applicationForm.resume.name }} ({{
+                    formatFileSize(applicationForm.resume.size)
                   }})
                 </div>
               </div>
@@ -332,63 +326,87 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { jobService } from "@/services/jobService";
+import { useJobsStore } from "@/stores/jobs";
 import { Modal } from "bootstrap";
 
 export default {
   name: "JobDetails",
-  
   data() {
     return {
-      job: null,
-      isLoading: true,
-      loadError: null,
-      isApplying: false,
-      errorMessage: "",
-      successModal: null,
-      errorModal: null,
-      applicationModal: null,
+      applicationForm: {
+        coverLetter: "",
+        resume: null,
+      },
       formErrors: {
         coverLetter: "",
         resume: "",
       },
-      applicationForm: {
-        coverLetter: "",
-        resumeFile: null,
-      },
+      applicationModal: null,
+      successModal: null,
+      errorModal: null,
+      errorMessage: "",
       defaultCompanyLogo: "/images/dashboard-default.svg",
     };
   },
 
   computed: {
+    authStore() {
+      return useAuthStore();
+    },
+    jobsStore() {
+      return useJobsStore();
+    },
+    job() {
+      return this.jobsStore.getCurrentJob;
+    },
+    isLoading() {
+      return this.jobsStore.getJobLoadingState;
+    },
+    loadError() {
+      return this.jobsStore.getJobError;
+    },
+    isApplying() {
+      return this.jobsStore.getApplicationState.isApplying;
+    },
     isFormValid() {
       return (
         this.applicationForm.coverLetter.length >= 100 &&
-             this.applicationForm.resumeFile &&
-             !this.formErrors.coverLetter &&
+        this.applicationForm.resume &&
+        !this.formErrors.coverLetter &&
         !this.formErrors.resume
       );
     },
+    companyLogo() {
+      if (!this.job) return this.defaultCompanyLogo;
+      // Check all possible paths for the logo
+      return this.job.employer?.logo || this.job.company_logo || this.job.logo || this.defaultCompanyLogo;
+    },
+  },
+
+  created() {
+    this.loadJobDetails();
   },
 
   mounted() {
-    // Initialize Bootstrap modals
+    this.applicationModal = new Modal(this.$refs.applicationModal);
     this.successModal = new Modal(this.$refs.successModal);
     this.errorModal = new Modal(this.$refs.errorModal);
-    this.applicationModal = new Modal(this.$refs.applicationModal);
+
+    // Add event listener for modal close
+    this.$refs.applicationModal.addEventListener('hidden.bs.modal', this.resetForm);
   },
 
-  async created() {
-    // console.log("JobDetails component created");
-    // console.log("Route params:", this.$route.params);
-    await this.loadJobDetails();
+  beforeUnmount() {
+    // Remove event listener
+    this.$refs.applicationModal.removeEventListener('hidden.bs.modal', this.resetForm);
+    this.hideModals();
   },
 
   methods: {
     formatFileSize(bytes) {
       if (bytes === 0) return "0 Bytes";
       const k = 1024;
-      const sizes = ["Bytes", "KB", "MB"];
+      const sizes = ["Bytes", "KB", "MB", "GB"];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     },
@@ -396,40 +414,37 @@ export default {
     handleResumeUpload(event) {
       const file = event.target.files[0];
       this.formErrors.resume = "";
-      
-      if (!file) {
-        this.applicationForm.resumeFile = null;
-        return;
-      }
 
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        this.formErrors.resume = "Resume file size must be less than 5MB";
-        event.target.value = "";
-        this.applicationForm.resumeFile = null;
+      if (!file) {
+        this.applicationForm.resume = null;
         return;
       }
 
       // Validate file type
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
+      const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
       if (!allowedTypes.includes(file.type)) {
-        this.formErrors.resume = "Please upload a PDF or Word document";
+        this.formErrors.resume = "Please upload a PDF, DOC, or DOCX file";
         event.target.value = "";
-        this.applicationForm.resumeFile = null;
         return;
       }
 
-      this.applicationForm.resumeFile = file;
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        this.formErrors.resume = "File size must be less than 5MB";
+        event.target.value = "";
+        return;
+      }
+
+      this.applicationForm.resume = file;
+    },
+
+    handleImageError(event) {
+      event.target.src = this.defaultCompanyLogo;
     },
 
     async handleApply() {
-      const authStore = useAuthStore();
-      
-      if (!authStore.isAuthenticated || !localStorage.getItem("token")) {
+      if (!this.authStore.isAuthenticated) {
         this.$router.push({
           name: "Login",
           query: { redirect: this.$route.fullPath },
@@ -437,123 +452,56 @@ export default {
         return;
       }
 
-      if (authStore.userType === "employer") {
-        this.errorMessage = "Only job seekers can apply for jobs";
-        this.errorModal.show();
+      // Check if user is an employer
+      if (this.authStore.user?.role === "employer") {
+        this.showSuccessMessage("Employers cannot apply for jobs");
         return;
       }
 
-      // Reset form and errors
-      this.applicationForm = {
-        coverLetter: "",
-        resumeFile: null,
-      };
-      this.formErrors = {
-        coverLetter: "",
-        resume: "",
-      };
+      // Check if the job deadline has passed
+      const deadline = new Date(this.job.deadline);
+      if (deadline < new Date()) {
+        this.showSuccessMessage("This job posting has expired");
+        return;
+      }
 
-      // Show application form modal
       this.applicationModal.show();
     },
 
     async submitApplication() {
+      if (!this.isFormValid) return;
+
       try {
-        // Add validation to ensure job exists
-        if (!this.job || !this.job.id) {
-          this.errorMessage = "Invalid job. Please refresh the page and try again.";
-          this.errorModal.show();
-          return;
-        }
-
-        // Create FormData
         const formData = new FormData();
-        formData.append("job_id", this.job.id.toString());
         formData.append("cover_letter", this.applicationForm.coverLetter);
-        formData.append("resume", this.applicationForm.resumeFile);
+        formData.append("resume", this.applicationForm.resume);
 
-        this.isApplying = true;
-        await jobService.applyForJob(formData);
-
-        // If we get here, the application was successful
-        this.applicationModal.hide();
-        this.showSuccessMessage("Application submitted successfully!");
+        await this.jobsStore.submitJobApplication(this.job.id, formData);
         
-        // Reset form
-        this.applicationForm = {
-          coverLetter: "",
-          resumeFile: null,
-        };
-        this.formErrors = {
-          coverLetter: "",
-          resume: "",
-        };
+        this.hideModals();
+        this.resetForm(); // Reset form after successful submission
+        this.successModal.show();
+        
       } catch (error) {
-        console.error("Error applying for job:", error);
-        
-        // Handle specific error cases
-        if (error.message.includes("already applied")) {
-          this.errorMessage = "You have already applied for this job.";
-        } else if (error.response?.data?.errors) {
-          // Handle validation errors
-          const errors = error.response.data.errors;
-          Object.keys(errors).forEach(key => {
-            this.formErrors[key] = errors[key][0];
-          });
-          this.errorMessage = "Please fix the errors in your application.";
-        } else {
-          // Handle other errors
-          this.errorMessage = error.message || "Failed to submit application. Please try again.";
-        }
-        
-        // Show error modal
+        console.error("Application submission error:", error);
+        this.errorMessage = error.message || 'Failed to submit application. Please try again.';
         this.errorModal.show();
-      } finally {
-        this.isApplying = false;
       }
     },
 
     async loadJobDetails() {
-      try {
-        const jobId = this.$route.params.id;
-        // console.log("Loading job details for ID:", jobId); 
-
-        const response = await jobService.getJob(jobId);
-        // console.log("Job details response:", response); 
-
-        // Check if response has the expected structure
-        if (response && response.data) {
-        this.job = response.data;
-        } else if (response) {
-          this.job = response; // If the data is directly in the response
-        } else {
-          throw new Error("Invalid response structure");
-        }
-
-        // Verify job exists
-        if (!this.job) {
-          this.loadError = "Job not found";
-          return;
-        }
-
-        this.isLoading = false;
-      } catch (error) {
-        console.error("Error loading job details:", error);
-        this.loadError =
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to load job details. Please try again.";
-        this.isLoading = false;
-      }
+      const jobId = this.$route.params.id;
+      if (!jobId) return;
+      
+      await this.jobsStore.fetchJob(jobId);
     },
 
     formatSalary(amount) {
-      if (!amount) return "Not specified";
-      return new Intl.NumberFormat("en-NG").format(amount);
+      return amount ? amount.toLocaleString() : "Not specified";
     },
 
     formatDate(date) {
-      if (!date) return "";
+      if (!date) return "Not specified";
       return new Date(date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -563,36 +511,37 @@ export default {
 
     parseList(text) {
       if (!text) return [];
-      if (Array.isArray(text)) return text;
-      
-      // Split by periods, semicolons, or newlines
-      const items = text
-        .split(/[.;\n]+/)
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0)
-        .map((item) => {
-          // Capitalize first letter if it's not already
-          return item.charAt(0).toUpperCase() + item.slice(1);
-        });
-      
-      return items;
+      // Remove brackets and quotes, then split by commas
+      return text
+        .replace(/[\[\]"]/g, '')
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
     },
 
     showSuccessMessage(message) {
-      // Show success modal
-      this.successModal.show();
+      alert(message);
     },
 
     hideModals() {
+      if (this.applicationModal) this.applicationModal.hide();
       if (this.successModal) this.successModal.hide();
       if (this.errorModal) this.errorModal.hide();
-      if (this.applicationModal) this.applicationModal.hide();
     },
-  },
 
-  beforeUnmount() {
-    // Clean up modals
-    this.hideModals();
+    resetForm() {
+      this.applicationForm = {
+        coverLetter: "",
+        resume: null,
+      };
+      this.formErrors = {
+        coverLetter: "",
+        resume: "",
+      };
+      // Reset file input
+      const fileInput = document.getElementById('resume');
+      if (fileInput) fileInput.value = '';
+    },
   },
 };
 </script>
@@ -611,32 +560,32 @@ export default {
 }
 
 .job-hero {
-  background: linear-gradient(to right, #2563eb, #3b82f6);
-  color: white;
-  padding: 3rem 2rem;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+  padding: 3rem 0;
   margin-bottom: 2rem;
+  color: #ffffff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .hero-content {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 2rem;
 }
 
 .company-brand {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 2rem;
 }
 
 .company-logo {
   width: 120px;
   height: 120px;
-  border-radius: 12px;
   object-fit: cover;
+  border-radius: 12px;
   background-color: white;
-  padding: 0.5rem;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -647,19 +596,56 @@ export default {
 .job-title {
   font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: white;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .company-name {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.company-name i {
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+
+.job-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #ffffff;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.meta-item i {
   font-size: 1.25rem;
   opacity: 0.9;
-  margin-bottom: 1rem;
+  width: 1.5rem;
+  text-align: center;
 }
 
 .job-tags {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
   margin-top: 1rem;
 }
 
@@ -668,18 +654,20 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 50px;
-  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
   font-size: 0.875rem;
-}
-
-.tag i {
-  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .tag-featured {
-  background-color: #fbbf24;
-  color: #92400e;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tag-level {
+  background-color: rgba(66, 153, 225, 0.2);
 }
 
 .job-meta {
@@ -719,10 +707,18 @@ export default {
   margin-bottom: 2rem;
 }
 
+.job-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #2d3748;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -730,50 +726,38 @@ export default {
 }
 
 .section-title i {
-  color: #3b82f6;
-}
-
-.job-section {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.job-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.job-section h3 {
+  color: #4a5568;
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 1rem;
 }
 
-.job-section p {
-  color: #4b5563;
-  line-height: 1.75;
+.section-content {
+  color: #4a5568;
+  line-height: 1.6;
 }
 
 .requirements-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .requirements-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
-  color: #4b5563;
+  position: relative;
+  padding-left: 2rem;
+  color: #4a5568;
   line-height: 1.5;
 }
 
-.requirements-list li i {
-  color: #3b82f6;
-  margin-top: 0.25rem;
+.requirements-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0.5rem;
+  color: #4299e1;
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .modal .bi {

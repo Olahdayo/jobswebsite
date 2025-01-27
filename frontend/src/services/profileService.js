@@ -73,11 +73,11 @@ export const profileService = {
     try {
       console.log('Attempting to cancel application:', {
         applicationId,
-        url: `/applications/${applicationId}`,
+        url: `/applications/${applicationId}/cancel`,
         token: localStorage.getItem('token')
       });
 
-      const response = await authAxios.delete(`/applications/${applicationId}`);
+      const response = await authAxios.post(`/applications/${applicationId}/cancel`);
       
       console.log('Cancel application response:', response.data);
       return response.data;

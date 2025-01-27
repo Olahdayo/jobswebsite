@@ -105,6 +105,22 @@
             </div>
           </div>
         </div>
+
+        <div class="col-md-3">
+          <div class="card stat-card h-100 border-0">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon rejected">
+                  <i class="fas fa-times"></i>
+                </div>
+                <div class="ms-3">
+                  <h6 class="card-subtitle text-muted mb-1">Rejected Applications</h6>
+                  <h2 class="card-title mb-0">{{ jobStats.rejectedApplications }}</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Posted Jobs -->
@@ -114,60 +130,58 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+            <table class="table table-hover align-middle">
+              <thead>
                 <tr>
-                  <th>Job Title</th>
-                  <th>Category</th>
-                  <th>Applications</th>
-                  <th>Posted Date</th>
+                  <th>Title</th>
+                  <th>Location</th>
+                  <th>Type</th>
+                  <th>Experience</th>
                   <th>Status</th>
+                  <th>Posted Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="job in employerJobs" :key="job.id">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="ms-3">
-                        <h6 class="mb-0">{{ job.title }}</h6>
-                        <small class="text-muted">{{ job.location }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{{ job.category }}</td>
-                  <td>
-                    <span class="badge bg-info">
-                      {{ job.applications_count }} Applications
-                    </span>
-                  </td>
-                  <td>{{ new Date(job.created_at).toLocaleDateString() }}</td>
+                  <td>{{ job.title }}</td>
+                  <td>{{ job.location }}</td>
+                  <td>{{ job.type }}</td>
+                  <td>{{ job.experience_level }}</td>
                   <td>
                     <span 
-                      :class="{
-                        'badge': true,
-                        'bg-success': job.status === 'active',
-                        'bg-secondary': job.status === 'closed'
-                      }"
+                      :class="[
+                        'badge',
+                        job.is_active ? 'bg-success' : 'bg-secondary'
+                      ]"
                     >
-                      {{ job.status }}
+                      {{ job.is_active ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
+                  <td class="text-nowrap">{{ formatDate(job.created_at) }}</td>
                   <td>
                     <div class="btn-group">
                       <button 
-                        class="btn btn-sm btn-outline-primary"
-                        @click="toggleJobStatus(job.id)"
+                        class="btn btn-sm btn-outline-primary" 
+                        @click="viewJob(job.id)"
                       >
-                        {{ job.status === 'active' ? 'Close' : 'Reopen' }}
+                        View
                       </button>
                       <button 
-                        class="btn btn-sm btn-outline-info"
-                        @click="$router.push(`/jobs/${job.id}/applications`)"
+                        class="btn btn-sm"
+                        :class="[
+                          job.is_active ? 'btn-outline-secondary' : 'btn-outline-success'
+                        ]"
+                        @click="toggleJobStatus(job.id)"
                       >
-                        View Applications
+                        {{ job.is_active ? 'Deactivate' : 'Activate' }}
                       </button>
                     </div>
+                  </td>
+                </tr>
+                <tr v-if="employerJobs.length === 0">
+                  <td colspan="7" class="text-center py-4">
+                    <p class="text-muted mb-0">No jobs posted yet</p>
                   </td>
                 </tr>
               </tbody>
@@ -233,12 +247,14 @@
                   <!-- Job Type -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Type*</label>
-                    <select class="form-select" v-model="jobForm.type" required>
-                      <option value="">Select Type</option>
-                      <option v-for="type in filterOptions.jobTypes" 
-                              :key="type" 
-                              :value="type">
-                        {{ type }}
+                    <select v-model="jobForm.type" class="form-select" required>
+                      <option value="" disabled>Select job type</option>
+                      <option 
+                        v-for="type in jobTypes" 
+                        :key="type" 
+                        :value="type"
+                      >
+                        {{ type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ') }}
                       </option>
                     </select>
                   </div>
@@ -397,15 +413,13 @@ export default {
       jobTypes: [
         'full-time',
         'part-time', 
-        'contract',
-        'remote',
-        'internship'
+        'contract'
       ],
       jobForm: {
         title: '',
         description: '',
         location: '',
-        type: 'full-time',
+        type: '',
         experienceLevel: '',
         salaryMin: null,
         salaryMax: null,
@@ -422,7 +436,8 @@ export default {
       jobsStore: null,
       showSuccessModal: false,
       successJobTitle: '',
-      isJobCreationLoading: false
+      isJobCreationLoading: false,
+      isLoading: false
     };
   },
 
@@ -450,6 +465,18 @@ export default {
       };
     },
 
+    formatDate() {
+      return (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      };
+    },
+
     today() {
       return new Date().toISOString().split('T')[0];
     }
@@ -458,15 +485,16 @@ export default {
   methods: {
     async loadDashboardData() {
       try {
-        if (this.jobsStore) {
-          await Promise.all([
-            this.jobsStore.fetchEmployerJobs(),
-            this.jobsStore.fetchJobStats(),
-            this.jobsStore.fetchFilterOptions()
-          ]);
-        }
+        this.isLoading = true;
+        await Promise.all([
+          this.jobsStore.fetchEmployerJobs(),
+          this.jobsStore.fetchJobStats(),
+          this.jobsStore.fetchFilterOptions()
+        ]);
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        console.error('Error loading dashboard:', error);
+      } finally {
+        this.isLoading = false;
       }
     },
 
@@ -565,13 +593,19 @@ export default {
     handleSuccessModalClose() {
       this.showSuccessModal = false;
       this.successJobTitle = '';
-    }
+    },
+
+    viewJob(jobId) {
+      this.$router.push({ 
+        name: 'JobApplications', 
+        params: { jobId: jobId } 
+      });
+    },
   },
 
   created() {
     this.authStore = useAuthStore();
     this.jobsStore = useJobsStore();
-
     this.loadDashboardData();
   }
 }
@@ -625,6 +659,11 @@ export default {
 .stat-icon.accepted {
   background-color: rgba(40, 167, 69, 0.1);
   color: #28a745;
+}
+
+.stat-icon.rejected {
+  background-color: #fecaca;
+  color: #dc2626;
 }
 
 .card {

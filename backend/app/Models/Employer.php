@@ -35,8 +35,34 @@ class Employer extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected $appends = [
+        'user_type'
+    ];
+
     public function jobs()
     {
         return $this->hasMany(Job::class);
+    }
+
+    /**
+     * Get the user type for the employer
+     *
+     * @return string
+     */
+    public function getUserTypeAttribute()
+    {
+        return 'employer';
+    }
+
+    /**
+     * Scope a query to find an employer by email
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $email
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindByEmail($query, $email)
+    {
+        return $query->where('email', $email);
     }
 }

@@ -75,6 +75,12 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: "/job-details/:id",
+      name: 'job-details',
+      component: () => import('@/views/JobDetails.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: "/jobs/state/:state",
       name: "JobsByState",
       component: () => import("@/views/JobsByState.vue"),
@@ -116,6 +122,17 @@ const router = createRouter({
       name: "Profile",
       component: Profile,
       meta: { requiresAuth: true }
+    },
+    {
+      path: "/job-applications/:jobId",
+      name: "JobApplications",
+      component: () => import("@/views/JobApplications.vue"),
+      meta: {
+        requiresAuth: true,
+        userType: "employer",
+        title: "Job Applications"
+      },
+      props: true
     },
   ],
   scrollBehavior(to, from, savedPosition) {

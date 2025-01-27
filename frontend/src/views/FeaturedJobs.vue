@@ -1,21 +1,34 @@
 <template>
-  <div class="featured-jobs-page">
+  <div class="featured-jobs-page bg-light">
     <div class="container py-5">
-      <div class="page-header mb-5">
-        <h1 class="text-3xl font-bold text-gray-900">Featured Jobs</h1>
-        <p class="text-gray-600 mt-2">Discover our handpicked selection of premium job opportunities</p>
+      <!-- Page Header -->
+      <div class="page-header text-center mb-5">
+        <h1 class="display-5 fw-bold text-dark">Featured Jobs</h1>
+        <p class="lead text-muted">Discover our handpicked selection of premium job opportunities</p>
       </div>
 
-      <div v-if="loading" class="text-center py-5">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
+        <p class="mt-3 text-muted">Loading featured jobs...</p>
       </div>
 
+      <!-- Error State -->
+      <div v-if="error" class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+
+      <!-- Empty State -->
       <div v-else-if="featuredJobs.length === 0" class="text-center py-5">
-        <p class="text-gray-600">No featured jobs available at the moment.</p>
+        <div class="alert alert-info" role="alert">
+          <i class="fas fa-info-circle me-2"></i>
+          No featured jobs available at the moment.
+        </div>
       </div>
 
+      <!-- Jobs Grid -->
       <div v-else class="featured-jobs-grid">
         <router-link 
           v-for="job in featuredJobs" 
@@ -23,57 +36,66 @@
           :to="{ name: 'JobDetails', params: { id: job.id }}"
           class="job-card-link"
         >
-          <div class="job-card">
-            <div class="card-header">
-              <div class="company-info">
-                <img 
-                  :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
-                  :alt="job.employer?.company_name"
-                  class="company-logo"
-                />
-                <div>
-                  <h2 class="job-title">{{ job.title }}</h2>
-                  <p class="company-name">{{ job.employer?.company_name }}</p>
+          <div class="card job-card h-100">
+            <!-- Card Header -->
+            <div class="card-header border-bottom bg-white">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="company-info d-flex gap-3">
+                  <img 
+                    :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
+                    :alt="job.employer?.company_name"
+                    class="company-logo rounded"
+                    width="60"
+                    height="60"
+                  />
+                  <div>
+                    <h5 class="card-title mb-1">{{ job.title }}</h5>
+                    <p class="text-muted mb-0">{{ job.employer?.company_name }}</p>
+                  </div>
                 </div>
-              </div>
-              <div class="featured-badge">
-                <i class="fas fa-star"></i>
-                Featured
+                <span class="badge bg-warning text-dark">
+                  <i class="fas fa-star me-1"></i>
+                  Featured
+                </span>
               </div>
             </div>
 
+            <!-- Card Body -->
             <div class="card-body">
-              <p class="job-description">{{ job.description.substring(0, 150) }}...</p>
+              <p class="card-text text-muted mb-4">{{ job.description.substring(0, 150) }}...</p>
               
-              <div class="job-meta">
+              <div class="job-meta d-flex flex-wrap gap-3 mb-4">
                 <div class="meta-item">
-                  <i class="fas fa-map-marker-alt"></i>
+                  <i class="fas fa-map-marker-alt text-secondary me-2"></i>
                   <span>{{ job.location }}</span>
                 </div>
                 <div class="meta-item">
-                  <i class="fas fa-briefcase"></i>
+                  <i class="fas fa-briefcase text-secondary me-2"></i>
                   <span>{{ job.type }}</span>
                 </div>
                 <div class="meta-item">
-                  <i class="fas fa-money-bill-wave"></i>
+                  <i class="fas fa-money-bill-wave text-secondary me-2"></i>
                   <span>₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
                 </div>
               </div>
 
               <div class="job-tags">
-                <span class="tag">{{ job.experience_level }}</span>
-                <span class="tag">{{ job.category }}</span>
+                <span class="badge bg-light text-dark me-2">{{ job.experience_level }}</span>
+                <span class="badge bg-light text-dark">{{ job.category }}</span>
               </div>
             </div>
 
-            <div class="card-footer">
-              <div class="deadline">
-                <i class="fas fa-clock"></i>
-                <span>Deadline: {{ formatDate(job.deadline) }}</span>
+            <!-- Card Footer -->
+            <div class="card-footer bg-white border-top">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="deadline text-muted">
+                  <i class="fas fa-clock me-2"></i>
+                  <span>Deadline: {{ formatDate(job.deadline) }}</span>
+                </div>
+                <span class="view-details text-primary">
+                  View Details <i class="fas fa-arrow-right ms-2"></i>
+                </span>
               </div>
-              <span class="view-details">
-                View Details <i class="fas fa-arrow-right"></i>
-              </span>
             </div>
           </div>
         </router-link>
@@ -83,70 +105,77 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { jobService } from '@/services/jobService';
+// Import the jobs store
+import { useJobsStore } from '@/stores/jobs';
 
 export default {
   name: 'FeaturedJobs',
   
-  setup() {
-    const featuredJobs = ref([]);
-    const loading = ref(true);
-
-    const loadFeaturedJobs = async () => {
-      try {
-        const response = await jobService.getFeaturedJobs();
-        featuredJobs.value = response.data;
-      } catch (error) {
-        console.error('Error loading featured jobs:', error);
-      } finally {
-        loading.value = false;
-      }
+  // Component data
+  data() {
+    return {
+      error: null
     };
+  },
 
-    const formatSalary = (amount) => {
-      return new Intl.NumberFormat('en-NG').format(amount);
-    };
+  // Computed properties for reactive data
+  computed: {
+    // Get jobs store instance
+    jobsStore() {
+      return useJobsStore();
+    },
 
-    const formatDate = (date) => {
-      if (!date) return '';
+    // Loading state from store
+    isLoading() {
+      return this.jobsStore.loading;
+    },
+
+    // Get featured jobs from store
+    featuredJobs() {
+      return this.jobsStore.getFeaturedJobs;
+    }
+  },
+
+  // Methods for component logic
+  methods: {
+    // Format salary numbers with Nigerian Naira format
+    formatSalary(salary) {
+      if (!salary) return 'Not specified';
+      return new Intl.NumberFormat('en-NG', {
+        maximumFractionDigits: 0
+      }).format(salary);
+    },
+
+    // Format date to readable format
+    formatDate(date) {
+      if (!date) return 'N/A';
       return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric'
       });
-    };
+    },
 
-    onMounted(() => {
-      loadFeaturedJobs();
-    });
+    // Load featured jobs from the store
+    async loadFeaturedJobs() {
+      try {
+        await this.jobsStore.initialize();
+      } catch (error) {
+        console.error('Error loading featured jobs:', error);
+        this.error = 'Failed to load featured jobs. Please try again later.';
+      }
+    }
+  },
 
-    return {
-      featuredJobs,
-      loading,
-      formatSalary,
-      formatDate
-    };
+  // Lifecycle hook - load jobs when component is created
+  created() {
+    this.loadFeaturedJobs();
   }
 };
 </script>
 
 <style scoped>
-.featured-jobs-page {
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-.page-header {
-  text-align: center;
-}
-
-.featured-jobs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
-}
-
+/* Card link styles */
 .job-card-link {
   text-decoration: none;
   color: inherit;
@@ -158,146 +187,33 @@ export default {
   transform: translateY(-4px);
 }
 
-.job-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  transition: box-shadow 0.2s;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+/* Grid layout for job cards */
+.featured-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
 }
 
-.job-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.company-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
+/* Company logo styles */
 .company-logo {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
   object-fit: cover;
 }
 
-.job-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
+/* Card hover effects */
+.job-card {
+  transition: box-shadow 0.3s;
 }
 
-.company-name {
-  color: #6b7280;
-  font-size: 0.875rem;
+.job-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.featured-badge {
-  background: #fef3c7;
-  color: #92400e;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.featured-badge i {
-  color: #f59e0b;
-}
-
-.card-body {
-  padding: 1.5rem;
-  flex: 1;
-}
-
-.job-description {
-  color: #4b5563;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 1.5rem;
-}
-
-.job-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
+/* Meta item styles */
 .meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #4b5563;
   font-size: 0.875rem;
 }
 
-.meta-item i {
-  color: #3b82f6;
-  width: 16px;
-}
-
-.job-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.tag {
-  background: #e5e7eb;
-  color: #374151;
-  padding: 0.25rem 0.75rem;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.card-footer {
-  padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.deadline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #4b5563;
-  font-size: 0.875rem;
-}
-
-.deadline i {
-  color: #ef4444;
-}
-
-.view-details {
-  color: #3b82f6;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
+/* View details animation */
 .view-details i {
   transition: transform 0.2s;
 }
@@ -306,19 +222,10 @@ export default {
   transform: translateX(4px);
 }
 
-@media (max-width: 640px) {
+/* Responsive styles */
+@media (max-width: 768px) {
   .featured-jobs-grid {
     grid-template-columns: 1fr;
-  }
-
-  .job-meta {
-    grid-template-columns: 1fr;
-  }
-
-  .card-footer {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
   }
 }
 </style>
