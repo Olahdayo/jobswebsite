@@ -446,7 +446,7 @@ export default {
     async handleApply() {
       if (!this.authStore.isAuthenticated) {
         this.$router.push({
-          name: "login",
+          name: "Login",
           query: { redirect: this.$route.fullPath },
         });
         return;
