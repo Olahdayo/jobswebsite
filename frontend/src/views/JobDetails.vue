@@ -200,9 +200,9 @@
                 <div class="invalid-feedback" v-if="formErrors.resume">
                   {{ formErrors.resume }}
                 </div>
-                <div class="form-text mt-1" v-if="applicationForm.resumeFile">
-                  Selected file: {{ applicationForm.resumeFile.name }} ({{
-                    formatFileSize(applicationForm.resumeFile.size)
+                <div class="form-text mt-1" v-if="applicationForm.resume">
+                  Selected file: {{ applicationForm.resume.name }} ({{
+                    formatFileSize(applicationForm.resume.size)
                   }})
                 </div>
               </div>
@@ -322,63 +322,82 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { jobService } from "@/services/jobService";
+import { useJobsStore } from "@/stores/jobs";
 import { Modal } from "bootstrap";
 
 export default {
   name: "JobDetails",
-  
   data() {
     return {
-      job: null,
-      isLoading: true,
-      loadError: null,
-      isApplying: false,
-      errorMessage: "",
-      successModal: null,
-      errorModal: null,
-      applicationModal: null,
+      defaultCompanyLogo: "/images/default-company-logo.png",
+      applicationForm: {
+        coverLetter: "",
+        resume: null,
+      },
       formErrors: {
         coverLetter: "",
         resume: "",
       },
-      applicationForm: {
-        coverLetter: "",
-        resumeFile: null,
-      },
-      defaultCompanyLogo: "/images/dashboard-default.svg",
+      applicationModal: null,
+      successModal: null,
+      errorModal: null,
+      errorMessage: "",
     };
   },
 
   computed: {
+    authStore() {
+      return useAuthStore();
+    },
+    jobsStore() {
+      return useJobsStore();
+    },
+    job() {
+      return this.jobsStore.getCurrentJob;
+    },
+    isLoading() {
+      return this.jobsStore.getJobLoadingState;
+    },
+    loadError() {
+      return this.jobsStore.getJobError;
+    },
+    isApplying() {
+      return this.jobsStore.getApplicationState.isApplying;
+    },
     isFormValid() {
       return (
         this.applicationForm.coverLetter.length >= 100 &&
-             this.applicationForm.resumeFile &&
-             !this.formErrors.coverLetter &&
+        this.applicationForm.resume &&
+        !this.formErrors.coverLetter &&
         !this.formErrors.resume
       );
     },
   },
 
-  mounted() {
-    // Initialize Bootstrap modals
-    this.successModal = new Modal(this.$refs.successModal);
-    this.errorModal = new Modal(this.$refs.errorModal);
-    this.applicationModal = new Modal(this.$refs.applicationModal);
+  created() {
+    this.loadJobDetails();
   },
 
-  async created() {
-    // console.log("JobDetails component created");
-    // console.log("Route params:", this.$route.params);
-    await this.loadJobDetails();
+  mounted() {
+    this.applicationModal = new Modal(this.$refs.applicationModal);
+    this.successModal = new Modal(this.$refs.successModal);
+    this.errorModal = new Modal(this.$refs.errorModal);
+
+    // Add event listener for modal close
+    this.$refs.applicationModal.addEventListener('hidden.bs.modal', this.resetForm);
+  },
+
+  beforeUnmount() {
+    // Remove event listener
+    this.$refs.applicationModal.removeEventListener('hidden.bs.modal', this.resetForm);
+    this.hideModals();
   },
 
   methods: {
     formatFileSize(bytes) {
       if (bytes === 0) return "0 Bytes";
       const k = 1024;
-      const sizes = ["Bytes", "KB", "MB"];
+      const sizes = ["Bytes", "KB", "MB", "GB"];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     },
@@ -386,164 +405,90 @@ export default {
     handleResumeUpload(event) {
       const file = event.target.files[0];
       this.formErrors.resume = "";
-      
-      if (!file) {
-        this.applicationForm.resumeFile = null;
-        return;
-      }
 
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        this.formErrors.resume = "Resume file size must be less than 5MB";
-        event.target.value = "";
-        this.applicationForm.resumeFile = null;
+      if (!file) {
+        this.applicationForm.resume = null;
         return;
       }
 
       // Validate file type
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
+      const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
       if (!allowedTypes.includes(file.type)) {
-        this.formErrors.resume = "Please upload a PDF or Word document";
+        this.formErrors.resume = "Please upload a PDF, DOC, or DOCX file";
         event.target.value = "";
-        this.applicationForm.resumeFile = null;
         return;
       }
 
-      this.applicationForm.resumeFile = file;
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        this.formErrors.resume = "File size must be less than 5MB";
+        event.target.value = "";
+        return;
+      }
+
+      this.applicationForm.resume = file;
     },
 
     async handleApply() {
-      const authStore = useAuthStore();
-      
-      if (!authStore.isAuthenticated || !localStorage.getItem("token")) {
+      if (!this.authStore.isAuthenticated) {
         this.$router.push({
-          name: "Login",
+          name: "login",
           query: { redirect: this.$route.fullPath },
         });
         return;
       }
 
-      if (authStore.userType === "employer") {
-        this.errorMessage = "Only job seekers can apply for jobs";
-        this.errorModal.show();
+      // Check if user is an employer
+      if (this.authStore.user?.role === "employer") {
+        this.showSuccessMessage("Employers cannot apply for jobs");
         return;
       }
 
-      // Reset form and errors
-      this.applicationForm = {
-        coverLetter: "",
-        resumeFile: null,
-      };
-      this.formErrors = {
-        coverLetter: "",
-        resume: "",
-      };
+      // Check if the job deadline has passed
+      const deadline = new Date(this.job.deadline);
+      if (deadline < new Date()) {
+        this.showSuccessMessage("This job posting has expired");
+        return;
+      }
 
-      // Show application form modal
       this.applicationModal.show();
     },
 
     async submitApplication() {
+      if (!this.isFormValid) return;
+
       try {
-        // Add validation to ensure job exists
-        if (!this.job || !this.job.id) {
-          this.errorMessage = "Invalid job. Please refresh the page and try again.";
-          this.errorModal.show();
-          return;
-        }
-
-        // Create FormData
         const formData = new FormData();
-        formData.append("job_id", this.job.id.toString());
         formData.append("cover_letter", this.applicationForm.coverLetter);
-        formData.append("resume", this.applicationForm.resumeFile);
+        formData.append("resume", this.applicationForm.resume);
 
-        this.isApplying = true;
-        await jobService.applyForJob(formData);
-
-        // If we get here, the application was successful
-        this.applicationModal.hide();
-        this.showSuccessMessage("Application submitted successfully!");
+        await this.jobsStore.submitJobApplication(this.job.id, formData);
         
-        // Reset form
-        this.applicationForm = {
-          coverLetter: "",
-          resumeFile: null,
-        };
-        this.formErrors = {
-          coverLetter: "",
-          resume: "",
-        };
+        this.hideModals();
+        this.resetForm(); // Reset form after successful submission
+        this.successModal.show();
+        
       } catch (error) {
-        console.error("Error applying for job:", error);
-        
-        // Handle specific error cases
-        if (error.message.includes("already applied")) {
-          this.errorMessage = "You have already applied for this job.";
-        } else if (error.response?.data?.errors) {
-          // Handle validation errors
-          const errors = error.response.data.errors;
-          Object.keys(errors).forEach(key => {
-            this.formErrors[key] = errors[key][0];
-          });
-          this.errorMessage = "Please fix the errors in your application.";
-        } else {
-          // Handle other errors
-          this.errorMessage = error.message || "Failed to submit application. Please try again.";
-        }
-        
-        // Show error modal
+        console.error("Application submission error:", error);
+        this.errorMessage = error.message || 'Failed to submit application. Please try again.';
         this.errorModal.show();
-      } finally {
-        this.isApplying = false;
       }
     },
 
     async loadJobDetails() {
-      try {
-        const jobId = this.$route.params.id;
-        // console.log("Loading job details for ID:", jobId); 
-
-        const response = await jobService.getJob(jobId);
-        // console.log("Job details response:", response); 
-
-        // Check if response has the expected structure
-        if (response && response.data) {
-        this.job = response.data;
-        } else if (response) {
-          this.job = response; // If the data is directly in the response
-        } else {
-          throw new Error("Invalid response structure");
-        }
-
-        // Verify job exists
-        if (!this.job) {
-          this.loadError = "Job not found";
-          return;
-        }
-
-        this.isLoading = false;
-      } catch (error) {
-        console.error("Error loading job details:", error);
-        this.loadError =
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to load job details. Please try again.";
-        this.isLoading = false;
-      }
+      const jobId = this.$route.params.id;
+      if (!jobId) return;
+      
+      await this.jobsStore.fetchJob(jobId);
     },
 
     formatSalary(amount) {
-      if (!amount) return "Not specified";
-      return new Intl.NumberFormat("en-NG").format(amount);
+      return amount ? amount.toLocaleString() : "Not specified";
     },
 
     formatDate(date) {
-      if (!date) return "";
+      if (!date) return "Not specified";
       return new Date(date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -553,49 +498,53 @@ export default {
 
     parseList(text) {
       if (!text) return [];
-      
-      // If it's already an array, clean and return it
-      if (Array.isArray(text)) {
-        return text.map(item => {
-          // Remove brackets, quotes, and trim
-          return item
-            .replace(/^\[|\]$/g, '')
-            .replace(/"/g, '')
-            .trim();
-        });
+
+      // Split by newlines first
+      let items = text.split(/\n/);
+
+      // If no newlines found, try splitting by semicolons
+      if (items.length === 1) {
+        items = text.split(";");
       }
-      
-      // Split by commas, periods, semicolons, or newlines
-      const items = text
-        .split(/[,;\n.]+/)
-        .map(item => {
-          // Remove brackets, quotes, trim, and capitalize first letter
-          return item
-            .replace(/^\[|\]$/g, '')
-            .replace(/"/g, '')
-            .trim()
-            .replace(/^[a-z]/, char => char.toUpperCase());
-        })
-        .filter(item => item.length > 0);
-      
-      return items;
+
+      // If still no splits found, try splitting by periods that are followed by a space
+      if (items.length === 1) {
+        items = text.split(/\.\s+/);
+      }
+
+      // Clean up the items
+      return items
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+        .map((item) => {
+          // Remove leading bullet points, numbers, or dashes
+          return item.replace(/^[\s•\-\d.]+/, "").trim();
+        });
     },
 
     showSuccessMessage(message) {
-      // Show success modal
-      this.successModal.show();
+      alert(message);
     },
 
     hideModals() {
+      if (this.applicationModal) this.applicationModal.hide();
       if (this.successModal) this.successModal.hide();
       if (this.errorModal) this.errorModal.hide();
-      if (this.applicationModal) this.applicationModal.hide();
     },
-  },
 
-  beforeUnmount() {
-    // Clean up modals
-    this.hideModals();
+    resetForm() {
+      this.applicationForm = {
+        coverLetter: "",
+        resume: null,
+      };
+      this.formErrors = {
+        coverLetter: "",
+        resume: "",
+      };
+      // Reset file input
+      const fileInput = document.getElementById('resume');
+      if (fileInput) fileInput.value = '';
+    },
   },
 };
 </script>

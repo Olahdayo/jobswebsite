@@ -95,8 +95,7 @@ export const jobService = {
   getJob: async (id) => {
     try {
       const response = await api.get(`/jobs/${id}`);
-      // Log the response structure for debugging
-      // console.log("Job response:", response);
+      console.log("Job API response:", response);
       return response.data; // Return just the data portion
     } catch (error) {
       console.error("Error fetching job details:", error);
@@ -105,7 +104,7 @@ export const jobService = {
   },
 
   // Apply for a job
-  applyForJob: async (formData) => {
+  applyForJob: async (jobId, formData) => {
     try {
       // Log FormData contents for debugging (excluding file contents)
       const formDataEntries = {};
@@ -118,7 +117,10 @@ export const jobService = {
       }
       console.log('Submitting application with data:', formDataEntries);
 
-      const response = await api.post("/applications", formData, {
+      // Add job_id to formData
+      formData.append('job_id', jobId);
+
+      const response = await api.post(`/applications`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",

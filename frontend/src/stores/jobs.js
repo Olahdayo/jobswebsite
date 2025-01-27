@@ -7,6 +7,16 @@ export const useJobsStore = defineStore("jobs", {
     jobs: [],
     filteredJobs: [],
     
+    // Job details
+    currentJob: null,
+    isLoadingJob: false,
+    jobError: null,
+    
+    // Application state
+    isApplying: false,
+    applicationError: null,
+    applicationSuccess: false,
+    
     // Employer specific data
     employerJobs: [],
     jobStats: {
@@ -47,6 +57,18 @@ export const useJobsStore = defineStore("jobs", {
     getFilteredJobs: (state) => state.filteredJobs,
     getActiveJobs: (state) => state.jobs.filter(job => job.status === 'active'),
     getFeaturedJobs: (state) => state.jobs.filter(job => job.is_featured),
+    getCurrentJob: (state) => {
+      // Handle both direct job object and nested data structure
+      if (!state.currentJob) return null;
+      return state.currentJob.data || state.currentJob;
+    },
+    getJobLoadingState: (state) => state.isLoadingJob,
+    getJobError: (state) => state.jobError,
+    getApplicationState: (state) => ({
+      isApplying: state.isApplying,
+      error: state.applicationError,
+      success: state.applicationSuccess
+    }),
     
     // Employer getters
     getEmployerJobs: (state) => state.employerJobs,
@@ -176,6 +198,51 @@ export const useJobsStore = defineStore("jobs", {
       } finally {
         this.loading = false;
       }
+    },
+
+    // Job details actions
+    async fetchJob(jobId) {
+      try {
+        this.isLoadingJob = true;
+        this.jobError = null;
+        const response = await jobService.getJob(jobId);
+        console.log("Store response:", response);
+        this.currentJob = response;
+        console.log("Current job in store:", this.currentJob);
+      } catch (error) {
+        console.error('Error fetching job details:', error);
+        this.jobError = error.message;
+        this.currentJob = null;
+      } finally {
+        this.isLoadingJob = false;
+      }
+    },
+
+    async submitJobApplication(jobId, applicationData) {
+      try {
+        this.isApplying = true;
+        this.applicationError = null;
+        this.applicationSuccess = false;
+        
+        const response = await jobService.applyForJob(jobId, applicationData);
+        this.applicationSuccess = true;
+        return response;
+      } catch (error) {
+        console.error('Error submitting application:', error);
+        this.applicationError = error.message;
+        throw error;
+      } finally {
+        this.isApplying = false;
+      }
+    },
+
+    resetJobDetails() {
+      this.currentJob = null;
+      this.isLoadingJob = false;
+      this.jobError = null;
+      this.isApplying = false;
+      this.applicationError = null;
+      this.applicationSuccess = false;
     },
 
     // Filter options
