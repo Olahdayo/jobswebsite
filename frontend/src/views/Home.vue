@@ -421,7 +421,7 @@ export default {
 </script>
 
 <style scoped>
-/* Hero section styles */
+/* Hero section style */
 .hero-section {
   height: 90vh;
   display: flex;
