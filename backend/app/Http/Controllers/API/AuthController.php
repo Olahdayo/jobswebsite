@@ -17,7 +17,7 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:employers',
+            'email' => 'required|string|email:rfc,dns|max:255|unique:employers',
             'password' => 'required|string|min:8|confirmed',
             'company_description' => 'required|string',
             'industry' => 'required|string',
@@ -58,7 +58,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:job_seekers',
+            'email' => 'required|string|email:rfc,dns|max:255|unique:job_seekers',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string',
             'education_level' => 'required|string',
