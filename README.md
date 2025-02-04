@@ -82,18 +82,12 @@ Before you begin, ensure you have met the following requirements:
    npm install
    ```
 
-   - Build the frontend assets:
-
-   ```powershell
-   npm run build
-   ```
-
 6. **Start the Frontend Development Server:**
 
    - Run the Vue development server:
 
    ```powershell
-   npm run serve
+   npm run dev
    ```
 
    - The frontend will be accessible at `http://localhost:8080` (or the port specified in the terminal).
