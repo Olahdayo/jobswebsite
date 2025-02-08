@@ -10,7 +10,6 @@ use App\Models\Job;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class ApplicationController extends Controller
 {
@@ -52,10 +51,7 @@ class ApplicationController extends Controller
             ]);
 
             if ($validator->fails()) {
-                // Log::warning('Application validation failed', [
-                //     'errors' => $validator->errors()->toArray(),
-                //     'request_data' => $request->except(['resume']),
-                // ]);
+               
                 return response()->json([
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
@@ -65,7 +61,6 @@ class ApplicationController extends Controller
             // Check if job exists
             $job = Job::find($request->job_id);
             if (!$job) {
-                // Log::warning('Job not found after validation', ['job_id' => $request->job_id]);
                 return response()->json([
                     'message' => 'The selected job is no longer available'
                 ], 404);
@@ -113,10 +108,6 @@ class ApplicationController extends Controller
                         'status' => 'pending'
                     ]);
 
-                    Log::info('Application created successfully', [
-                        'application_id' => $application->id,
-                        'resume_path' => $path
-                    ]);
 
                     return response()->json([
                         'message' => 'Application submitted successfully',
@@ -225,9 +216,7 @@ class ApplicationController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::warning('Application status update validation failed', [
-                'errors' => $validator->errors()->toArray()
-            ]);
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
@@ -238,20 +227,14 @@ class ApplicationController extends Controller
             $application = Application::findOrFail($id);
             $application->update($request->only(['status', 'employer_notes']));
 
-            Log::info('Application status updated successfully', [
-                'application_id' => $application->id,
-                'new_status' => $application->status
-            ]);
+           
 
             return response()->json([
                 'message' => 'Application status updated',
                 'data' => $application
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to update application status', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            
             return response()->json([
                 'message' => 'Failed to update application status',
                 'error' => $e->getMessage()
@@ -265,12 +248,6 @@ class ApplicationController extends Controller
     public function cancel($applicationId)
     {
         try {
-            // Log the incoming request details
-            Log::info('Cancel application request received', [
-                'application_id' => $applicationId,
-                'request_method' => request()->method(),
-                'user_id' => request()->user()->id
-            ]);
 
             $jobSeeker = request()->user();
 
@@ -279,17 +256,7 @@ class ApplicationController extends Controller
                 ->where('job_seeker_id', $jobSeeker->id)
                 ->first();
 
-            // Log application lookup details
-            Log::info('Application lookup details', [
-                'application_found' => $application ? true : false,
-                'application_details' => $application ? $application->toArray() : null
-            ]);
-
             if (!$application) {
-                Log::warning('Application not found or unauthorized', [
-                    'application_id' => $applicationId,
-                    'user_id' => $jobSeeker->id
-                ]);
 
                 return response()->json([
                     'message' => 'Application not found or you do not have permission to cancel this application'
@@ -298,10 +265,6 @@ class ApplicationController extends Controller
 
             // Check if application is in a state that can be cancelled
             if (in_array($application->status, ['accepted', 'rejected'])) {
-                Log::warning('Attempt to cancel processed application', [
-                    'application_id' => $applicationId,
-                    'current_status' => $application->status
-                ]);
 
                 return response()->json([
                     'message' => 'This application cannot be cancelled as it has already been processed'
@@ -312,23 +275,11 @@ class ApplicationController extends Controller
             $application->status = 'withdrawn';
             $application->save();
 
-            // Log successful cancellation
-            Log::info('Application cancelled successfully', [
-                'application_id' => $applicationId,
-                'user_id' => $jobSeeker->id
-            ]);
-
             return response()->json([
                 'message' => 'Application cancelled successfully',
                 'data' => $application
             ]);
         } catch (\Exception $e) {
-            // Log the full error details
-            Log::error('Failed to cancel application', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'application_id' => $applicationId
-            ]);
 
             return response()->json([
                 'message' => 'Failed to cancel application',
