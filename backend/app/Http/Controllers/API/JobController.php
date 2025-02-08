@@ -8,7 +8,6 @@ use App\Models\JobApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,7 +19,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class JobController extends Controller
 {
-    /**log
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -42,7 +41,6 @@ class JobController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error fetching jobs: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to fetch jobs',
                 'message' => $e->getMessage()
@@ -68,9 +66,6 @@ class JobController extends Controller
                 'Not Required'
             ];
 
-            // Log incoming request data
-            Log::info('Job Creation Request:', $request->all());
-
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -87,8 +82,6 @@ class JobController extends Controller
                 'education_level' => 'sometimes|string|in:' . implode(',', $validEducationLevels)
             ]);
 
-            // Log the validated data
-            Log::info('Job Creation Validated Data:', $validated);
 
             // Add employer_id to the validated data
             $validated['employer_id'] = $request->user()->id;
@@ -467,20 +460,6 @@ class JobController extends Controller
         // Fetch applications with related job seeker details
         $applications = $job->applications()->with('jobSeeker')->get();
 
-        // Log the applications to verify relationship loading
-        // Log::info('Job Applications Fetched', [
-        //     'job_id' => $job->id,
-        //     'applications_count' => $applications->count(),
-        //     'applications_details' => $applications->map(function($application) {
-        //         return [
-        //             'id' => $application->id,
-        //             'job_seeker_id' => $application->job_seeker_id,
-        //             'job_seeker_name' => $application->jobSeeker ? 
-        //                 ($application->jobSeeker->first_name . ' ' . $application->jobSeeker->last_name) : 
-        //                 'No Job Seeker'
-        //         ];
-        //     })
-        // ]);
 
         // Return the job and its applications
         return response()->json([

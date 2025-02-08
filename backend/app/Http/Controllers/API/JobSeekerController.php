@@ -7,7 +7,6 @@ use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class JobSeekerController extends Controller
 {
@@ -127,7 +126,6 @@ class JobSeekerController extends Controller
             $user->profile_picture = $path;
             $user->save();
 
-            Log::info('Profile picture updated successfully');
 
             return response()->json([
                 'message' => 'Profile picture uploaded successfully',
