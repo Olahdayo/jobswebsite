@@ -510,13 +510,37 @@ export default {
     },
 
     parseList(text) {
+      // Handle null, undefined, or empty input
       if (!text) return [];
-      // Remove brackets and quotes, then split by commas
-      return text
-        .replace(/[\[\]"]/g, '')
-        .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
+      
+      // If it's already an array, return it after filtering empty items
+      if (Array.isArray(text)) {
+        return text
+          .map(item => item?.toString().trim())
+          .filter(item => item && item.length > 0);
+      }
+      
+      try {
+        // If it's a JSON string, parse it first
+        if (typeof text === 'string' && (text.startsWith('[') || text.startsWith('{'))) {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map(item => item?.toString().trim())
+              .filter(item => item && item.length > 0);
+          }
+        }
+        
+        // Convert to string and split by commas
+        return text
+          .toString()
+          .split(',')
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+      } catch (error) {
+        console.error('Error parsing list:', error);
+        return [];
+      }
     },
 
     showSuccessMessage(message) {
