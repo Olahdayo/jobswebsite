@@ -193,178 +193,176 @@
 
     <!-- Post Job Modal -->
     <Teleport to="body">
-      <div v-if="showPostJobModal" class="modal fade show" style="display: block">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Post New Job</h5>
+      <div v-if="showPostJobModal" class="modal fade show" style="display: block; z-index: 10050;">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content job-post-modal">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                <i class="bi bi-plus-circle me-2"></i>
+                Post New Job
+              </h5>
               <button
                 type="button"
-                class="btn-close"
+                class="btn-close btn-close-white"
                 @click="closePostJobModal"
+                aria-label="Close"
               ></button>
             </div>
             <div class="modal-body">
-              <form @submit.prevent="handlePostJob">
-                <!-- Job Title -->
-                <div class="mb-3">
-                  <label class="form-label">Job Title*</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    v-model="jobForm.title"
-                    required
-                    placeholder="e.g. Senior Software Engineer"
-                  />
-                </div>
-
-                <!-- Job Description -->
-                <div class="mb-3">
-                  <label class="form-label">Job Description*</label>
-                  <textarea
-                    class="form-control"
-                    v-model="jobForm.description"
-                    rows="4"
-                    required
-                    placeholder="Describe the role, responsibilities, and requirements"
-                  ></textarea>
-                </div>
-
-                <!-- Job Category -->
-                <div class="mb-3">
-                  <label class="form-label">Job Category*</label>
-                  <select class="form-select" v-model="jobForm.category" required>
-                    <option value="">Select Category</option>
-                    <option v-for="category in filterOptions.categories" 
-                            :key="category" 
-                            :value="category">
-                      {{ category }}
-                    </option>
-                  </select>
-                </div>
-
+              <form @submit.prevent="handlePostJob" class="job-post-form">
                 <div class="row">
-                  <!-- Job Type -->
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Job Type*</label>
-                    <select v-model="jobForm.type" class="form-select" required>
-                      <option value="" disabled>Select job type</option>
-                      <option 
-                        v-for="type in jobTypes" 
-                        :key="type" 
-                        :value="type"
-                      >
-                        {{ type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ') }}
-                      </option>
-                    </select>
+                  <!-- Job Title -->
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label">Job Title*</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="jobForm.title"
+                      required
+                      placeholder="Enter job title"
+                    />
                   </div>
 
-                  <!-- Experience Level -->
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Experience Level*</label>
-                    <select class="form-select" v-model="jobForm.experienceLevel" required>
-                      <option value="">Select Experience Level</option>
-                      <option v-for="level in filterOptions.experienceLevels" 
-                              :key="level" 
-                              :value="level">
-                        {{ level }}
-                      </option>
-                    </select>
+                  <!-- Job Description -->
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label">Job Description*</label>
+                    <textarea
+                      class="form-control"
+                      v-model="jobForm.description"
+                      rows="4"
+                      required
+                      placeholder="Describe the job responsibilities and expectations"
+                    ></textarea>
                   </div>
-                </div>
 
-                <div class="row">
-                  <!-- Location -->
+                  <!-- Location and Job Type -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Location*</label>
-                    <select class="form-select" v-model="jobForm.location" required>
-                      <option value="">Select Location</option>
-                      <option v-for="location in filterOptions.locations" 
-                              :key="location" 
-                              :value="location">
-                        {{ location }}
-                      </option>
-                    </select>
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="jobForm.location"
+                      required
+                      placeholder="City, State"
+                    />
                   </div>
-
-                  <!-- Education Level -->
                   <div class="col-md-6 mb-3">
-                    <label class="form-label">Education Level*</label>
-                    <select class="form-select" v-model="jobForm.educationLevel" required>
-                      <option value="">Select Education Level</option>
-                      <option v-for="level in filterOptions.educationLevels" 
-                              :key="level" 
-                              :value="level">
-                        {{ level }}
+                    <label class="form-label">Job Type*</label>
+                    <select 
+                      class="form-select" 
+                      v-model="jobForm.type" 
+                      required
+                    >
+                      <option value="">Select Job Type</option>
+                      <option value="full-time">Full-Time</option>
+                      <option value="part-time">Part-Time</option>
+                      <option value="contract">Contract</option>
+                    </select>
+                  </div>
+
+                  <!-- Experience Level and Category -->
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Experience Level*</label>
+                    <select 
+                      class="form-select" 
+                      v-model="jobForm.experienceLevel" 
+                      required
+                    >
+                      <option value="">Select Experience Level</option>
+                      <option value="entry">Entry Level</option>
+                      <option value="mid">Mid Level</option>
+                      <option value="senior">Senior Level</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Job Category*</label>
+                    <select 
+                      class="form-select" 
+                      v-model="jobForm.category" 
+                      required
+                    >
+                      <option value="">Select Job Category</option>
+                      <option 
+                        v-for="category in filterOptions.categories" 
+                        :key="category"
+                        :value="category"
+                      >
+                        {{ category }}
                       </option>
                     </select>
                   </div>
-                </div>
 
-                <div class="row">
                   <!-- Salary Range -->
                   <div class="col-md-6 mb-3">
-                    <label class="form-label">Salary Range (₦)*</label>
-                    <div class="input-group">
-                      <input
-                        type="number"
-                        class="form-control"
-                        v-model="jobForm.salaryMin"
-                        required
-                        placeholder="Min"
-                      />
-                      <span class="input-group-text">to</span>
-                      <input
-                        type="number"
-                        class="form-control"
-                        v-model="jobForm.salaryMax"
-                        required
-                        placeholder="Max"
-                      />
-                    </div>
+                    <label class="form-label">Minimum Salary (₦)*</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      v-model="jobForm.salaryMin"
+                      required
+                      min="0"
+                      placeholder="Minimum salary"
+                    />
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Maximum Salary (₦)*</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      v-model="jobForm.salaryMax"
+                      required
+                      min="0"
+                      placeholder="Maximum salary"
+                    />
                   </div>
 
-                  <!-- Application Deadline -->
+                  <!-- Skills and Benefits -->
                   <div class="col-md-6 mb-3">
+                    <label class="form-label">Required Skills*</label>
+                    <textarea
+                      class="form-control"
+                      v-model="jobForm.skills"
+                      rows="2"
+                      required
+                      placeholder="Enter skills separated by commas"
+                    ></textarea>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Benefits</label>
+                    <textarea
+                      class="form-control"
+                      v-model="jobForm.benefits"
+                      rows="2"
+                      placeholder="List job benefits separated by commas"
+                    ></textarea>
+                  </div>
+
+                  <!-- Deadline -->
+                  <div class="col-md-12 mb-3">
                     <label class="form-label">Application Deadline*</label>
                     <input
                       type="date"
                       class="form-control"
                       v-model="jobForm.deadline"
-                      required
                       :min="today"
+                      required
                     />
                   </div>
                 </div>
 
-                <!-- Skills Required -->
-                <div class="mb-3">
-                  <label class="form-label">Required Skills*</label>
-                  <textarea
-                    class="form-control"
-                    v-model="jobForm.skills"
-                    rows="2"
-                    required
-                    placeholder="Enter skills separated by commas"
-                  ></textarea>
-                </div>
-
-                <!-- Benefits -->
-                <div class="mb-3">
-                  <label class="form-label">Benefits</label>
-                  <textarea
-                    class="form-control"
-                    v-model="jobForm.benefits"
-                    rows="2"
-                    placeholder="List job benefits separated by commas"
-                  ></textarea>
-                </div>
-
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" @click="closePostJobModal">
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary" 
+                    @click="closePostJobModal"
+                  >
                     Cancel
                   </button>
-                  <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary" 
+                    :disabled="isSubmitting"
+                  >
                     {{ isSubmitting ? 'Posting...' : 'Post Job' }}
                   </button>
                 </div>
@@ -373,7 +371,7 @@
           </div>
         </div>
       </div>
-      <div v-if="showPostJobModal" class="modal-backdrop fade show"></div>
+      <div v-if="showPostJobModal" class="modal-backdrop fade show" style="z-index: 1040;"></div>
     </Teleport>
 
     <Teleport to="body">
@@ -843,4 +841,5 @@ export default {
   background-color: #ffc107;
   border-color: #ffc107;
 }
+
 </style>
