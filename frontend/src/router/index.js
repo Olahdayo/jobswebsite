@@ -51,7 +51,7 @@ const router = createRouter({
       component: JobSeekerDashboard,
       meta: {
         requiresAuth: true,
-        userType: "job_seeker",
+        userType: "jobseeker",
         title: "Job Seeker Dashboard",
       },
     },

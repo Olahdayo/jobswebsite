@@ -66,27 +66,6 @@
                   </div>
                 </div>
 
-                <div class="mb-3">
-                  <label class="form-label"
-                    >Account Type <span class="text-danger">*</span></label
-                  >
-                  <select
-                    class="form-select"
-                    v-model="formData.accountType"
-                    :class="{ 'is-invalid': v$.formData.accountType.$error }"
-                    required
-                  >
-                    <option value="jobseeker">Job Seeker</option>
-                    <option value="employer">Employer</option>
-                  </select>
-                  <div
-                    class="invalid-feedback"
-                    v-if="v$.formData.accountType.$error"
-                  >
-                    {{ v$.formData.accountType.$errors[0].$message }}
-                  </div>
-                </div>
-
                 <div class="mb-3 form-check">
                   <input
                     type="checkbox"
@@ -148,7 +127,6 @@ export default {
         email: "",
         password: "",
         remember: false,
-        accountType: "jobseeker", 
       },
     };
   },
@@ -163,7 +141,6 @@ export default {
       formData: {
         email: { required, email },
         password: { required },
-        accountType: { required },
       },
     };
   },
@@ -182,18 +159,14 @@ export default {
         this.isLoading = true;
         this.error = null;
 
-        // Login based on account type
-        if (this.formData.accountType === "employer") {
-          await this.authStore.loginAsEmployer(this.formData);
-        } else {
-          await this.authStore.loginAsJobSeeker(this.formData);
-        }
+        // Login
+        await this.authStore.login(this.formData);
 
-        // Get redirect path from query parameters or use default
-        const redirectPath = this.$route.query.redirect ||
-          (this.authStore.userType === "employer"
-            ? "/dashboard/employer"
-            : "/dashboard/jobseeker");
+        // Get redirect path from query parameters or use default based on user type
+        const redirectPath = this.$route.query.redirect || 
+          (this.authStore.userType === 'employer' 
+            ? '/dashboard/employer' 
+            : '/dashboard/jobseeker');
 
         // Navigate to the appropriate dashboard
         await this.$router.push(redirectPath);
