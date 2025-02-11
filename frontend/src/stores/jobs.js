@@ -92,7 +92,7 @@ export const useJobsStore = defineStore("jobs", {
         // Set filtered jobs to all jobs initially
         this.filteredJobs = [...this.jobs];
       } catch (error) {
-        console.error('Error initializing jobs store:', error);
+       
         this.error = error.message;
       } finally {
         this.loading = false;
@@ -106,7 +106,6 @@ export const useJobsStore = defineStore("jobs", {
         const response = await jobService.getEmployerJobs();
         this.employerJobs = response.data || [];
       } catch (error) {
-        console.error('Error fetching employer jobs:', error);
         this.error = error.message;
         this.employerJobs = [];
       } finally {
@@ -129,7 +128,6 @@ export const useJobsStore = defineStore("jobs", {
           };
         }
       } catch (error) {
-        console.error('Error fetching job stats:', error);
         this.error = error.message;
       } finally {
         this.loading = false;
@@ -146,11 +144,7 @@ export const useJobsStore = defineStore("jobs", {
         }
         return response.data;
       } catch (error) {
-        console.error('Job Creation Store Error:', {
-          message: error.message,
-          response: error.response ? JSON.stringify(error.response, null, 2) : 'No response',
-          data: error.response?.data ? JSON.stringify(error.response.data, null, 2) : 'No data'
-        });
+       
         this.error = error.message;
         throw error;
       } finally {
@@ -171,7 +165,6 @@ export const useJobsStore = defineStore("jobs", {
         }
         return response.data;
       } catch (error) {
-        console.error('Error updating job:', error);
         this.error = error.message;
         throw error;
       } finally {
@@ -192,7 +185,7 @@ export const useJobsStore = defineStore("jobs", {
         }
         return response.data;
       } catch (error) {
-        console.error('Error toggling job status:', error);
+        
         this.error = error.message;
         throw error;
       } finally {
@@ -203,15 +196,27 @@ export const useJobsStore = defineStore("jobs", {
     // Job details actions
     async fetchJob(jobId) {
       try {
+        
         this.isLoadingJob = true;
         this.jobError = null;
+        
         const response = await jobService.getJob(jobId);
-        console.log("Store response:", response);
-        this.currentJob = response;
-        console.log("Current job in store:", this.currentJob);
+
+        
+        // Check if response has nested data
+        const jobData = response.data || response;
+        
+        if (!jobData || Object.values(jobData).every(val => val === null)) {
+          this.jobError = 'No job details found';
+          this.currentJob = null;
+          return;
+        }
+        
+        this.currentJob = jobData;
       } catch (error) {
-        console.error('Error fetching job details:', error);
-        this.jobError = error.message;
+       
+        
+        this.jobError = error.message || 'Failed to fetch job details';
         this.currentJob = null;
       } finally {
         this.isLoadingJob = false;
@@ -228,7 +233,6 @@ export const useJobsStore = defineStore("jobs", {
         this.applicationSuccess = true;
         return response;
       } catch (error) {
-        console.error('Error submitting application:', error);
         this.applicationError = error.message;
         throw error;
       } finally {
@@ -254,7 +258,6 @@ export const useJobsStore = defineStore("jobs", {
           ...response
         };
       } catch (error) {
-        console.error('Error fetching filter options:', error);
         this.error = error.message;
       }
     },
@@ -268,7 +271,6 @@ export const useJobsStore = defineStore("jobs", {
         // Set filtered jobs to all jobs when fetching
         this.filteredJobs = [...this.jobs];
       } catch (error) {
-        console.error('Error fetching jobs:', error);
         this.error = error.message;
         this.jobs = [];
         this.filteredJobs = [];
@@ -295,7 +297,6 @@ export const useJobsStore = defineStore("jobs", {
         const response = await jobService.searchJobs(this.searchFilters);
         this.filteredJobs = response.data || [];
       } catch (error) {
-        console.error('Error searching jobs:', error);
         this.error = error.message;
         this.filteredJobs = [];
       } finally {
@@ -320,7 +321,6 @@ export const useJobsStore = defineStore("jobs", {
         const response = await jobService.getAllJobs();
         this.filteredJobs = response.data || [];
       } catch (error) {
-        console.error('Error fetching all jobs:', error);
         this.error = error.message;
         this.filteredJobs = [];
       } finally {

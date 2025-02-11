@@ -15,7 +15,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      console.error("JobService: Error fetching jobs:", error);
       throw error;
     }
   },
@@ -94,11 +93,32 @@ export const jobService = {
 
   getJob: async (id) => {
     try {
+      
+      
       const response = await api.get(`/jobs/${id}`);
-      console.log("Job API response:", response);
-      return response.data; // Return just the data portion
+      
+      if (!response.data) {
+        throw new Error('No job details found');
+      }
+      
+      return response.data;
     } catch (error) {
-      console.error("Error fetching job details:", error);
+    
+      
+      if (error.response) {
+        // Handle specific HTTP error codes
+        switch (error.response.status) {
+          case 404:
+            console.warn('Job not found');
+            throw new Error('Job not found');
+          case 500:
+            console.error('Server error while fetching job');
+            throw new Error('Server error occurred');
+          default:
+            throw error;
+        }
+      }
+      
       throw error;
     }
   },
@@ -115,7 +135,6 @@ export const jobService = {
           formDataEntries[key] = 'File present';
         }
       }
-      console.log('Submitting application with data:', formDataEntries);
 
       // Add job_id to formData
       formData.append('job_id', jobId);
@@ -127,14 +146,10 @@ export const jobService = {
         },
       });
 
-      console.log('Application submitted successfully:', response.data);
       return response.data;
     } catch (error) {
-      console.error("Error applying for job:", error);
       
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
         
         // Handle specific error cases
         if (error.response.status === 422) {
@@ -181,7 +196,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching jobs by location:", error);
 
       throw error;
     }
@@ -193,7 +207,6 @@ export const jobService = {
       const response = await api.get("/jobs/locations");
       return response.data;
     } catch (error) {
-      console.error("Error fetching locations:", error);
       throw error;
     }
   },
@@ -206,7 +219,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching categories:", error);
 
       throw error;
     }
@@ -220,7 +232,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching jobs by category:", error);
 
       throw error;
     }
@@ -236,7 +247,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching featured jobs:", error);
 
       throw error;
     }
@@ -331,21 +341,13 @@ export const jobService = {
         throw new Error('Invalid response from server');
       }
       
-      // Log the response for debugging
-      console.log("Applications response:", response.data);
       
       // Return the entire response
       return response;
     } catch (error) {
-      console.error("Error fetching user applications:", error);
       
       // More detailed error logging
       if (error.response) {
-        console.error("Full error response:", {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers,
-        });
         
         // Handle specific error cases
         if (error.response.status === 401) {
@@ -413,7 +415,6 @@ export const jobService = {
       const response = await api.patch(`/employer/jobs/${jobId}/toggle-status`);
       return response.data;
     } catch (error) {
-      console.error("Error toggling job status:", error);
       throw error;
     }
   },
@@ -424,7 +425,6 @@ export const jobService = {
       const response = await api.get(`/employer/jobs/${jobId}/applications`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching job applications:", error);
       throw error;
     }
   },
@@ -438,7 +438,6 @@ export const jobService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating application status:", error);
       throw error;
     }
   },
