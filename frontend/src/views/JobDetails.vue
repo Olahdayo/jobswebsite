@@ -134,12 +134,12 @@
 
     <!-- Application Modal -->
     <div
-      class="modal fade"
+      class="modal fade mt-3"
       id="applicationModal"
       tabindex="-1"
       ref="applicationModal"
     >
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
             <h5 class="modal-title">
@@ -150,9 +150,10 @@
               type="button"
               class="btn-close btn-close-white"
               data-bs-dismiss="modal"
+              aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body application-modal-body">
             <form @submit.prevent="submitApplication" class="application-form">
               <!-- Cover Letter -->
               <div class="mb-4">
@@ -814,9 +815,6 @@ export default {
   vertical-align: -0.125em;
 }
 
-@media (min-width: 768px) {
-  .content-grid {
-    grid-template-columns: 2fr 1fr;
-  }
-}
+
+
 </style>
