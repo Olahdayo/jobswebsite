@@ -119,10 +119,10 @@
               <button 
                 @click="handleApply" 
                 class="btn btn-primary btn-lg"
-                :disabled="isApplying || hasApplied"
+                :disabled="isApplying || hasApplied || isExpired"
               >
                 <i class="bi bi-send me-2"></i>
-                {{ hasApplied ? 'Already Applied' : 'Apply Now' }}
+                {{ isExpired ? 'Expired' : (hasApplied ? 'Already Applied' : 'Apply Now') }}
               </button>
               <div v-if="applicationError" class="text-danger mt-2">
                 {{ applicationError }}
@@ -352,6 +352,7 @@ export default {
       defaultCompanyLogo: "/images/dashboard-default.svg",
       applicationError: null,
       hasApplied: false,
+      isExpired: false, 
     };
   },
 
@@ -550,7 +551,13 @@ export default {
 
     try {
         await this.jobsStore.fetchJob(jobId);
-        
+
+        // Check if the job has expired
+        const currentDate = new Date();
+        if (this.job.deadline && new Date(this.job.deadline) < currentDate) {
+            this.isExpired = true; // Mark job as expired
+        }
+
         const authStore = useAuthStore();
         if (authStore.isAuthenticated) {
             // Check if user has already applied
