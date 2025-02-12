@@ -119,10 +119,10 @@
               <button 
                 @click="handleApply" 
                 class="btn btn-primary btn-lg"
-                :disabled="isApplying"
+                :disabled="isApplying || hasApplied"
               >
                 <i class="bi bi-send me-2"></i>
-                Apply Now
+                {{ hasApplied ? 'Already Applied' : 'Apply Now' }}
               </button>
               <div v-if="applicationError" class="text-danger mt-2">
                 {{ applicationError }}
@@ -351,6 +351,7 @@ export default {
       errorMessage: "",
       defaultCompanyLogo: "/images/dashboard-default.svg",
       applicationError: null,
+      hasApplied: false,
     };
   },
 
@@ -392,7 +393,8 @@ export default {
     this.loadJobDetails();
   },
 
-  mounted() {
+  mounted() {   
+     
     this.applicationModal = new Modal(this.$refs.applicationModal);
     this.successModal = new Modal(this.$refs.successModal);
     this.errorModal = new Modal(this.$refs.errorModal);
@@ -400,6 +402,7 @@ export default {
     // Add event listener for modal close
     this.$refs.applicationModal.addEventListener('hidden.bs.modal', this.resetForm);
   },
+
 
   beforeUnmount() {
     // Remove event listener
@@ -502,6 +505,7 @@ export default {
         
         // Safely check for hasApplied property
         if (applicationData.hasApplied) {
+          this.hasApplied = true;
           this.applicationError = 'You have already applied for this job';
           return;
         }
@@ -603,11 +607,23 @@ export default {
     },
 
     async loadJobDetails() {
-      const jobId = this.$route.params.id;
-      if (!jobId) return;
-      
-      await this.jobsStore.fetchJob(jobId);
-    },
+    const jobId = this.$route.params.id;
+    if (!jobId) return;
+
+    try {
+        await this.jobsStore.fetchJob(jobId);
+        
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated) {
+            // Check if user has already applied
+            const response = await this.jobsStore.fetchUserJobApplications(jobId);
+            this.hasApplied = response && response.data && response.data.hasApplied;
+        }
+    } catch (error) {
+        this.loadError = 'Failed to load job details. Please try again later.';
+        console.error(error);
+    }
+},
 
     formatSalary(amount) {
       return amount ? amount.toLocaleString() : "Not specified";
