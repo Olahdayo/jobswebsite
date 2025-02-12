@@ -459,11 +459,46 @@ export default {
           return;
         }
 
+        console.log('Job details:', this.job);
+
         // Check if user has already applied
         const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
         
+        console.log('Application check response:', response);
+
         // Defensive check for response structure
         const applicationData = response && response.data ? response.data : {};
+        
+        console.log('Application data:', applicationData);
+
+        // Check for application deadline
+        if (applicationData.deadlineDate) {
+          const deadlineDate = new Date(applicationData.deadlineDate);
+          const currentDate = new Date();
+          
+          console.log('Deadline date:', deadlineDate);
+          console.log('Current date:', currentDate);
+
+          // Ensure deadline is in the past
+          if (currentDate > deadlineDate) {
+            this.applicationError = `Application expired since ${this.formatDate(deadlineDate)}`;
+            
+            // Explicitly prevent modal from showing
+            if (this.applicationModal && this.applicationModal.hide) {
+              this.applicationModal.hide();
+            }
+            
+            // Ensure error is visible
+            this.$nextTick(() => {
+              const errorElement = this.$el.querySelector('.text-danger');
+              if (errorElement) {
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            });
+            
+            return;
+          }
+        }
         
         // Safely check for hasApplied property
         if (applicationData.hasApplied) {
@@ -472,23 +507,40 @@ export default {
         }
         
         // If no existing application, show modal
-        this.applicationModal.show();
+        if (this.applicationModal && this.applicationModal.show) {
+          this.applicationModal.show();
+        }
       } catch (error) {
         console.error('Error checking job application:', error);
         
         // More detailed error handling
         if (error.response) {
-          // The request was made and the server responded with a status code
-          const errorMessage = error.response.data 
-            ? (error.response.data.message || 'Failed to check job application')
-            : 'Failed to check job application';
-          
-          this.applicationError = errorMessage;
-          
+          console.log('Error response:', error.response);
+
           // Additional error status handling
           switch (error.response.status) {
             case 400:
-              this.applicationError = 'Invalid job ID';
+              // Check for specific deadline error
+              if (error.response.data.error === 'Application Deadline Passed') {
+                this.applicationError = `Application expired since ${this.formatDate(error.response.data.deadlineDate)}`;
+                
+                // Explicitly prevent modal from showing
+                if (this.applicationModal && this.applicationModal.hide) {
+                  this.applicationModal.hide();
+                }
+                
+                // Ensure error is visible
+                this.$nextTick(() => {
+                  const errorElement = this.$el.querySelector('.text-danger');
+                  if (errorElement) {
+                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                });
+                
+                return;
+              } else {
+                this.applicationError = 'Invalid job ID';
+              }
               break;
             case 401:
               this.$router.push({ 
@@ -510,6 +562,19 @@ export default {
           // Something happened in setting up the request
           this.applicationError = 'An unexpected error occurred. Please try again.';
         }
+        
+        // Prevent modal from showing in case of any error
+        if (this.applicationModal && this.applicationModal.hide) {
+          this.applicationModal.hide();
+        }
+        
+        // Ensure error is visible
+        this.$nextTick(() => {
+          const errorElement = this.$el.querySelector('.text-danger');
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
         
         // Prevent further execution
         throw error;

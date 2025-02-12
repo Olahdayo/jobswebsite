@@ -257,7 +257,8 @@ export const useJobsStore = defineStore("jobs", {
           return { 
             data: {
               hasApplied: response.hasApplied || false,
-              applicationStatus: response.applicationStatus || null
+              applicationStatus: response.applicationStatus || null,
+              deadlineDate: response.deadlineDate || null
             }
           };
         } catch (error) {

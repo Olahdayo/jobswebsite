@@ -235,6 +235,20 @@
                     ></textarea>
                   </div>
 
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Education Level*</label>
+                    <select class="form-select" v-model="jobForm.educationLevel" required>
+                      <option value="">Select Education Level</option>
+                      <option value="Secondary School">Secondary School</option>
+                      <option value="OND">OND</option>
+                      <option value="HND">HND</option>
+                      <option value="Bachelor's Degree">Bachelor's Degree</option>
+                      <option value="Master's Degree">Master's Degree</option>
+                      <option value="PhD">PhD</option>
+                      <option value="Professional Certification">Professional Certification</option>
+                      <option value="Not Required">Not Required</option>
+                    </select>
+                  </div>
                   <!-- Location and Job Type -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Location*</label>
