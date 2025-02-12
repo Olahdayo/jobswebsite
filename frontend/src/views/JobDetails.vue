@@ -452,138 +452,76 @@ export default {
     },
 
     async handleApply() {
-      // Reset any previous error
-      this.applicationError = null;
+    // Reset any previous error
+    this.applicationError = null;
 
-      try {
+    try {
         // Validate job exists and is numeric
         if (!this.job || !this.job.id || isNaN(this.job.id)) {
-          this.applicationError = 'Invalid job details';
-          return;
+            this.applicationError = 'Invalid job details';
+            return;
         }
 
         console.log('Job details:', this.job);
 
-        // Check if user has already applied
-        const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
-        
-        console.log('Application check response:', response);
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated) {
+            // Check if user has already applied
+            const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
+            console.log('Application check response:', response);
 
-        // Defensive check for response structure
-        const applicationData = response && response.data ? response.data : {};
-        
-        console.log('Application data:', applicationData);
+            // Defensive check for response structure
+            const applicationData = response && response.data ? response.data : {};
+            console.log('Application data:', applicationData);
 
-        // Check for application deadline
-        if (applicationData.deadlineDate) {
-          const deadlineDate = new Date(applicationData.deadlineDate);
-          const currentDate = new Date();
-          
-          console.log('Deadline date:', deadlineDate);
-          console.log('Current date:', currentDate);
+            // Check for application deadline
+            if (applicationData.deadlineDate) {
+                const deadlineDate = new Date(applicationData.deadlineDate);
+                const currentDate = new Date();
 
-          // Ensure deadline is in the past
-          if (currentDate > deadlineDate) {
-            this.applicationError = `Application expired since ${this.formatDate(deadlineDate)}`;
-            
-            // Explicitly prevent modal from showing
-            if (this.applicationModal && this.applicationModal.hide) {
-              this.applicationModal.hide();
-            }
-            
-            // Ensure error is visible
-            this.$nextTick(() => {
-              const errorElement = this.$el.querySelector('.text-danger');
-              if (errorElement) {
-                errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            });
-            
-            return;
-          }
-        }
-        
-        // Safely check for hasApplied property
-        if (applicationData.hasApplied) {
-          this.hasApplied = true;
-          this.applicationError = 'You have already applied for this job';
-          return;
-        }
-        
-        // If no existing application, show modal
-        if (this.applicationModal && this.applicationModal.show) {
-          this.applicationModal.show();
-        }
-      } catch (error) {
-        console.error('Error checking job application:', error);
-        
-        // More detailed error handling
-        if (error.response) {
-          console.log('Error response:', error.response);
-
-          // Additional error status handling
-          switch (error.response.status) {
-            case 400:
-              // Check for specific deadline error
-              if (error.response.data.error === 'Application Deadline Passed') {
-                this.applicationError = `Application expired since ${this.formatDate(error.response.data.deadlineDate)}`;
-                
-                // Explicitly prevent modal from showing
-                if (this.applicationModal && this.applicationModal.hide) {
-                  this.applicationModal.hide();
+                // Ensure deadline is in the past
+                if (currentDate > deadlineDate) {
+                    this.applicationError = `Application expired since ${this.formatDate(deadlineDate)}`;
+                    // Explicitly prevent modal from showing
+                    if (this.applicationModal && this.applicationModal.hide) {
+                        this.applicationModal.hide();
+                    }
+                    // Ensure error is visible
+                    this.$nextTick(() => {
+                        const errorElement = this.$el.querySelector('.text-danger');
+                        if (errorElement) {
+                            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                    return;
                 }
-                
-                // Ensure error is visible
-                this.$nextTick(() => {
-                  const errorElement = this.$el.querySelector('.text-danger');
-                  if (errorElement) {
-                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                });
-                
+            }
+
+            // Safely check for hasApplied property
+            if (applicationData.hasApplied) {
+                this.hasApplied = true;
+                this.applicationError = 'You have already applied for this job';
                 return;
-              } else {
-                this.applicationError = 'Invalid job ID';
-              }
-              break;
-            case 401:
-              this.$router.push({ 
-                name: 'Login', 
-                query: { redirect: this.$route.fullPath } 
-              });
-              break;
-            case 404:
-              this.applicationError = 'Job not found';
-              break;
-            case 500:
-              this.applicationError = 'Server error. Please try again later.';
-              break;
-          }
-        } else if (error.request) {
-          // The request was made but no response was received
-          this.applicationError = 'No response received from server. Please check your connection.';
+            }
+
+            // If no existing application, show modal
+            if (this.applicationModal && this.applicationModal.show) {
+                this.applicationModal.show();
+            }
         } else {
-          // Something happened in setting up the request
-          this.applicationError = 'An unexpected error occurred. Please try again.';
+            // Redirect to login with the current job details URL
+            this.$router.push({
+                name: 'Login',
+                query: { redirect: this.$route.fullPath } 
+            });
+            return;
         }
-        
-        // Prevent modal from showing in case of any error
-        if (this.applicationModal && this.applicationModal.hide) {
-          this.applicationModal.hide();
-        }
-        
-        // Ensure error is visible
-        this.$nextTick(() => {
-          const errorElement = this.$el.querySelector('.text-danger');
-          if (errorElement) {
-            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        });
-        
-        // Prevent further execution
-        throw error;
-      }
-    },
+    } catch (error) {
+        // Log the error details for debugging
+        console.error('Error checking user job applications:', error);
+        this.applicationError = error.response ? error.response.data.message : 'Failed to check application status. Please try again later.';
+    }
+},
 
     async submitApplication() {
       if (!this.isFormValid) return;
@@ -596,7 +534,7 @@ export default {
         await this.jobsStore.submitJobApplication(this.job.id, formData);
         
         this.hideModals();
-        this.resetForm(); // Reset form after successful submission
+        this.resetForm(); 
         this.successModal.show();
         
       } catch (error) {
