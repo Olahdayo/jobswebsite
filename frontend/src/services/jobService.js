@@ -441,4 +441,15 @@ export const jobService = {
       throw error;
     }
   },
+
+  // Check if user has already applied for a job
+  checkUserJobApplication: async (jobId) => {
+    try {
+      const response = await api.get(`/jobs/${jobId}/user-applications`);
+      return response.data;
+    } catch (error) {
+      console.error('Error checking user job applications:', error);
+      throw error;
+    }
+  },
 };

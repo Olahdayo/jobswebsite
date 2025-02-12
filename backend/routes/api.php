@@ -34,6 +34,8 @@ Route::prefix('jobs')->group(function () {
     Route::get('/location/{location}', [JobController::class, 'getJobsByLocation']);
     Route::get('/category/{category}', [JobController::class, 'getJobsByCategory']);
     Route::get('/{jobListing}', [JobController::class, 'show'])->where('jobListing', '[0-9]+');
+    Route::get('/{jobId}/user-applications', [JobController::class, 'checkUserJobApplication'])
+        ->middleware('auth:sanctum');
 });
 
 // Protected routes for employers

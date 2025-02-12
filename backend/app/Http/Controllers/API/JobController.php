@@ -631,4 +631,64 @@ class JobController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Check if the authenticated user has already applied for a specific job
+     *
+     * @param int $jobId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkUserJobApplication($jobId)
+    {
+        try {
+            // Validate job ID is numeric
+            if (!is_numeric($jobId)) {
+                throw new \InvalidArgumentException('Invalid job ID');
+            }
+
+            // Validate the job ID exists
+            $job = JobListing::findOrFail($jobId);
+            
+            // Ensure user is authenticated
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'error' => 'User not authenticated',
+                    'message' => 'Please log in to check job applications'
+                ], 401);
+            }
+            
+            // Check if the user has already applied for this job
+            $existingApplication = JobApplication::where('job_id', $jobId)
+                ->where('job_seeker_id', $user->id)
+                ->first();
+
+
+            return response()->json([
+                'hasApplied' => $existingApplication !== null,
+                'applicationStatus' => $existingApplication ? $existingApplication->status : null
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            
+
+            return response()->json([
+                'error' => 'Invalid Input',
+                'message' => 'The provided job ID is invalid'
+            ], 400);
+        } catch (ModelNotFoundException $e) {
+          
+
+            return response()->json([
+                'error' => 'Job not found',
+                'message' => "Job with ID {$jobId} does not exist"
+            ], 404);
+        } catch (\Exception $e) {
+            
+
+            return response()->json([
+                'error' => 'Server Error',
+                'message' => 'An unexpected error occurred while checking job application'
+            ], 500);
+        }
+    }
 }

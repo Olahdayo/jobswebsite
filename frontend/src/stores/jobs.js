@@ -240,6 +240,34 @@ export const useJobsStore = defineStore("jobs", {
       }
     },
 
+    async fetchUserJobApplications(jobId) {
+        try {
+          // Validate jobId is a number
+          if (!jobId || isNaN(jobId)) {
+            throw new Error('Invalid job ID');
+          }
+
+          const response = await jobService.checkUserJobApplication(jobId);
+          
+          // Validate response structure
+          if (!response || typeof response !== 'object') {
+            throw new Error('Invalid response from server');
+          }
+
+          return { 
+            data: {
+              hasApplied: response.hasApplied || false,
+              applicationStatus: response.applicationStatus || null
+            }
+          };
+        } catch (error) {
+          console.error('Error in store fetching user job applications:', error);
+          
+          // Rethrow to allow component-level error handling
+          throw error;
+        }
+      },
+
     resetJobDetails() {
       this.currentJob = null;
       this.isLoadingJob = false;

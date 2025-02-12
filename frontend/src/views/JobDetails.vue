@@ -124,6 +124,9 @@
                 <i class="bi bi-send me-2"></i>
                 Apply Now
               </button>
+              <div v-if="applicationError" class="text-danger mt-2">
+                {{ applicationError }}
+              </div>
             </div>
           </div>
         </div>
@@ -347,6 +350,7 @@ export default {
       errorModal: null,
       errorMessage: "",
       defaultCompanyLogo: "/images/dashboard-default.svg",
+      applicationError: null,
     };
   },
 
@@ -445,28 +449,71 @@ export default {
     },
 
     async handleApply() {
-      if (!this.authStore.isAuthenticated) {
-        this.$router.push({
-          name: "Login",
-          query: { redirect: this.$route.fullPath },
-        });
-        return;
-      }
+      // Reset any previous error
+      this.applicationError = null;
 
-      // Check if user is an employer
-      if (this.authStore.user?.role === "employer") {
-        this.showSuccessMessage("Employers cannot apply for jobs");
-        return;
-      }
+      try {
+        // Validate job exists and is numeric
+        if (!this.job || !this.job.id || isNaN(this.job.id)) {
+          this.applicationError = 'Invalid job details';
+          return;
+        }
 
-      // Check if the job deadline has passed
-      const deadline = new Date(this.job.deadline);
-      if (deadline < new Date()) {
-        this.showSuccessMessage("This job posting has expired");
-        return;
+        // Check if user has already applied
+        const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
+        
+        // Defensive check for response structure
+        const applicationData = response && response.data ? response.data : {};
+        
+        // Safely check for hasApplied property
+        if (applicationData.hasApplied) {
+          this.applicationError = 'You have already applied for this job';
+          return;
+        }
+        
+        // If no existing application, show modal
+        this.applicationModal.show();
+      } catch (error) {
+        console.error('Error checking job application:', error);
+        
+        // More detailed error handling
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          const errorMessage = error.response.data 
+            ? (error.response.data.message || 'Failed to check job application')
+            : 'Failed to check job application';
+          
+          this.applicationError = errorMessage;
+          
+          // Additional error status handling
+          switch (error.response.status) {
+            case 400:
+              this.applicationError = 'Invalid job ID';
+              break;
+            case 401:
+              this.$router.push({ 
+                name: 'Login', 
+                query: { redirect: this.$route.fullPath } 
+              });
+              break;
+            case 404:
+              this.applicationError = 'Job not found';
+              break;
+            case 500:
+              this.applicationError = 'Server error. Please try again later.';
+              break;
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          this.applicationError = 'No response received from server. Please check your connection.';
+        } else {
+          // Something happened in setting up the request
+          this.applicationError = 'An unexpected error occurred. Please try again.';
+        }
+        
+        // Prevent further execution
+        throw error;
       }
-
-      this.applicationModal.show();
     },
 
     async submitApplication() {
@@ -814,7 +861,4 @@ export default {
 .bi {
   vertical-align: -0.125em;
 }
-
-
-
 </style>
