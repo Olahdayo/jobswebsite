@@ -67,6 +67,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
+    Route::post('/jobseeker/profile/uploadProfilePicture', [JobSeekerController::class, 'uploadProfilePicture']);
     
     // Application routes
     Route::prefix('applications')->group(function () {

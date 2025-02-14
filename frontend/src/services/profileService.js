@@ -37,13 +37,9 @@ export const profileService = {
     try {
       // Check if we're uploading a file
       if (profileData instanceof FormData) {
-        // console.log('Uploading file...', {
-        //   file: profileData.get('profile_picture'),
-        //   size: profileData.get('profile_picture').size,
-        //   type: profileData.get('profile_picture').type
-        // });
+      
         
-        const response = await authAxios.post(`${baseEndpoint}/upload-photo`, profileData, {
+        const response = await authAxios.post(`${baseEndpoint}/uploadProfilePicture`, profileData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Accept: 'application/json'
