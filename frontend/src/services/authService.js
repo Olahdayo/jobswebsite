@@ -59,39 +59,18 @@ export const authService = {
     }
   },
 
-  // Login for employer
-  employerLogin: async (credentials) => {
+  // Login
+  login: async (credentials) => {
     try {
-      const response = await api.post("/employer/login", credentials);
+      const response = await axios.post(`${API_URL}/login`, credentials);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user_type", "employer");
-        localStorage.setItem("user", JSON.stringify(response.data.employer));
-
-        // Handle remember me
-        if (credentials.remember) {
-          localStorage.setItem("remember_token", response.data.remember_token);
-        }
+        localStorage.setItem("user_type", response.data.userType); 
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
       return response.data;
     } catch (error) {
-      console.error("Error logging in employer:", error);
-      throw error;
-    }
-  },
-
-  // Login for job seeker
-  jobSeekerLogin: async (credentials) => {
-    try {
-      const response = await api.post("/jobseeker/login", credentials);
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user_type", "job_seeker");
-        // localStorage.setItem("user", JSON.stringify(response.data.job_seeker));
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Error logging in job seeker:", error);
+      console.error("Error logging in:", error);
       throw error;
     }
   },

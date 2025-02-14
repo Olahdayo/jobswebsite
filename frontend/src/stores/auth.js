@@ -14,24 +14,13 @@ export const useAuthStore = defineStore("auth", {
   },
 
   actions: {
-    async loginAsJobSeeker(credentials) {
+    async login(credentials) {
       try {
-        const response = await authService.jobSeekerLogin(credentials);
-        this.setAuthData(response.job_seeker, response.token, 'job_seeker');
+        const response = await authService.login(credentials);
+        this.setAuthData(response.user, response.token, response.userType);
         return response;
       } catch (error) {
-        console.error('Job seeker login failed:', error);
-        throw error;
-      }
-    },
-
-    async loginAsEmployer(credentials) {
-      try {
-        const response = await authService.employerLogin(credentials);
-        this.setAuthData(response.employer, response.token, 'employer');
-        return response;
-      } catch (error) {
-        console.error('Employer login failed:', error);
+        console.error('Login failed:', error);
         throw error;
       }
     },

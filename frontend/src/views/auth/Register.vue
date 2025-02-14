@@ -522,46 +522,159 @@ export default {
 
 <style scoped>
 .register-page {
-  background-color: #f8f9fa;
+  position: relative;
   min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  background: linear-gradient(
+    45deg, 
+    rgba(66, 153, 225, 0.1), 
+    rgba(56, 161, 105, 0.1)
+  );
+  overflow: hidden;
+}
+
+.register-page::before,
+.register-page::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg, 
+    rgba(26, 54, 93, 0.05) 0%, 
+    rgba(45, 55, 72, 0.05) 100%
+  );
+  animation: move-background 15s ease infinite;
+  background-size: 400% 400%;
+}
+
+.register-page::after {
+  animation-direction: reverse;
+  opacity: 0.5;
+}
+
+@keyframes move-background {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .card {
-  border: none;
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  width: 90%;
+  margin: 0 auto;
 }
 
-.btn-check:checked + .btn-outline-primary {
-  background-color: #0d6efd;
-  color: white;
+.account-type-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+.account-type-selector .btn-group {
+  max-width: 400px;
 }
 
-.btn-primary {
-  padding: 0.75rem;
+.account-type-selector .btn-outline-primary {
+  transition: all 0.3s ease;
+}
+
+.account-type-selector .btn-outline-primary:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.form-label {
   font-weight: 500;
+  color: #2d3748;
 }
 
-.account-type-selector .btn {
-  padding: 1rem;
-  flex: 1;
+.input-group .form-control {
+  border-right: none;
 }
 
-.account-type-selector .btn i {
-  font-size: 1.2rem;
+.input-group .input-group-text {
+  background-color: transparent;
+  border-left: none;
 }
 
-.input-group .btn-outline-secondary {
-  border-color: #ced4da;
+.btn-submit {
+  background-color: #3182ce;
+  color: white;
+  transition: all 0.3s ease;
 }
 
-.input-group .btn-outline-secondary:hover {
-  background-color: #f8f9fa;
-  border-color: #ced4da;
+.btn-submit:hover {
+  background-color: #2c5282;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 95%;
+  }
+
+  .account-type-selector .btn-group {
+    flex-direction: column;
+  }
+
+  .account-type-selector .btn-group label {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Particle-like effects */
+.register-page::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 20px;
+  height: 20px;
+  background: rgba(66, 153, 225, 0.2);
+  border-radius: 50%;
+  animation: float-particle 15s linear infinite;
+}
+
+.register-page::after {
+  content: "";
+  position: absolute;
+  bottom: 20%;
+  right: 15%;
+  width: 30px;
+  height: 30px;
+  background: rgba(56, 161, 105, 0.2);
+  border-radius: 50%;
+  animation: float-particle 20s linear infinite reverse;
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-100px) rotate(180deg);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+    opacity: 0.5;
+  }
 }
 </style>

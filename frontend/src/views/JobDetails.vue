@@ -119,11 +119,14 @@
               <button 
                 @click="handleApply" 
                 class="btn btn-primary btn-lg"
-                :disabled="isApplying"
+                :disabled="isApplying || hasApplied || isExpired"
               >
                 <i class="bi bi-send me-2"></i>
-                Apply Now
+                {{ isExpired ? 'Expired' : (hasApplied ? 'Already Applied' : 'Apply Now') }}
               </button>
+              <div v-if="applicationError" class="text-danger mt-2">
+                {{ applicationError }}
+              </div>
             </div>
           </div>
         </div>
@@ -134,12 +137,12 @@
 
     <!-- Application Modal -->
     <div
-      class="modal fade"
+      class="modal fade mt-3"
       id="applicationModal"
       tabindex="-1"
       ref="applicationModal"
     >
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
             <h5 class="modal-title">
@@ -150,9 +153,10 @@
               type="button"
               class="btn-close btn-close-white"
               data-bs-dismiss="modal"
+              aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body application-modal-body">
             <form @submit.prevent="submitApplication" class="application-form">
               <!-- Cover Letter -->
               <div class="mb-4">
@@ -346,6 +350,9 @@ export default {
       errorModal: null,
       errorMessage: "",
       defaultCompanyLogo: "/images/dashboard-default.svg",
+      applicationError: null,
+      hasApplied: false,
+      isExpired: false, 
     };
   },
 
@@ -387,7 +394,8 @@ export default {
     this.loadJobDetails();
   },
 
-  mounted() {
+  mounted() {   
+     
     this.applicationModal = new Modal(this.$refs.applicationModal);
     this.successModal = new Modal(this.$refs.successModal);
     this.errorModal = new Modal(this.$refs.errorModal);
@@ -395,6 +403,7 @@ export default {
     // Add event listener for modal close
     this.$refs.applicationModal.addEventListener('hidden.bs.modal', this.resetForm);
   },
+
 
   beforeUnmount() {
     // Remove event listener
@@ -444,29 +453,76 @@ export default {
     },
 
     async handleApply() {
-      if (!this.authStore.isAuthenticated) {
-        this.$router.push({
-          name: "Login",
-          query: { redirect: this.$route.fullPath },
-        });
-        return;
-      }
+    // Reset any previous error
+    this.applicationError = null;
 
-      // Check if user is an employer
-      if (this.authStore.user?.role === "employer") {
-        this.showSuccessMessage("Employers cannot apply for jobs");
-        return;
-      }
+    try {
+        // Validate job exists and is numeric
+        if (!this.job || !this.job.id || isNaN(this.job.id)) {
+            this.applicationError = 'Invalid job details';
+            return;
+        }
 
-      // Check if the job deadline has passed
-      const deadline = new Date(this.job.deadline);
-      if (deadline < new Date()) {
-        this.showSuccessMessage("This job posting has expired");
-        return;
-      }
+        console.log('Job details:', this.job);
 
-      this.applicationModal.show();
-    },
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated) {
+            // Check if user has already applied
+            const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
+            console.log('Application check response:', response);
+
+            // Defensive check for response structure
+            const applicationData = response && response.data ? response.data : {};
+            console.log('Application data:', applicationData);
+
+            // Check for application deadline
+            if (applicationData.deadlineDate) {
+                const deadlineDate = new Date(applicationData.deadlineDate);
+                const currentDate = new Date();
+
+                // Ensure deadline is in the past
+                if (currentDate > deadlineDate) {
+                    this.applicationError = `Application expired since ${this.formatDate(deadlineDate)}`;
+                    // Explicitly prevent modal from showing
+                    if (this.applicationModal && this.applicationModal.hide) {
+                        this.applicationModal.hide();
+                    }
+                    // Ensure error is visible
+                    this.$nextTick(() => {
+                        const errorElement = this.$el.querySelector('.text-danger');
+                        if (errorElement) {
+                            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                    return;
+                }
+            }
+
+            // Safely check for hasApplied property
+            if (applicationData.hasApplied) {
+                this.hasApplied = true;
+                this.applicationError = 'You have already applied for this job';
+                return;
+            }
+
+            // If no existing application, show modal
+            if (this.applicationModal && this.applicationModal.show) {
+                this.applicationModal.show();
+            }
+        } else {
+            // Redirect to login with the current job details URL
+            this.$router.push({
+                name: 'Login',
+                query: { redirect: this.$route.fullPath } 
+            });
+            return;
+        }
+    } catch (error) {
+        // Log the error details for debugging
+        console.error('Error checking user job applications:', error);
+        this.applicationError = error.response ? error.response.data.message : 'Failed to check application status. Please try again later.';
+    }
+},
 
     async submitApplication() {
       if (!this.isFormValid) return;
@@ -479,7 +535,7 @@ export default {
         await this.jobsStore.submitJobApplication(this.job.id, formData);
         
         this.hideModals();
-        this.resetForm(); // Reset form after successful submission
+        this.resetForm(); 
         this.successModal.show();
         
       } catch (error) {
@@ -490,11 +546,29 @@ export default {
     },
 
     async loadJobDetails() {
-      const jobId = this.$route.params.id;
-      if (!jobId) return;
-      
-      await this.jobsStore.fetchJob(jobId);
-    },
+    const jobId = this.$route.params.id;
+    if (!jobId) return;
+
+    try {
+        await this.jobsStore.fetchJob(jobId);
+
+        // Check if the job has expired
+        const currentDate = new Date();
+        if (this.job.deadline && new Date(this.job.deadline) < currentDate) {
+            this.isExpired = true; // Mark job as expired
+        }
+
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated) {
+            // Check if user has already applied
+            const response = await this.jobsStore.fetchUserJobApplications(jobId);
+            this.hasApplied = response && response.data && response.data.hasApplied;
+        }
+    } catch (error) {
+        this.loadError = 'Failed to load job details. Please try again later.';
+        console.error(error);
+    }
+},
 
     formatSalary(amount) {
       return amount ? amount.toLocaleString() : "Not specified";
@@ -510,13 +584,37 @@ export default {
     },
 
     parseList(text) {
+      // Handle null, undefined, or empty input
       if (!text) return [];
-      // Remove brackets and quotes, then split by commas
-      return text
-        .replace(/[\[\]"]/g, '')
-        .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
+      
+      // If it's already an array, return it after filtering empty items
+      if (Array.isArray(text)) {
+        return text
+          .map(item => item?.toString().trim())
+          .filter(item => item && item.length > 0);
+      }
+      
+      try {
+        // If it's a JSON string, parse it first
+        if (typeof text === 'string' && (text.startsWith('[') || text.startsWith('{'))) {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map(item => item?.toString().trim())
+              .filter(item => item && item.length > 0);
+          }
+        }
+        
+        // Convert to string and split by commas
+        return text
+          .toString()
+          .split(',')
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+      } catch (error) {
+        console.error('Error parsing list:', error);
+        return [];
+      }
     },
 
     showSuccessMessage(message) {
@@ -788,11 +886,5 @@ export default {
 
 .bi {
   vertical-align: -0.125em;
-}
-
-@media (min-width: 768px) {
-  .content-grid {
-    grid-template-columns: 2fr 1fr;
-  }
 }
 </style>

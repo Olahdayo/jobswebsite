@@ -26,6 +26,8 @@
             <router-link
               class="nav-link"
               to="/joblistings"
+              active-class="nav-link-active"
+              exact
               @click="closeNavbar"
             >
               <i class="fas fa-search me-1"></i>Find Jobs
@@ -35,6 +37,8 @@
             <router-link
               class="nav-link"
               to="/featured-jobs"
+              active-class="nav-link-active"
+              exact
               @click="closeNavbar"
             >
               <i class="fas fa-star me-1"></i>Featured
@@ -44,18 +48,30 @@
             <router-link
               class="nav-link"
               to="/jobs/category"
+              active-class="nav-link-active"
+              exact
               @click="closeNavbar"
             >
               <i class="fas fa-th-large me-1"></i>Categories
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/post-job">
+            <router-link 
+              class="nav-link" 
+              to="/post-job"
+              active-class="nav-link-active"
+              exact
+            >
               <i class="bi bi-plus-circle me-1"></i>Post a Job
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/support">
+            <router-link 
+              class="nav-link" 
+              to="/support"
+              active-class="nav-link-active"
+              exact
+            >
               <i class="bi bi-headset me-1"></i>Support
             </router-link>
           </li>
@@ -344,15 +360,34 @@ export default {
 }
 
 .nav-link {
+  position: relative;
+  transition: color 0.3s ease;
   color: #4b5563;
   font-weight: 500;
   padding: 0.5rem 1rem;
-  transition: color 0.2s ease;
 }
 
-.nav-link:hover,
-.nav-link.active {
-  color: #2563eb;
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #3182ce;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link-active {
+  color: #3182ce !important;
+}
+
+.nav-link-active::after {
+  width: 100%;
 }
 
 .nav-buttons {

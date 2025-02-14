@@ -93,7 +93,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function jobSeekerLogin(Request $request)
+    public function login(Request $request)
     {
         $validated = $request->validate([
             'email' => 'required|email',
@@ -101,65 +101,50 @@ class AuthController extends Controller
             'remember' => 'boolean'
         ]);
 
-        // Find the job seeker
+        // Check JobSeeker table first
         $jobSeeker = JobSeeker::where('email', $validated['email'])->first();
+        if ($jobSeeker && Hash::check($validated['password'], $jobSeeker->password)) {
+            $token = $jobSeeker->createToken('auth_token', ['job-seeker'])->plainTextToken;
 
-        // Check credentials manually
-        if (!$jobSeeker || !Hash::check($validated['password'], $jobSeeker->password)) {
+            $remember_token = null;
+            if ($request->boolean('remember')) {
+                $remember_token = Str::random(60);
+                $jobSeeker->remember_token = $remember_token;
+                $jobSeeker->save();
+            }
+
             return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
-        }
-
-        // Create token with proper abilities
-        $token = $jobSeeker->createToken('auth_token', ['job-seeker'])->plainTextToken;
-
-        // Handle remember me functionality
-        $remember_token = null;
-        if ($request->boolean('remember')) {
-            $remember_token = Str::random(60);
-            $jobSeeker->remember_token = $remember_token;
-            $jobSeeker->save();
-        }
-
-        return response()->json([
-            'token' => $token,
-            'job_seeker' => $jobSeeker,
-            'remember_token' => $remember_token
-        ]);
-    }
-
-    public function employerLogin(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-            'remember' => 'boolean'
-        ]);
-
-        $employer = Employer::where('email', $request->email)->first();
-
-        if (!$employer || !Hash::check($request->password, $employer->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'token' => $token,
+                'user' => $jobSeeker,
+                'userType' => 'jobseeker',
+                'remember_token' => $remember_token
             ]);
         }
 
-        $token = $employer->createToken('auth_token', ['employer'])->plainTextToken;
+        // Check Employer table
+        $employer = Employer::where('email', $validated['email'])->first();
+        if ($employer && Hash::check($validated['password'], $employer->password)) {
+            $token = $employer->createToken('auth_token', ['employer'])->plainTextToken;
 
-        $remember_token = null;
-        if ($request->boolean('remember')) {
-            $remember_token = Str::random(60);
-            $employer->remember_token = $remember_token;
-            $employer->save();
+            $remember_token = null;
+            if ($request->boolean('remember')) {
+                $remember_token = Str::random(60);
+                $employer->remember_token = $remember_token;
+                $employer->save();
+            }
+
+            return response()->json([
+                'token' => $token,
+                'user' => $employer,
+                'userType' => 'employer',
+                'remember_token' => $remember_token
+            ]);
         }
 
+        // If no match found in either table
         return response()->json([
-            'employer' => $employer,
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'remember_token' => $remember_token
-        ]);
+            'message' => 'Invalid credentials'
+        ], 401);
     }
 
     public function logout(Request $request)

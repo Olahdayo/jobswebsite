@@ -19,8 +19,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/jobseeker/register', [AuthController::class, 'jobSeekerRegister']);
 Route::post('/employer/register', [AuthController::class, 'employerRegister']);
-Route::post('/jobseeker/login', [AuthController::class, 'jobSeekerLogin']);
-Route::post('/employer/login', [AuthController::class, 'employerLogin']);
 
 // Job routes (public)
 Route::prefix('jobs')->group(function () {
@@ -36,11 +34,13 @@ Route::prefix('jobs')->group(function () {
     Route::get('/location/{location}', [JobController::class, 'getJobsByLocation']);
     Route::get('/category/{category}', [JobController::class, 'getJobsByCategory']);
     Route::get('/{jobListing}', [JobController::class, 'show'])->where('jobListing', '[0-9]+');
+    Route::get('/{jobId}/user-applications', [JobController::class, 'checkUserJobApplication'])
+        ->middleware('auth:sanctum');
 });
 
 // Protected routes for employers
 Route::middleware(['auth:sanctum,employer'])->group(function () {
-    Route::post('/employer/logout', [AuthController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     // Profile management
     Route::get('/employer/profile', [EmployerController::class, 'profile']);
@@ -64,7 +64,7 @@ Route::middleware(['auth:sanctum,employer'])->group(function () {
 
 // Protected routes for job seekers
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('/jobseeker/logout', [AuthController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
     
