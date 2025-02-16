@@ -19,7 +19,7 @@
 
     <!-- Jobs by State -->
     <div class="sidebar-section mb-4">
-      <h5 class="section-title mb-3">Jobs by State</h5>
+      <h5 class="section-title mb-3">Jobs by Location</h5>
       <div v-if="loading.states" class="text-center py-3">
         <div class="spinner-border spinner-border-sm text-primary" role="status">
           <span class="visually-hidden">Loading...</span>

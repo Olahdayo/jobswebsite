@@ -12,13 +12,7 @@
             <i class="fas fa-plus-circle me-2"></i>
             Post New Job
           </button>
-          <!-- <button
-            @click="handleLogout"
-            class="btn btn-outline-danger d-flex align-items-center"
-          >
-            <i class="fas fa-sign-out-alt me-2"></i>
-            Logout
-          </button> -->
+          
         </div>
       </div>
     </nav>
@@ -362,6 +356,25 @@
                       required
                     />
                   </div>
+
+                  <div class="col-12">
+                <div class="form-check">
+                  <input
+                    v-model="jobForm.featured"
+                    type="checkbox"
+                    class="form-check-input"
+                    id="featuredJob"
+                  />
+                  <label class="form-check-label" for="featuredJob">
+                    Feature this job posting
+                    <span class="badge bg-warning text-dark ms-2">Premium</span>
+                  </label>
+                  <div class="text-muted small mt-1">
+                    Featured jobs appear prominently on the homepage and receive
+                    higher visibility
+                  </div>
+                </div>
+              </div>
                 </div>
 
                 <div class="modal-footer">
@@ -439,7 +452,8 @@ export default {
         benefits: '',
         deadline: '',
         category: '',
-        educationLevel: ''
+        educationLevel: '',
+        featured: false
       },
       showPostJobModal: false,
       isSubmitting: false,
@@ -528,7 +542,8 @@ export default {
         benefits: '',
         deadline: '',
         category: '',
-        educationLevel: ''
+        educationLevel: '',
+        featured: false
       };
     },
 
@@ -550,7 +565,8 @@ export default {
           responsibilities: this.jobForm.benefits ? this.jobForm.benefits.split(',').map(benefit => benefit.trim()) : [],
           deadline: this.jobForm.deadline,
           category: this.jobForm.category,
-          education_level: this.jobForm.educationLevel
+          education_level: this.jobForm.educationLevel,
+          featured: this.jobForm.featured
         };
         
         this.isJobCreationLoading = true;

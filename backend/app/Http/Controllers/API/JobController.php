@@ -103,7 +103,7 @@ class JobController extends Controller
 
             // Set default values
             $validated['is_active'] = true;
-            $validated['is_featured'] = false;
+            $validated['is_featured'] = $request->input('featured', false);
             $validated['category'] = $validated['category'] ?? 'Other';
 
             
