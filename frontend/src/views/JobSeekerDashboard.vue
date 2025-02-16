@@ -205,7 +205,7 @@
                     <td>
                       <button
                         v-if="application.status === 'pending'"
-                        @click="handleCancelApplication(application.id)"
+                        @click.stop="handleCancelApplication(application.id)"
                         class="btn btn-sm btn-outline-danger"
                       >
                         Cancel
