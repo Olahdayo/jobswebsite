@@ -68,10 +68,9 @@ const router = createRouter({
       meta: { public: true },
     },
     {
-      path: "/jobs/:id",
+      path: "/job/:id",
       name: "JobDetails",
       component: JobDetails,
-      props: true,
       meta: { public: true },
     },
     {

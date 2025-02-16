@@ -174,7 +174,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="application in applications" :key="application.id">
+                  <tr v-for="application in applications" :key="application.id" @click="(jobId) => {goToJobDetails(application.job.id); }">
                     <td>
                       <h6 class="mb-0">{{ application.jobTitle }}</h6>
                       <small class="text-muted">{{ application.job?.type || 'Unknown Type' }}</small>
@@ -209,6 +209,12 @@
                         class="btn btn-sm btn-outline-danger"
                       >
                         Cancel
+                      </button>
+                      <button
+                        @click="goToJobDetails(application.job.id)"
+                        class="btn btn-sm btn-outline-primary"
+                      >
+                        View Job Details
                       </button>
                     </td>
                   </tr>
@@ -376,6 +382,14 @@ export default {
           this.isCancelling = null;
         }
       }
+    },
+
+    goToJobDetails(jobId) {
+        if (jobId) {
+            this.$router.push({ name: 'JobDetails', params: { id: jobId } });
+        } else {
+            console.error('Job ID is missing');
+        }
     }
   },
 
