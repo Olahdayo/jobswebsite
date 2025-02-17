@@ -4,8 +4,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div class="container-fluid px-4">
         <h1 class="navbar-brand mb-0 h1 fw-bold">My Dashboard</h1>
-        <div class="d-flex align-items-center">
-        </div>
+        <div class="d-flex align-items-center"></div>
       </div>
     </nav>
 
@@ -120,13 +119,13 @@
               type="text"
               class="form-control"
               placeholder="Search applications..."
-              @input="e => handleSearch(e.target.value)"
+              @input="(e) => handleSearch(e.target.value)"
             />
           </div>
           <div class="col-md-6">
-            <select 
+            <select
               class="form-select"
-              @change="e => handleStatusFilter(e.target.value)"
+              @change="(e) => handleStatusFilter(e.target.value)"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -159,7 +158,9 @@
             <div v-else-if="applications.length === 0" class="text-center py-5">
               <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
               <h5 class="text-muted">No applications found</h5>
-              <p class="text-muted">Start applying for jobs to see them here!</p>
+              <p class="text-muted">
+                Start applying for jobs to see them here!
+              </p>
             </div>
 
             <div v-else class="table-responsive">
@@ -174,32 +175,51 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="application in applications" :key="application.id" @click="(jobId) => {goToJobDetails(application.job.id); }">
+                  <tr
+                    v-for="application in applications"
+                    :key="application.id"
+                    @click="
+                      (jobId) => {
+                        goToJobDetails(application.job.id);
+                      }
+                    "
+                  >
                     <td>
                       <h6 class="mb-0">{{ application.jobTitle }}</h6>
-                      <small class="text-muted">{{ application.job?.type || 'Unknown Type' }}</small>
+                      <small class="text-muted">{{
+                        application.job?.type || "Unknown Type"
+                      }}</small>
                     </td>
                     <td>
                       <div class="d-flex align-items-center">
                         <img
                           v-if="application.job?.employer?.logo_url"
-                          :src="getCompanyLogo(application.job.employer.logo_url)"
+                          :src="
+                            getCompanyLogo(application.job.employer.logo_url)
+                          "
                           :alt="application.companyName"
                           class="company-logo me-2"
                           @error="handleImageError"
                         />
                         <div>
                           <span>{{ application.companyName }}</span>
-                          <br>
-                          <small class="text-muted">{{ application.job?.location || 'Location Unknown' }}</small>
+                          <br />
+                          <small class="text-muted">{{
+                            application.job?.location || "Location Unknown"
+                          }}</small>
                         </div>
                       </div>
                     </td>
                     <td>{{ formatDate(application.created_at) }}</td>
                     <td>
-                      <span :class="['badge', getStatusClass(application.status)]">
-                        <i :class="getStatusIcon(application.status)" class="me-1"></i>
-                        {{ application.status || 'Unknown' }}
+                      <span
+                        :class="['badge', getStatusClass(application.status)]"
+                      >
+                        <i
+                          :class="getStatusIcon(application.status)"
+                          class="me-1"
+                        ></i>
+                        {{ application.status || "Unknown" }}
                       </span>
                     </td>
                     <td>
@@ -261,10 +281,10 @@ export default {
       jobSeekerStore: useJobSeekerStore(),
       authStore: useAuthStore(),
       profileStore: useProfileStore(),
-      searchTerm: '',
-      statusFilter: 'all',
+      searchTerm: "",
+      statusFilter: "all",
       user: null,
-      isCancelling: null
+      isCancelling: null,
     };
   },
 
@@ -282,35 +302,39 @@ export default {
       return this.jobSeekerStore.error;
     },
     pendingApplications() {
-      return this.applications?.filter(
-        (app) => app.status?.toLowerCase() === "pending"
-      ) || [];
+      return (
+        this.applications?.filter(
+          (app) => app.status?.toLowerCase() === "pending"
+        ) || []
+      );
     },
     approvedApplications() {
-      return this.applications?.filter(
-        (app) => app.status?.toLowerCase() === "approved"
-      ) || [];
+      return (
+        this.applications?.filter(
+          (app) => app.status?.toLowerCase() === "approved"
+        ) || []
+      );
     },
     recentApplications() {
       if (!this.applications?.length) return [];
       return [...this.applications]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
-    }
+    },
   },
 
   methods: {
     handleSearch(value) {
-      this.jobSeekerStore.setFilter('search', value);
+      this.jobSeekerStore.setFilter("search", value);
     },
 
     handleStatusFilter(status) {
-      this.jobSeekerStore.setFilter('status', status);
+      this.jobSeekerStore.setFilter("status", status);
     },
 
     handleImageError(event) {
-      event.target.src = '/images/default-company-logo.png';
-      event.target.classList.add('default-logo');
+      event.target.src = "/images/default-company-logo.png";
+      event.target.classList.add("default-logo");
     },
 
     formatDate(date) {
@@ -340,26 +364,26 @@ export default {
 
     getStatusClass(status) {
       return {
-        'bg-warning': status === 'pending',
-        'bg-success': status === 'accepted',
-        'bg-danger': status === 'rejected',
-        'bg-secondary': status === 'withdrawn',
-        'bg-light text-dark': !status
+        "bg-warning": status === "pending",
+        "bg-success": status === "accepted",
+        "bg-danger": status === "rejected",
+        "bg-secondary": status === "withdrawn",
+        "bg-light text-dark": !status,
       };
     },
 
     getStatusIcon(status) {
-      switch(status?.toLowerCase()) {
-        case 'pending':
-          return 'fas fa-clock';
-        case 'accepted':
-          return 'fas fa-check';
-        case 'rejected':
-          return 'fas fa-times';
-        case 'withdrawn':
-          return 'fas fa-undo';
+      switch (status?.toLowerCase()) {
+        case "pending":
+          return "fas fa-clock";
+        case "accepted":
+          return "fas fa-check";
+        case "rejected":
+          return "fas fa-times";
+        case "withdrawn":
+          return "fas fa-undo";
         default:
-          return 'fas fa-question';
+          return "fas fa-question";
       }
     },
 
@@ -373,17 +397,19 @@ export default {
     },
 
     async handleCancelApplication(applicationId) {
-      if (confirm('Are you sure you want to cancel this application?')) {
+      if (confirm("Are you sure you want to cancel this application?")) {
         this.isCancelling = applicationId;
         try {
-          const success = await this.profileStore.cancelApplication(applicationId);
+          const success = await this.profileStore.cancelApplication(
+            applicationId
+          );
           if (success) {
             await this.jobSeekerStore.loadApplications();
-            alert('Application cancelled successfully');
+            alert("Application cancelled successfully");
           }
         } catch (error) {
-          console.error('Failed to cancel application:', error);
-          alert('Failed to cancel application. Please try again.');
+          console.error("Failed to cancel application:", error);
+          alert("Failed to cancel application. Please try again.");
         } finally {
           this.isCancelling = null;
         }
@@ -391,25 +417,25 @@ export default {
     },
 
     async handleReapply(applicationId) {
-      if (confirm('Are you sure you want to reapply for this job?')) {
+      if (confirm("Are you sure you want to reapply for this job?")) {
         try {
           await this.authStore.reapplyForJob(applicationId);
           await this.jobSeekerStore.loadApplications();
-          alert('Successfully reapplied for the job');
+          alert("Successfully reapplied for the job");
         } catch (error) {
-          console.error('Failed to reapply:', error);
-          alert('Failed to reapply for the job. Please try again.');
+          console.error("Failed to reapply:", error);
+          alert("Failed to reapply for the job. Please try again.");
         }
       }
     },
 
     goToJobDetails(jobId) {
-        if (jobId) {
-            this.$router.push({ name: 'JobDetails', params: { id: jobId } });
-        } else {
-            console.error('Job ID is missing');
-        }
-    }
+      if (jobId) {
+        this.$router.push({ name: "JobDetails", params: { id: jobId } });
+      } else {
+        console.error("Job ID is missing");
+      }
+    },
   },
 
   async created() {
@@ -426,7 +452,7 @@ export default {
     } catch (error) {
       console.error("Error initializing dashboard:", error);
     }
-  }
+  },
 };
 </script>
 

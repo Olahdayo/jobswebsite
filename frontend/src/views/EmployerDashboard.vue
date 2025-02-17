@@ -12,7 +12,6 @@
             <i class="fas fa-plus-circle me-2"></i>
             Post New Job
           </button>
-          
         </div>
       </div>
     </nav>
@@ -60,8 +59,12 @@
                   <i class="fas fa-users"></i>
                 </div>
                 <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Total Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.totalApplications }}</h2>
+                  <h6 class="card-subtitle text-muted mb-1">
+                    Total Applications
+                  </h6>
+                  <h2 class="card-title mb-0">
+                    {{ jobStats.totalApplications }}
+                  </h2>
                 </div>
               </div>
             </div>
@@ -76,8 +79,12 @@
                   <i class="fas fa-clock"></i>
                 </div>
                 <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Pending Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.pendingApplications }}</h2>
+                  <h6 class="card-subtitle text-muted mb-1">
+                    Pending Applications
+                  </h6>
+                  <h2 class="card-title mb-0">
+                    {{ jobStats.pendingApplications }}
+                  </h2>
                 </div>
               </div>
             </div>
@@ -92,8 +99,12 @@
                   <i class="fas fa-check"></i>
                 </div>
                 <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Accepted Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.acceptedApplications }}</h2>
+                  <h6 class="card-subtitle text-muted mb-1">
+                    Accepted Applications
+                  </h6>
+                  <h2 class="card-title mb-0">
+                    {{ jobStats.acceptedApplications }}
+                  </h2>
                 </div>
               </div>
             </div>
@@ -108,8 +119,12 @@
                   <i class="fas fa-times"></i>
                 </div>
                 <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Rejected Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.rejectedApplications }}</h2>
+                  <h6 class="card-subtitle text-muted mb-1">
+                    Rejected Applications
+                  </h6>
+                  <h2 class="card-title mb-0">
+                    {{ jobStats.rejectedApplications }}
+                  </h2>
                 </div>
               </div>
             </div>
@@ -143,32 +158,34 @@
                   <td>{{ job.type }}</td>
                   <td>{{ job.experience_level }}</td>
                   <td>
-                    <span 
+                    <span
                       :class="[
                         'badge',
-                        job.is_active ? 'bg-success' : 'bg-secondary'
+                        job.is_active ? 'bg-success' : 'bg-secondary',
                       ]"
                     >
-                      {{ job.is_active ? 'Active' : 'Inactive' }}
+                      {{ job.is_active ? "Active" : "Inactive" }}
                     </span>
                   </td>
                   <td class="text-nowrap">{{ formatDate(job.created_at) }}</td>
                   <td>
                     <div class="btn-group">
-                      <button 
-                        class="btn btn-sm btn-outline-primary" 
+                      <button
+                        class="btn btn-sm btn-outline-primary"
                         @click="viewJob(job.id)"
                       >
                         View
                       </button>
-                      <button 
+                      <button
                         class="btn btn-sm"
                         :class="[
-                          job.is_active ? 'btn-outline-secondary' : 'btn-outline-success'
+                          job.is_active
+                            ? 'btn-outline-secondary'
+                            : 'btn-outline-success',
                         ]"
                         @click="toggleJobStatus(job.id)"
                       >
-                        {{ job.is_active ? 'Deactivate' : 'Activate' }}
+                        {{ job.is_active ? "Deactivate" : "Activate" }}
                       </button>
                     </div>
                   </td>
@@ -187,7 +204,11 @@
 
     <!-- Post Job Modal -->
     <Teleport to="body">
-      <div v-if="showPostJobModal" class="modal fade show" style="display: block; z-index: 10050;">
+      <div
+        v-if="showPostJobModal"
+        class="modal fade show"
+        style="display: block; z-index: 10050"
+      >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content job-post-modal">
             <div class="modal-header bg-primary text-white">
@@ -231,15 +252,23 @@
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Education Level*</label>
-                    <select class="form-select" v-model="jobForm.educationLevel" required>
+                    <select
+                      class="form-select"
+                      v-model="jobForm.educationLevel"
+                      required
+                    >
                       <option value="">Select Education Level</option>
                       <option value="Secondary School">Secondary School</option>
                       <option value="OND">OND</option>
                       <option value="HND">HND</option>
-                      <option value="Bachelor's Degree">Bachelor's Degree</option>
+                      <option value="Bachelor's Degree">
+                        Bachelor's Degree
+                      </option>
                       <option value="Master's Degree">Master's Degree</option>
                       <option value="PhD">PhD</option>
-                      <option value="Professional Certification">Professional Certification</option>
+                      <option value="Professional Certification">
+                        Professional Certification
+                      </option>
                       <option value="Not Required">Not Required</option>
                     </select>
                   </div>
@@ -256,11 +285,7 @@
                   </div>
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Type*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.type" 
-                      required
-                    >
+                    <select class="form-select" v-model="jobForm.type" required>
                       <option value="">Select Job Type</option>
                       <option value="full-time">Full-Time</option>
                       <option value="part-time">Part-Time</option>
@@ -271,9 +296,9 @@
                   <!-- Experience Level and Category -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Experience Level*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.experienceLevel" 
+                    <select
+                      class="form-select"
+                      v-model="jobForm.experienceLevel"
                       required
                     >
                       <option value="">Select Experience Level</option>
@@ -284,14 +309,14 @@
                   </div>
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Category*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.category" 
+                    <select
+                      class="form-select"
+                      v-model="jobForm.category"
                       required
                     >
                       <option value="">Select Job Category</option>
-                      <option 
-                        v-for="category in filterOptions.categories" 
+                      <option
+                        v-for="category in filterOptions.categories"
                         :key="category"
                         :value="category"
                       >
@@ -358,39 +383,41 @@
                   </div>
 
                   <div class="col-12">
-                <div class="form-check">
-                  <input
-                    v-model="jobForm.featured"
-                    type="checkbox"
-                    class="form-check-input"
-                    id="featuredJob"
-                  />
-                  <label class="form-check-label" for="featuredJob">
-                    Feature this job posting
-                    <span class="badge bg-warning text-dark ms-2">Premium</span>
-                  </label>
-                  <div class="text-muted small mt-1">
-                    Featured jobs appear prominently on the homepage and receive
-                    higher visibility
+                    <div class="form-check">
+                      <input
+                        v-model="jobForm.featured"
+                        type="checkbox"
+                        class="form-check-input"
+                        id="featuredJob"
+                      />
+                      <label class="form-check-label" for="featuredJob">
+                        Feature this job posting
+                        <span class="badge bg-warning text-dark ms-2"
+                          >Premium</span
+                        >
+                      </label>
+                      <div class="text-muted small mt-1">
+                        Featured jobs appear prominently on the homepage and
+                        receive higher visibility
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
                 </div>
 
                 <div class="modal-footer">
-                  <button 
-                    type="button" 
-                    class="btn btn-secondary" 
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
                     @click="closePostJobModal"
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
-                    class="btn btn-primary" 
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
                     :disabled="isSubmitting"
                   >
-                    {{ isSubmitting ? 'Posting...' : 'Post Job' }}
+                    {{ isSubmitting ? "Posting..." : "Post Job" }}
                   </button>
                 </div>
               </form>
@@ -398,12 +425,16 @@
           </div>
         </div>
       </div>
-      <div v-if="showPostJobModal" class="modal-backdrop fade show" style="z-index: 1040;"></div>
+      <div
+        v-if="showPostJobModal"
+        class="modal-backdrop fade show"
+        style="z-index: 1040"
+      ></div>
     </Teleport>
 
     <Teleport to="body">
-      <SuccessModal 
-        v-if="showSuccessModal" 
+      <SuccessModal
+        v-if="showSuccessModal"
         :message="`Job posted successfully: ${successJobTitle}`"
         @close="handleSuccessModalClose"
       />
@@ -412,15 +443,15 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
-import { useJobsStore } from '@/stores/jobs';
-import SuccessModal from '@/components/SuccessModal.vue';
+import { useAuthStore } from "@/stores/auth";
+import { useJobsStore } from "@/stores/jobs";
+import SuccessModal from "@/components/SuccessModal.vue";
 
 export default {
-  name: 'EmployerDashboard',
-  
+  name: "EmployerDashboard",
+
   components: {
-    SuccessModal
+    SuccessModal,
   },
 
   data() {
@@ -428,32 +459,28 @@ export default {
       educationLevels: [
         "Secondary School",
         "OND",
-        "HND", 
+        "HND",
         "Bachelor's Degree",
         "Master's Degree",
         "PhD",
         "Professional Certification",
-        "Not Required"
+        "Not Required",
       ],
-      jobTypes: [
-        'full-time',
-        'part-time', 
-        'contract'
-      ],
+      jobTypes: ["full-time", "part-time", "contract"],
       jobForm: {
-        title: '',
-        description: '',
-        location: '',
-        type: '',
-        experienceLevel: '',
+        title: "",
+        description: "",
+        location: "",
+        type: "",
+        experienceLevel: "",
         salaryMin: null,
         salaryMax: null,
-        skills: '',
-        benefits: '',
-        deadline: '',
-        category: '',
-        educationLevel: '',
-        featured: false
+        skills: "",
+        benefits: "",
+        deadline: "",
+        category: "",
+        educationLevel: "",
+        featured: false,
       },
       showPostJobModal: false,
       isSubmitting: false,
@@ -461,9 +488,9 @@ export default {
       authStore: null,
       jobsStore: null,
       showSuccessModal: false,
-      successJobTitle: '',
+      successJobTitle: "",
       isJobCreationLoading: false,
-      isLoading: false
+      isLoading: false,
     };
   },
 
@@ -477,35 +504,40 @@ export default {
     },
 
     filterOptions() {
-      return this.jobsStore ? {
-        ...this.jobsStore.getFilterOptions,
-        educationLevels: this.educationLevels,
-        jobTypes: this.jobTypes
-      } : {};
+      return this.jobsStore
+        ? {
+            ...this.jobsStore.getFilterOptions,
+            educationLevels: this.educationLevels,
+            jobTypes: this.jobTypes,
+          }
+        : {};
     },
 
     normalizeJobType() {
       return (type) => {
-        const lowercaseType = type.toLowerCase().replace(/\s+/g, '-');
-        return this.jobTypes.find(validType => validType === lowercaseType) || 'full-time';
+        const lowercaseType = type.toLowerCase().replace(/\s+/g, "-");
+        return (
+          this.jobTypes.find((validType) => validType === lowercaseType) ||
+          "full-time"
+        );
       };
     },
 
     formatDate() {
       return (dateString) => {
-        if (!dateString) return '';
+        if (!dateString) return "";
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
       };
     },
 
     today() {
-      return new Date().toISOString().split('T')[0];
-    }
+      return new Date().toISOString().split("T")[0];
+    },
   },
 
   methods: {
@@ -515,10 +547,10 @@ export default {
         await Promise.all([
           this.jobsStore.fetchEmployerJobs(),
           this.jobsStore.fetchJobStats(),
-          this.jobsStore.fetchFilterOptions()
+          this.jobsStore.fetchFilterOptions(),
         ]);
       } catch (error) {
-        console.error('Error loading dashboard:', error);
+        console.error("Error loading dashboard:", error);
       } finally {
         this.isLoading = false;
       }
@@ -531,26 +563,26 @@ export default {
 
     resetJobForm() {
       this.jobForm = {
-        title: '',
-        description: '',
-        location: '',
-        type: 'full-time',
-        experienceLevel: '',
+        title: "",
+        description: "",
+        location: "",
+        type: "full-time",
+        experienceLevel: "",
         salaryMin: null,
         salaryMax: null,
-        skills: '',
-        benefits: '',
-        deadline: '',
-        category: '',
-        educationLevel: '',
-        featured: false
+        skills: "",
+        benefits: "",
+        deadline: "",
+        category: "",
+        educationLevel: "",
+        featured: false,
       };
     },
 
     async handlePostJob() {
       try {
         this.isSubmitting = true;
-        
+
         const formData = {
           title: this.jobForm.title,
           description: this.jobForm.description,
@@ -558,43 +590,55 @@ export default {
           type: this.normalizeJobType(this.jobForm.type),
           experience_level: this.jobForm.experienceLevel,
           salary: {
-            min: this.jobForm.salaryMin ? parseInt(this.jobForm.salaryMin) : null,
-            max: this.jobForm.salaryMax ? parseInt(this.jobForm.salaryMax) : null
+            min: this.jobForm.salaryMin
+              ? parseInt(this.jobForm.salaryMin)
+              : null,
+            max: this.jobForm.salaryMax
+              ? parseInt(this.jobForm.salaryMax)
+              : null,
           },
-          requirements: this.jobForm.skills ? this.jobForm.skills.split(',').map(skill => skill.trim()) : [],
-          responsibilities: this.jobForm.benefits ? this.jobForm.benefits.split(',').map(benefit => benefit.trim()) : [],
+          requirements: this.jobForm.skills
+            ? this.jobForm.skills.split(",").map((skill) => skill.trim())
+            : [],
+          responsibilities: this.jobForm.benefits
+            ? this.jobForm.benefits.split(",").map((benefit) => benefit.trim())
+            : [],
           deadline: this.jobForm.deadline,
           category: this.jobForm.category,
           education_level: this.jobForm.educationLevel,
-          featured: this.jobForm.featured
+          featured: this.jobForm.featured,
         };
-        
+
         this.isJobCreationLoading = true;
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         if (this.jobsStore) {
           await this.jobsStore.createJob(formData);
-          
+
           this.closePostJobModal();
-          
+
           this.successJobTitle = formData.title;
           this.showSuccessModal = true;
-          
+
           await this.loadDashboardData();
         }
       } catch (error) {
-        console.error('Error posting job:', error);
-        
-        if (error.response && error.response.data && error.response.data.errors) {
+        console.error("Error posting job:", error);
+
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
           const errors = error.response.data.errors;
-          let errorMessage = 'Please correct the following errors:\n';
-          Object.keys(errors).forEach(key => {
-            errorMessage += `- ${key}: ${errors[key].join(', ')}\n`;
+          let errorMessage = "Please correct the following errors:\n";
+          Object.keys(errors).forEach((key) => {
+            errorMessage += `- ${key}: ${errors[key].join(", ")}\n`;
           });
           alert(errorMessage);
         } else {
-          alert('Failed to create job. Please try again.');
+          alert("Failed to create job. Please try again.");
         }
       } finally {
         this.isJobCreationLoading = false;
@@ -620,13 +664,13 @@ export default {
 
     handleSuccessModalClose() {
       this.showSuccessModal = false;
-      this.successJobTitle = '';
+      this.successJobTitle = "";
     },
 
     viewJob(jobId) {
-      this.$router.push({ 
-        name: 'JobApplications', 
-        params: { jobId: jobId } 
+      this.$router.push({
+        name: "JobApplications",
+        params: { jobId: jobId },
       });
     },
   },
@@ -635,8 +679,8 @@ export default {
     this.authStore = useAuthStore();
     this.jobsStore = useJobsStore();
     this.loadDashboardData();
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -871,5 +915,4 @@ export default {
   background-color: #ffc107;
   border-color: #ffc107;
 }
-
 </style>

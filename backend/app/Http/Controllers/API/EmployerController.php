@@ -58,7 +58,6 @@ class EmployerController extends Controller
                 'status' => 'success',
                 'data' => $jobs
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error fetching employer jobs',
@@ -179,7 +178,7 @@ class EmployerController extends Controller
     {
         try {
             $employer = $request->user();
-            
+
             if (!$employer) {
                 return response()->json([
                     'message' => 'Unauthorized',
@@ -189,32 +188,32 @@ class EmployerController extends Controller
 
             // Get total jobs count
             $totalJobs = Job::where('employer_id', $employer->id)->count();
-            
+
             // Get active jobs count using is_active boolean field
             $activeJobs = Job::where('employer_id', $employer->id)
-                            ->where('is_active', true)
-                            ->count();
-            
+                ->where('is_active', true)
+                ->count();
+
             // Get total applications count
-            $totalApplications = Application::whereHas('job', function($query) use ($employer) {
+            $totalApplications = Application::whereHas('job', function ($query) use ($employer) {
                 $query->where('employer_id', $employer->id);
             })->count();
-            
+
             // Get pending applications count
-            $pendingApplications = Application::whereHas('job', function($query) use ($employer) {
+            $pendingApplications = Application::whereHas('job', function ($query) use ($employer) {
                 $query->where('employer_id', $employer->id);
             })->where('status', 'pending')->count();
-            
+
             // Get accepted applications count
-            $acceptedApplications = Application::whereHas('job', function($query) use ($employer) {
+            $acceptedApplications = Application::whereHas('job', function ($query) use ($employer) {
                 $query->where('employer_id', $employer->id);
             })->where('status', 'accepted')->count();
-            
+
             // Get rejected applications count
-            $rejectedApplications = Application::whereHas('job', function($query) use ($employer) {
+            $rejectedApplications = Application::whereHas('job', function ($query) use ($employer) {
                 $query->where('employer_id', $employer->id);
             })->where('status', 'rejected')->count();
-           
+
             $response = [
                 'status' => 'success',
                 'data' => [
@@ -226,7 +225,7 @@ class EmployerController extends Controller
                     'rejectedApplications' => (int)$rejectedApplications
                 ]
             ];
-            
+
             return response()->json($response);
         } catch (\Exception $e) {
             return response()->json([
