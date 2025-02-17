@@ -178,10 +178,18 @@
                   <td>
                     <div class="btn-group">
                       <button
-                        class="btn btn-sm btn-outline-primary"
-                        @click="viewJob(job.id)"
+                        class="btn btn-sm btn-outline-info"
+                        @click="viewApplications(job.id)"
+                        title="View Applications"
                       >
-                        View
+                        <i class="fas fa-list-ul"></i>
+                      </button>
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        @click="viewJobDetails(job)"
+                        title="View Details"
+                      >
+                        <i class="fas fa-eye"></i>
                       </button>
                       <button
                         class="btn btn-sm"
@@ -191,8 +199,16 @@
                             : 'btn-outline-success',
                         ]"
                         @click="toggleJobStatus(job.id)"
+                        :title="
+                          job.is_active ? 'Deactivate Job' : 'Activate Job'
+                        "
                       >
-                        {{ job.is_active ? "Deactivate" : "Activate" }}
+                        <i
+                          :class="[
+                            'fas',
+                            job.is_active ? 'fa-toggle-off' : 'fa-toggle-on',
+                          ]"
+                        ></i>
                       </button>
                     </div>
                   </td>
@@ -321,9 +337,9 @@
                       v-model="jobForm.category"
                       required
                     >
-                      <option value="">Select Job Category</option>
+                      <option value="" disabled selected>Select a category</option>
                       <option
-                        v-for="category in filterOptions.categories"
+                        v-for="category in jobCategories"
                         :key="category"
                         :value="category"
                       >
@@ -446,6 +462,13 @@
         @close="handleSuccessModalClose"
       />
     </Teleport>
+
+    <JobDetailsModal
+      v-if="selectedJob"
+      :show="showJobDetailsModal"
+      :job="selectedJob"
+      @close="closeJobDetailsModal"
+    />
   </div>
 </template>
 
@@ -454,12 +477,14 @@ import { useAuthStore } from "@/stores/auth";
 import { useJobsStore } from "@/stores/jobs";
 import { useEmployerStore } from "@/stores/employer";
 import SuccessModal from "@/components/SuccessModal.vue";
+import JobDetailsModal from "@/components/JobDetailsModal.vue";
 
 export default {
   name: "EmployerDashboard",
 
   components: {
     SuccessModal,
+    JobDetailsModal,
   },
 
   data() {
@@ -475,6 +500,26 @@ export default {
         "Not Required",
       ],
       jobTypes: ["full-time", "part-time", "contract"],
+      jobCategories: [
+        "Technology",
+        "Healthcare",
+        "Education",
+        "Finance",
+        "Sales",
+        "Marketing",
+        "Engineering",
+        "Customer Service",
+        "Administration",
+        "Human Resources",
+        "Manufacturing",
+        "Retail",
+        "Construction",
+        "Hospitality",
+        "Media",
+        "Legal",
+        "Transportation",
+        "Others"
+      ],
       jobForm: {
         title: "",
         description: "",
@@ -511,6 +556,8 @@ export default {
           total: 0,
         },
       },
+      showJobDetailsModal: false,
+      selectedJob: null,
     };
   },
 
@@ -682,11 +729,14 @@ export default {
       this.successJobTitle = "";
     },
 
-    viewJob(jobId) {
-      this.$router.push({
-        name: "JobApplications",
-        params: { jobId: jobId },
-      });
+    viewJobDetails(job) {
+      this.selectedJob = job;
+      this.showJobDetailsModal = true;
+    },
+
+    closeJobDetailsModal() {
+      this.showJobDetailsModal = false;
+      this.selectedJob = null;
     },
 
     async loadJobs() {
@@ -706,6 +756,13 @@ export default {
       } catch (error) {
         console.error("Error loading job stats:", error);
       }
+    },
+
+    viewApplications(jobId) {
+      this.$router.push({
+        name: "JobApplications",
+        params: { jobId: jobId },
+      });
     },
   },
 
@@ -962,5 +1019,60 @@ export default {
 .badge {
   font-size: 0.75rem;
   padding: 0.25em 0.5em;
+}
+
+.btn-group {
+  gap: 0.25rem;
+}
+
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-group .btn i {
+  font-size: 0.875rem;
+}
+
+/* Add tooltip styles */
+.btn {
+  position: relative;
+}
+
+[title] {
+  position: relative;
+  cursor: pointer;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+[title]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+  margin-bottom: -5px;
 }
 </style>

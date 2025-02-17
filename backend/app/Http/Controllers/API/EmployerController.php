@@ -152,9 +152,12 @@ class EmployerController extends Controller
                     return [
                         'id' => $job->id,
                         'title' => $job->title,
+                        'description' => $job->description,
                         'location' => $job->location,
                         'type' => $job->type,
                         'experience_level' => $job->experience_level,
+                        'requirements' => $job->requirements,
+                        'responsibilities' => $job->responsibilities,
                         'deadline' => $job->deadline ? date('M d, Y', strtotime($job->deadline)) : null,
                         'is_active' => $job->is_active,
                         'created_at' => date('M d, Y', strtotime($job->created_at)),
