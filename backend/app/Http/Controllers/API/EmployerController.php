@@ -31,9 +31,17 @@ class EmployerController extends Controller
                     },
                     'applications as accepted_applications' => function ($query) {
                         $query->where('status', 'accepted');
+                    },
+                    'applications as rejected_applications' => function ($query) {
+                        $query->where('status', 'rejected');
+                    },
+                    'applications as withdrawn_applications' => function ($query) {
+                        $query->where('status', 'withdrawn');
                     }
                 ])
-                ->with('applications') // Load the applications relationship
+                ->with(['applications' => function ($query) {
+                    $query->select('id', 'job_id', 'status');
+                }])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($job) {
@@ -46,10 +54,12 @@ class EmployerController extends Controller
                         'deadline' => $job->deadline ? date('M d, Y', strtotime($job->deadline)) : null,
                         'is_active' => $job->is_active,
                         'created_at' => date('M d, Y', strtotime($job->created_at)),
-                        'applications' => [
-                            'total' => $job->applications->count(),
-                            'pending' => $job->applications->where('status', 'pending')->count(),
-                            'accepted' => $job->applications->where('status', 'accepted')->count()
+                        'applications_count' => [
+                            'total' => $job->total_applications,
+                            'pending' => $job->pending_applications,
+                            'accepted' => $job->accepted_applications,
+                            'rejected' => $job->rejected_applications,
+                            'withdrawn' => $job->withdrawn_applications
                         ]
                     ];
                 });
@@ -131,12 +141,39 @@ class EmployerController extends Controller
      */
     public function jobs(Request $request)
     {
-        $jobs = $request->user()->jobs()
-            ->with('applications.jobSeeker')
-            ->latest()
-            ->paginate(10);
+        try {
+            $employer = $request->user();
 
-        return response()->json($jobs);
+            $jobs = Job::where('employer_id', $employer->id)
+                ->withCount('applications as total_applications')
+                ->latest()
+                ->get()
+                ->map(function ($job) {
+                    return [
+                        'id' => $job->id,
+                        'title' => $job->title,
+                        'location' => $job->location,
+                        'type' => $job->type,
+                        'experience_level' => $job->experience_level,
+                        'deadline' => $job->deadline ? date('M d, Y', strtotime($job->deadline)) : null,
+                        'is_active' => $job->is_active,
+                        'created_at' => date('M d, Y', strtotime($job->created_at)),
+                        'applications_count' => [
+                            'total' => $job->total_applications
+                        ]
+                    ];
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $jobs
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching employer jobs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

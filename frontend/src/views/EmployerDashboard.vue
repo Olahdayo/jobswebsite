@@ -145,7 +145,7 @@
                   <th>Title</th>
                   <th>Location</th>
                   <th>Type</th>
-                  <th>Experience</th>
+                  <th>Applications</th>
                   <th>Status</th>
                   <th>Posted Date</th>
                   <th>Actions</th>
@@ -156,7 +156,14 @@
                   <td>{{ job.title }}</td>
                   <td>{{ job.location }}</td>
                   <td>{{ job.type }}</td>
-                  <td>{{ job.experience_level }}</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold text-primary">
+                        Total Applications:
+                        {{ job.applications_count?.total || 0 }}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     <span
                       :class="[
@@ -445,6 +452,7 @@
 <script>
 import { useAuthStore } from "@/stores/auth";
 import { useJobsStore } from "@/stores/jobs";
+import { useEmployerStore } from "@/stores/employer";
 import SuccessModal from "@/components/SuccessModal.vue";
 
 export default {
@@ -487,16 +495,33 @@ export default {
       expandedJobId: null,
       authStore: null,
       jobsStore: null,
+      employerStore: null,
       showSuccessModal: false,
       successJobTitle: "",
       isJobCreationLoading: false,
       isLoading: false,
+      jobs: [],
+      jobStats: {
+        totalJobs: 0,
+        activeJobs: 0,
+        totalApplications: 0,
+      },
+      defaultJob: {
+        applications_count: {
+          total: 0,
+        },
+      },
     };
   },
 
   computed: {
     employerJobs() {
-      return this.jobsStore ? this.jobsStore.getEmployerJobs : [];
+      return this.jobs.map((job) => ({
+        ...job,
+        applications_count: {
+          total: parseInt(job.applications_count?.total) || 0,
+        },
+      }));
     },
 
     jobStats() {
@@ -544,13 +569,9 @@ export default {
     async loadDashboardData() {
       try {
         this.isLoading = true;
-        await Promise.all([
-          this.jobsStore.fetchEmployerJobs(),
-          this.jobsStore.fetchJobStats(),
-          this.jobsStore.fetchFilterOptions(),
-        ]);
+        await Promise.all([this.loadJobs(), this.loadStats()]);
       } catch (error) {
-        console.error("Error loading dashboard:", error);
+        console.error("Error loading dashboard data:", error);
       } finally {
         this.isLoading = false;
       }
@@ -656,12 +677,6 @@ export default {
       }
     },
 
-    // handleLogout() {
-    //   if (this.authStore) {
-    //     this.authStore.logout();
-    //   }
-    // },
-
     handleSuccessModalClose() {
       this.showSuccessModal = false;
       this.successJobTitle = "";
@@ -673,11 +688,31 @@ export default {
         params: { jobId: jobId },
       });
     },
+
+    async loadJobs() {
+      try {
+        const response = await this.employerStore.getJobs();
+        if (response?.data) {
+          this.jobs = response.data;
+        }
+      } catch (error) {
+        console.error("Error loading jobs:", error);
+      }
+    },
+
+    async loadStats() {
+      try {
+        await this.jobsStore.fetchJobStats();
+      } catch (error) {
+        console.error("Error loading job stats:", error);
+      }
+    },
   },
 
   created() {
     this.authStore = useAuthStore();
     this.jobsStore = useJobsStore();
+    this.employerStore = useEmployerStore();
     this.loadDashboardData();
   },
 };
@@ -914,5 +949,18 @@ export default {
 .form-check-input:checked {
   background-color: #ffc107;
   border-color: #ffc107;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.applications-count {
+  font-size: 0.875rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
 }
 </style>

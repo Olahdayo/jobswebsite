@@ -48,7 +48,7 @@ Route::middleware(['auth:sanctum,employer'])->group(function () {
 
     // Job management
     Route::get('/employer/jobs', [EmployerController::class, 'jobs']);
-    Route::get('/employer/stats', [EmployerController::class, 'stats']); 
+    Route::get('/employer/stats', [EmployerController::class, 'stats']);
     Route::post('/jobs', [JobController::class, 'store']);
     Route::put('/jobs/{job}', [JobController::class, 'update']);
     Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
@@ -56,10 +56,10 @@ Route::middleware(['auth:sanctum,employer'])->group(function () {
     // Job Applications Routes
     Route::get('/jobs/{job}/applications', [JobController::class, 'getJobApplications']);
     Route::patch('/job-applications/{applicationId}/status', [JobController::class, 'updateApplicationStatus']);
-    Route::get('/job-applications/{application}/download-resume', 
+    Route::get(
+        '/job-applications/{application}/download-resume',
         [JobController::class, 'downloadResume']
     )->name('job-applications.download-resume');
-
 });
 
 // Protected routes for job seekers
@@ -68,7 +68,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/jobseeker/profile', [JobSeekerController::class, 'profile']);
     Route::put('/jobseeker/profile', [JobSeekerController::class, 'updateProfile']);
     Route::post('/jobseeker/profile/uploadProfilePicture', [JobSeekerController::class, 'uploadProfilePicture']);
-    
+
     // Application routes
     Route::prefix('applications')->group(function () {
         Route::get('/', [ApplicationController::class, 'index']);
