@@ -180,14 +180,14 @@
                       <button
                         class="btn btn-sm btn-outline-info"
                         @click="viewApplications(job.id)"
-                        title="View Applications"
+                        data-title="View Applications"
                       >
                         <i class="fas fa-list-ul"></i>
                       </button>
                       <button
                         class="btn btn-sm btn-outline-primary"
                         @click="viewJobDetails(job)"
-                        title="View Details"
+                        data-title="View Details"
                       >
                         <i class="fas fa-eye"></i>
                       </button>
@@ -199,7 +199,7 @@
                             : 'btn-outline-success',
                         ]"
                         @click="toggleJobStatus(job.id)"
-                        :title="
+                        :data-title="
                           job.is_active ? 'Deactivate Job' : 'Activate Job'
                         "
                       >
@@ -337,7 +337,9 @@
                       v-model="jobForm.category"
                       required
                     >
-                      <option value="" disabled selected>Select a category</option>
+                      <option value="" disabled selected>
+                        Select a category
+                      </option>
                       <option
                         v-for="category in jobCategories"
                         :key="category"
@@ -518,7 +520,7 @@ export default {
         "Media",
         "Legal",
         "Transportation",
-        "Others"
+        "Others",
       ],
       jobForm: {
         title: "",
@@ -1039,18 +1041,18 @@ export default {
   font-size: 0.875rem;
 }
 
-/* Add tooltip styles */
+/* Custom tooltip styles */
 .btn {
   position: relative;
 }
 
-[title] {
+[data-title] {
   position: relative;
   cursor: pointer;
 }
 
-[title]:hover::after {
-  content: attr(title);
+[data-title]:hover::after {
+  content: attr(data-title);
   position: absolute;
   bottom: 100%;
   left: 50%;
@@ -1065,7 +1067,7 @@ export default {
   margin-bottom: 5px;
 }
 
-[title]:hover::before {
+[data-title]:hover::before {
   content: "";
   position: absolute;
   bottom: 100%;
@@ -1074,5 +1076,23 @@ export default {
   border: 5px solid transparent;
   border-top-color: rgba(0, 0, 0, 0.8);
   margin-bottom: -5px;
+}
+
+.btn-group {
+  gap: 0.25rem;
+}
+
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-group .btn i {
+  font-size: 0.875rem;
 }
 </style>
