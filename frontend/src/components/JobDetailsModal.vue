@@ -29,6 +29,12 @@
                 </p>
                 <p class="mb-3"><strong>Posted Date:</strong> {{ job.created_at }}</p>
                 <p class="mb-3"><strong>Total Applications:</strong> {{ job.applications_count?.total || 0 }}</p>
+                <p class="mb-3">
+                  <strong>Application Deadline:</strong>
+                  <span :class="{ 'text-danger': isDeadlinePassed }">
+                    {{ job.deadline || 'No deadline set' }}
+                  </span>
+                </p>
               </div>
             </div>
 
@@ -93,6 +99,12 @@ export default {
     },
     displayResponsibilities() {
       return this.hasResponsibilities ? this.job.responsibilities : [];
+    },
+    isDeadlinePassed() {
+      if (!this.job.deadline) return false;
+      const deadline = new Date(this.job.deadline);
+      const today = new Date();
+      return deadline < today;
     }
   },
   emits: ['close'],
@@ -207,5 +219,9 @@ export default {
   .modal-footer {
     padding: 0.75rem 1rem;
   }
+}
+
+.text-danger {
+  color: #dc3545 !important;
 }
 </style> 

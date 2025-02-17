@@ -17,209 +17,224 @@
     </nav>
 
     <div class="container py-4">
-      <!-- Stats Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon jobs">
-                  <i class="fas fa-briefcase"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Total Jobs</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.totalJobs }}</h2>
-                </div>
-              </div>
-            </div>
+      <!-- Loading State -->
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-content">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
           </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon active">
-                  <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Active Jobs</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.activeJobs }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon applications">
-                  <i class="fas fa-users"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">
-                    Total Applications
-                  </h6>
-                  <h2 class="card-title mb-0">
-                    {{ jobStats.totalApplications }}
-                  </h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon pending">
-                  <i class="fas fa-clock"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">
-                    Pending Applications
-                  </h6>
-                  <h2 class="card-title mb-0">
-                    {{ jobStats.pendingApplications }}
-                  </h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon accepted">
-                  <i class="fas fa-check"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">
-                    Accepted Applications
-                  </h6>
-                  <h2 class="card-title mb-0">
-                    {{ jobStats.acceptedApplications }}
-                  </h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon rejected">
-                  <i class="fas fa-times"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">
-                    Rejected Applications
-                  </h6>
-                  <h2 class="card-title mb-0">
-                    {{ jobStats.rejectedApplications }}
-                  </h2>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p class="mt-3 text-muted">Loading dashboard data...</p>
         </div>
       </div>
 
-      <!-- Posted Jobs -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom-0 py-3">
-          <h5 class="card-title mb-0">Posted Jobs</h5>
+      <!-- Dashboard Content -->
+      <div v-else>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon jobs">
+                    <i class="fas fa-briefcase"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">Total Jobs</h6>
+                    <h2 class="card-title mb-0">{{ jobStats.totalJobs }}</h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon active">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">Active Jobs</h6>
+                    <h2 class="card-title mb-0">{{ jobStats.activeJobs }}</h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon applications">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Total Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.totalApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Pending Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.pendingApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon accepted">
+                    <i class="fas fa-check"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Accepted Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.acceptedApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon rejected">
+                    <i class="fas fa-times"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Rejected Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.rejectedApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Location</th>
-                  <th>Type</th>
-                  <th>Applications</th>
-                  <th>Status</th>
-                  <th>Posted Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="job in employerJobs" :key="job.id">
-                  <td>{{ job.title }}</td>
-                  <td>{{ job.location }}</td>
-                  <td>{{ job.type }}</td>
-                  <td>
-                    <div class="d-flex flex-column">
-                      <span class="fw-bold text-primary">
-                        Total Applications:
-                        {{ job.applications_count?.total || 0 }}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      :class="[
-                        'badge',
-                        job.is_active ? 'bg-success' : 'bg-secondary',
-                      ]"
-                    >
-                      {{ job.is_active ? "Active" : "Inactive" }}
-                    </span>
-                  </td>
-                  <td class="text-nowrap">{{ formatDate(job.created_at) }}</td>
-                  <td>
-                    <div class="btn-group">
-                      <button
-                        class="btn btn-sm btn-outline-info"
-                        @click="viewApplications(job.id)"
-                        data-title="View Applications"
-                      >
-                        <i class="fas fa-list-ul"></i>
-                      </button>
-                      <button
-                        class="btn btn-sm btn-outline-primary"
-                        @click="viewJobDetails(job)"
-                        data-title="View Details"
-                      >
-                        <i class="fas fa-eye"></i>
-                      </button>
-                      <button
-                        class="btn btn-sm"
+
+        <!-- Posted Jobs -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom-0 py-3">
+            <h5 class="card-title mb-0">Posted Jobs</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Applications</th>
+                    <th>Status</th>
+                    <th>Posted Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="job in employerJobs" :key="job.id">
+                    <td>{{ job.title }}</td>
+                    <td>{{ job.location }}</td>
+                    <td>{{ job.type }}</td>
+                    <td>
+                      <div class="d-flex flex-column">
+                        <span class="fw-bold text-primary">
+                          Total Applications:
+                          {{ job.applications_count?.total || 0 }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span
                         :class="[
-                          job.is_active
-                            ? 'btn-outline-secondary'
-                            : 'btn-outline-success',
+                          'badge',
+                          job.is_active ? 'bg-success' : 'bg-secondary',
                         ]"
-                        @click="toggleJobStatus(job.id)"
-                        :data-title="
-                          job.is_active ? 'Deactivate Job' : 'Activate Job'
-                        "
                       >
-                        <i
+                        {{ job.is_active ? "Active" : "Inactive" }}
+                      </span>
+                    </td>
+                    <td class="text-nowrap">
+                      {{ formatDate(job.created_at) }}
+                    </td>
+                    <td>
+                      <div class="btn-group">
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          @click="viewApplications(job.id)"
+                          data-title="View Applications"
+                        >
+                          <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          @click="viewJobDetails(job)"
+                          data-title="View Details"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm"
                           :class="[
-                            'fas',
-                            job.is_active ? 'fa-toggle-off' : 'fa-toggle-on',
+                            job.is_active
+                              ? 'btn-outline-secondary'
+                              : 'btn-outline-success',
                           ]"
-                        ></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="employerJobs.length === 0">
-                  <td colspan="7" class="text-center py-4">
-                    <p class="text-muted mb-0">No jobs posted yet</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                          @click="toggleJobStatus(job.id)"
+                          :data-title="
+                            job.is_active ? 'Deactivate Job' : 'Activate Job'
+                          "
+                        >
+                          <i
+                            :class="[
+                              'fas',
+                              job.is_active ? 'fa-toggle-off' : 'fa-toggle-on',
+                            ]"
+                          ></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="employerJobs.length === 0">
+                    <td colspan="7" class="text-center py-4">
+                      <p class="text-muted mb-0">No jobs posted yet</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -546,7 +561,7 @@ export default {
       showSuccessModal: false,
       successJobTitle: "",
       isJobCreationLoading: false,
-      isLoading: false,
+      isLoading: true,
       jobs: [],
       jobStats: {
         totalJobs: 0,
@@ -618,6 +633,13 @@ export default {
     async loadDashboardData() {
       try {
         this.isLoading = true;
+
+        // Initialize stores
+        this.authStore = useAuthStore();
+        this.jobsStore = useJobsStore();
+        this.employerStore = useEmployerStore();
+
+        // Fetch data in parallel
         await Promise.all([this.loadJobs(), this.loadStats()]);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
@@ -768,11 +790,8 @@ export default {
     },
   },
 
-  created() {
-    this.authStore = useAuthStore();
-    this.jobsStore = useJobsStore();
-    this.employerStore = useEmployerStore();
-    this.loadDashboardData();
+  async created() {
+    await this.loadDashboardData();
   },
 };
 </script>
@@ -781,6 +800,7 @@ export default {
 .dashboard-container {
   background-color: #f8f9fa;
   min-height: 100vh;
+  position: relative;
 }
 
 .stat-card {
@@ -1094,5 +1114,49 @@ export default {
 
 .btn-group .btn i {
   font-size: 0.875rem;
+}
+
+/* Add these new styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Optional: Add a subtle animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-overlay {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Style loading text */
+.loading-content p {
+  font-size: 1rem;
+  margin-top: 1rem;
+  color: #6c757d;
 }
 </style>
