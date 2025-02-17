@@ -91,6 +91,16 @@ export const useAuthStore = defineStore("auth", {
       if (token && user && userType) {
         this.setAuthData(JSON.parse(user), token, userType);
       }
+    },
+
+    async reapplyForJob(applicationId) {
+      try {
+        const response = await authService.reapplyForJob(applicationId);
+        return response;
+      } catch (error) {
+        console.error('Error in reapplyForJob:', error);
+        throw error;
+      }
     }
   }
 });

@@ -211,6 +211,13 @@
                         Cancel
                       </button>
                       <button
+                        v-if="application.status === 'withdrawn'"
+                        @click.stop="handleReapply(application.id)"
+                        class="btn btn-sm btn-outline-success"
+                      >
+                        Reapply
+                      </button>
+                      <button
                         @click="goToJobDetails(application.job.id)"
                         class="btn btn-sm btn-outline-primary"
                       >
@@ -245,7 +252,6 @@
 import { useJobSeekerStore } from "@/stores/jobSeeker";
 import { useAuthStore } from "@/stores/auth";
 import { useProfileStore } from "@/stores/profile";
-import { authService } from "@/services/authService";
 
 export default {
   name: "JobSeekerDashboard",
@@ -257,7 +263,7 @@ export default {
       profileStore: useProfileStore(),
       searchTerm: '',
       statusFilter: 'all',
-      user: authService.getCurrentUser(),
+      user: null,
       isCancelling: null
     };
   },
@@ -324,7 +330,7 @@ export default {
 
     async handleLogout() {
       try {
-        await authService.logout();
+        await this.authStore.logout();
         this.$router.push("/login");
       } catch (error) {
         console.error("Error logging out:", error);
@@ -384,6 +390,19 @@ export default {
       }
     },
 
+    async handleReapply(applicationId) {
+      if (confirm('Are you sure you want to reapply for this job?')) {
+        try {
+          await this.authStore.reapplyForJob(applicationId);
+          await this.jobSeekerStore.loadApplications();
+          alert('Successfully reapplied for the job');
+        } catch (error) {
+          console.error('Failed to reapply:', error);
+          alert('Failed to reapply for the job. Please try again.');
+        }
+      }
+    },
+
     goToJobDetails(jobId) {
         if (jobId) {
             this.$router.push({ name: 'JobDetails', params: { id: jobId } });
@@ -395,14 +414,14 @@ export default {
 
   async created() {
     try {
-      if (!authService.isAuthenticated()) {
+      if (!this.authStore.isAuthenticated) {
         this.$router.push({
           name: "Login",
           query: { redirect: this.$route.fullPath },
         });
         return;
       }
-
+      this.user = this.authStore.user;
       await this.jobSeekerStore.loadApplications();
     } catch (error) {
       console.error("Error initializing dashboard:", error);

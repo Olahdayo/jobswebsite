@@ -152,4 +152,15 @@ export const authService = {
       throw error;
     }
   },
+
+  // Add this method to authService
+  async reapplyForJob(applicationId) {
+    try {
+      const response = await api.post(`/applications/${applicationId}/reapply`);
+      return response.data;
+    } catch (error) {
+      console.error("Error reapplying for job:", error);
+      throw error;
+    }
+  },
 };

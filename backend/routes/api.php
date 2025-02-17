@@ -76,5 +76,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{application}', [ApplicationController::class, 'show']);
         Route::put('/{application}', [ApplicationController::class, 'update']);
         Route::post('/{application}/cancel', [ApplicationController::class, 'cancel']);
+        Route::post('/{application}/reapply', [ApplicationController::class, 'reapply']);
     });
 });
