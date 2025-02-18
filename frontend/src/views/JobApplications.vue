@@ -34,6 +34,7 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Resume</th>
+                    <th>Cover Letter</th>
                     <th>Applied Date</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -60,6 +61,16 @@
                         View Resume
                       </button>
                       <span v-else class="text-muted">No Resume</span>
+                    </td>
+                    <td>
+                      <button 
+                        v-if="application.cover_letter" 
+                        @click="openCoverLetter(application.cover_letter)" 
+                        class="btn btn-sm btn-outline-info"
+                      >
+                        Cover Letter
+                      </button>
+                      <span v-else class="text-muted">No Cover Letter</span>
                     </td>
                     <td>{{ new Date(application.created_at).toLocaleDateString() }}</td>
                     <td>
@@ -99,22 +110,44 @@
       </div>
     </div>
   </div>
+
+  <!-- cover letter -->
+  <div v-if="showModal" class="modal fade show" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cover Letter</h5>
+        <button type="button" class="btn-close" @click="showModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ coverLetterContent }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" @click="showModal = false">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+  
 </template>
 
 <script>
 import { useJobApplicationsStore } from '@/stores/job-applications';
 import { useAuthStore } from '@/stores/auth';
-
 export default {
   name: 'JobApplications',
+
   
   data() {
     return {
       jobId: this.$route.params.jobId,
       jobApplicationsStore: useJobApplicationsStore(),
-      authStore: useAuthStore()
+      authStore: useAuthStore(),
+      showModal: false,
+      coverLetterContent: '',
     };
   },
+
 
   computed: {
     applications() {
@@ -173,12 +206,20 @@ export default {
         this.$toast?.error(errorMessage) || alert(errorMessage);
       }
     },
-    downloadResume(application) {
-    const resumeUrl = application.resume_url || (application.job_seeker && application.job_seeker.resume_url);
-    if (resumeUrl) {
-        window.open(`http://localhost:8000/storage/${resumeUrl}`, '_blank');
-    }
+    
+    openCoverLetter(coverLetter) {
+  console.log('Cover letter button clicked'); 
+  this.coverLetterContent = coverLetter; 
+  this.showModal = true; 
+  console.log('Modal state:', this.showModal); 
 },
+
+    downloadResume(application) {
+      const resumeUrl = application.resume_url || (application.job_seeker && application.job_seeker.resume_url);
+      if (resumeUrl) {
+        window.open(`http://localhost:8000/storage/${resumeUrl}`, '_blank');
+      }
+    },
     getApplicantName(application) {
 
       if (application.job_seeker) {
@@ -232,5 +273,22 @@ export default {
 <style scoped>
 .job-applications-container {
   max-width: 1200px;
+}
+.modal {
+  max-height: 80vh;   
+  overflow-y: auto; 
+  z-index: 10050; 
+  margin-top:2rem;
+}
+.modal-body {
+  padding: 20px; 
+}
+.modal-header {
+  background-color: #f8f9fa; 
+  border-bottom: 1px solid #dee2e6; 
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end; 
 }
 </style>
