@@ -75,12 +75,14 @@
                       <div class="btn-group">
                         <button 
                           class="btn btn-sm btn-outline-success"
+                          v-if="application.status !== 'withdrawn'"
                           @click="updateApplicationStatus(application.id, 'accepted')"
                         >
                           Accept
                         </button>
                         <button 
                           class="btn btn-sm btn-outline-danger"
+                          v-if="application.status !== 'withdrawn'"
                           @click="updateApplicationStatus(application.id, 'rejected')"
                         >
                           Reject
