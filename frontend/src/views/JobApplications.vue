@@ -174,10 +174,10 @@ export default {
       }
     },
     downloadResume(application) {
-  const resumeUrl = application.resume_url || (application.job_seeker && application.job_seeker.resume_url);
-  if (resumeUrl) {
-    window.open(resumeUrl, '_blank'); 
-  }
+    const resumeUrl = application.resume_url || (application.job_seeker && application.job_seeker.resume_url);
+    if (resumeUrl) {
+        window.open(`http://localhost:8000/storage/${resumeUrl}`, '_blank');
+    }
 },
     getApplicantName(application) {
 
