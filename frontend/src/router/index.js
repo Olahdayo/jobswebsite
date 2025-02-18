@@ -6,6 +6,8 @@ import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import PostJob from "../views/PostJob.vue";
 import Support from "../views/Support.vue";
 import Profile from '@/views/profile/Profile.vue'
+import EmployerProfile from '@/views/profile/EmployerProfile.vue';
+import JobSeekerProfile from '@/views/profile/Profile.vue';
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -121,6 +123,18 @@ const router = createRouter({
       name: "Profile",
       component: Profile,
       meta: { requiresAuth: true }
+    },
+    {
+      path: "/employer-profile",
+      name: "EmployerProfile",
+      component: EmployerProfile,
+      meta: { requiresAuth: true, userType: "employer" }
+    },
+    {
+      path: "/jobseeker-profile",
+      name: "JobSeekerProfile",
+      component: Profile,
+      meta: { requiresAuth: true, userType: "jobseeker" }
     },
     {
       path: "/job-applications/:jobId",

@@ -121,7 +121,7 @@
                 <li>
                   <router-link
                     class="dropdown-item"
-                    to="/profile"
+                    :to="userType === 'employer' ? '/employer-profile' : '/jobseeker-profile'"
                     @click="closeDropdown"
                   >
                     <i class="fas fa-user-cog me-2"></i>Profile
