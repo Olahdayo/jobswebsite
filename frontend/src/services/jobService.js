@@ -5,7 +5,6 @@ export const jobService = {
   // Get all jobs with pagination
   getAllJobs: async (page = 1) => {
     try {
-
       // Make the API call with axios config
       const response = await api.get("/jobs", {
         params: {
@@ -93,32 +92,28 @@ export const jobService = {
 
   getJob: async (id) => {
     try {
-      
-      
       const response = await api.get(`/jobs/${id}`);
-      
+
       if (!response.data) {
-        throw new Error('No job details found');
+        throw new Error("No job details found");
       }
-      
+
       return response.data;
     } catch (error) {
-    
-      
       if (error.response) {
         // Handle specific HTTP error codes
         switch (error.response.status) {
           case 404:
-            console.warn('Job not found');
-            throw new Error('Job not found');
+            console.warn("Job not found");
+            throw new Error("Job not found");
           case 500:
-            console.error('Server error while fetching job');
-            throw new Error('Server error occurred');
+            console.error("Server error while fetching job");
+            throw new Error("Server error occurred");
           default:
             throw error;
         }
       }
-      
+
       throw error;
     }
   },
@@ -129,15 +124,15 @@ export const jobService = {
       // Log FormData contents for debugging (excluding file contents)
       const formDataEntries = {};
       for (let [key, value] of formData.entries()) {
-        if (key !== 'resume') {
+        if (key !== "resume") {
           formDataEntries[key] = value;
         } else {
-          formDataEntries[key] = 'File present';
+          formDataEntries[key] = "File present";
         }
       }
 
       // Add job_id to formData
-      formData.append('job_id', jobId);
+      formData.append("job_id", jobId);
 
       const response = await api.post(`/applications`, formData, {
         headers: {
@@ -148,28 +143,29 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-      
       if (error.response) {
-        
         // Handle specific error cases
         if (error.response.status === 422) {
           // Validation errors or duplicate application
-          const errorMessage = error.response.data.message || 
-            'There was a problem with your application.';
+          const errorMessage =
+            error.response.data.message ||
+            "There was a problem with your application.";
           throw new Error(errorMessage);
         } else if (error.response.status === 401) {
-          throw new Error('Please log in to apply for this job.');
+          throw new Error("Please log in to apply for this job.");
         } else if (error.response.status === 403) {
-          throw new Error('You are not authorized to apply for this job.');
+          throw new Error("You are not authorized to apply for this job.");
         } else if (error.response.status === 404) {
-          throw new Error('This job posting is no longer available.');
+          throw new Error("This job posting is no longer available.");
         } else if (error.response.status === 500) {
-          throw new Error('An error occurred while submitting your application. Please try again later.');
+          throw new Error(
+            "An error occurred while submitting your application. Please try again later."
+          );
         }
       }
-      
+
       // Generic error
-      throw new Error('Failed to submit application. Please try again.');
+      throw new Error("Failed to submit application. Please try again.");
     }
   },
 
@@ -196,7 +192,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-
       throw error;
     }
   },
@@ -219,7 +214,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-
       throw error;
     }
   },
@@ -232,7 +226,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-
       throw error;
     }
   },
@@ -247,7 +240,6 @@ export const jobService = {
 
       return response.data;
     } catch (error) {
-
       throw error;
     }
   },
@@ -335,32 +327,29 @@ export const jobService = {
   async getUserApplications() {
     try {
       const response = await api.get("/applications");
-      
+
       // More robust response handling
       if (!response || !response.data) {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
-      
-      
+
       // Return the entire response
       return response;
     } catch (error) {
-      
       // More detailed error logging
       if (error.response) {
-        
         // Handle specific error cases
         if (error.response.status === 401) {
-          console.warn('User session expired. Redirecting to login.');
+          console.warn("User session expired. Redirecting to login.");
         } else if (error.response.status === 500) {
-          console.error('Internal Server Error. Please contact support.');
+          console.error("Internal Server Error. Please contact support.");
         }
       } else if (error.request) {
-        console.error('No response received:', error.request);
+        console.error("No response received:", error.request);
       } else {
-        console.error('Error setting up request:', error.message);
+        console.error("Error setting up request:", error.message);
       }
-      
+
       throw error;
     }
   },
@@ -448,7 +437,7 @@ export const jobService = {
       const response = await api.get(`/jobs/${jobId}/user-applications`);
       return response.data;
     } catch (error) {
-      console.error('Error checking user job applications:', error);
+      console.error("Error checking user job applications:", error);
       throw error;
     }
   },

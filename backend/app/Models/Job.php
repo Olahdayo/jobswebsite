@@ -20,13 +20,16 @@ class Job extends Model
         'description',
         'location',
         'type',
-        'salary',
         'experience_level',
-        'requirements',
-        'responsibilities',
+        'salary_min',
+        'salary_max',
+        'skills',
+        'benefits',
+        'deadline',
+        'category',
+        'education_level',
         'is_active',
-        'is_featured',
-        'deadline'
+        'featured'
     ];
 
     protected $casts = [
@@ -55,7 +58,7 @@ class Job extends Model
      */
     public function applications()
     {
-        return $this->hasMany(Application::class, 'job_id');
+        return $this->hasMany(Application::class);
     }
 
     /**

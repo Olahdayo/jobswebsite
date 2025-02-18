@@ -1,0 +1,47 @@
+{
+  "rules": [
+    {
+      "description": "Vue.js Best Practices",
+      "languages": ["javascript", "vue"],
+      "frameworks": ["vue.js"],
+      "guidelines": [
+       "Utilize Options API for component logic organization for simplicity.",
+        "Utilize the Vue Router for navigation and route management.",
+         "Implement Pinia for state management with clear and simple actions and getters.",
+        "Opt for Element Plus or Vuetify for UI components for better integration with Vue.",
+        "Implement component reusability and proper props management."
+        "Use an event bus only when necessary for components interaction.",
+        "Keep code readable and comments specific for better understanding.",
+        "Craft a unique style of coding niche that is consistent"
+      ]
+    },
+    {
+      "description": "Bootstrap and CSS Integration",
+      "languages": ["css", "scss"],
+      "frameworks": ["bootstrap"],
+      "guidelines": [
+        "Customize Bootstrap themes using SCSS variables.",
+        "Implement responsive designs using Bootstrap's grid system.",
+        "Avoid excessive use of custom CSS by leveraging Bootstrap's utility classes.",
+        "Integrate with Vue components for styling consistency."
+      ]
+    },
+    {
+      "description": "Laravel PHP Best Practices",
+      "languages": ["php"],
+      "frameworks": ["laravel"],
+      "guidelines": [
+        "Follow Laravel's MVC architecture for a clean separation of concerns.",
+        "Use Eloquent ORM for database interactions.",
+        "Implement API resources for clean data handling.",
+        "Utilize Laravel's built-in authentication and authorization features.",
+        "Leverage Laravel Mix for asset management, integrating with Vue components and processes."
+"Maintain DRY (Don't Repeat Yourself) principles to keep code manageable.",
+        "Use `dd()` for debugging and error logging to quickly diagnose issues.",
+        "Optimize for simplicity; avoid complex logic where a simple alternative exists.",
+        "Rely on Laravel's built-in features for routing, database migrations, and authentication to ease development.",
+        "Craft a style of coding niche that is consistent"
+      ]
+    }
+  ]
+}

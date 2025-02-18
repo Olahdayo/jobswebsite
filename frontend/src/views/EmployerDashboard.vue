@@ -12,180 +12,243 @@
             <i class="fas fa-plus-circle me-2"></i>
             Post New Job
           </button>
-          <!-- <button
-            @click="handleLogout"
-            class="btn btn-outline-danger d-flex align-items-center"
-          >
-            <i class="fas fa-sign-out-alt me-2"></i>
-            Logout
-          </button> -->
         </div>
       </div>
     </nav>
 
     <div class="container py-4">
-      <!-- Stats Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon jobs">
-                  <i class="fas fa-briefcase"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Total Jobs</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.totalJobs }}</h2>
-                </div>
-              </div>
-            </div>
+      <!-- Loading State -->
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-content">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
           </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon active">
-                  <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Active Jobs</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.activeJobs }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon applications">
-                  <i class="fas fa-users"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Total Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.totalApplications }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon pending">
-                  <i class="fas fa-clock"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Pending Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.pendingApplications }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon accepted">
-                  <i class="fas fa-check"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Accepted Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.acceptedApplications }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card stat-card h-100 border-0">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="stat-icon rejected">
-                  <i class="fas fa-times"></i>
-                </div>
-                <div class="ms-3">
-                  <h6 class="card-subtitle text-muted mb-1">Rejected Applications</h6>
-                  <h2 class="card-title mb-0">{{ jobStats.rejectedApplications }}</h2>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p class="mt-3 text-muted">Loading dashboard data...</p>
         </div>
       </div>
 
-      <!-- Posted Jobs -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom-0 py-3">
-          <h5 class="card-title mb-0">Posted Jobs</h5>
+      <!-- Dashboard Content -->
+      <div v-else>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon jobs">
+                    <i class="fas fa-briefcase"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">Total Jobs</h6>
+                    <h2 class="card-title mb-0">{{ jobStats.totalJobs }}</h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon active">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">Active Jobs</h6>
+                    <h2 class="card-title mb-0">{{ jobStats.activeJobs }}</h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon applications">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Total Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.totalApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Pending Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.pendingApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon accepted">
+                    <i class="fas fa-check"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Accepted Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.acceptedApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card stat-card h-100 border-0">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="stat-icon rejected">
+                    <i class="fas fa-times"></i>
+                  </div>
+                  <div class="ms-3">
+                    <h6 class="card-subtitle text-muted mb-1">
+                      Rejected Applications
+                    </h6>
+                    <h2 class="card-title mb-0">
+                      {{ jobStats.rejectedApplications }}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Location</th>
-                  <th>Type</th>
-                  <th>Experience</th>
-                  <th>Status</th>
-                  <th>Posted Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="job in employerJobs" :key="job.id">
-                  <td>{{ job.title }}</td>
-                  <td>{{ job.location }}</td>
-                  <td>{{ job.type }}</td>
-                  <td>{{ job.experience_level }}</td>
-                  <td>
-                    <span 
-                      :class="[
-                        'badge',
-                        job.is_active ? 'bg-success' : 'bg-secondary'
-                      ]"
-                    >
-                      {{ job.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td class="text-nowrap">{{ formatDate(job.created_at) }}</td>
-                  <td>
-                    <div class="btn-group">
-                      <button 
-                        class="btn btn-sm btn-outline-primary" 
-                        @click="viewJob(job.id)"
-                      >
-                        View
-                      </button>
-                      <button 
-                        class="btn btn-sm"
+
+        <!-- Posted Jobs -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom-0 py-3">
+            <h5 class="card-title mb-0">Posted Jobs</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Applications</th>
+                    <th>Status</th>
+                    <th>Posted Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="job in paginatedJobs" :key="job.id">
+                    <td>{{ job.title }}</td>
+                    <td>{{ job.location }}</td>
+                    <td>{{ job.type }}</td>
+                    <td>
+                      <div class="d-flex flex-column">
+                        <span class="fw-bold text-primary">
+                          Total Applications:
+                          {{ job.applications_count?.total || 0 }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span
                         :class="[
-                          job.is_active ? 'btn-outline-secondary' : 'btn-outline-success'
+                          'badge',
+                          job.is_active ? 'bg-success' : 'bg-secondary',
                         ]"
-                        @click="toggleJobStatus(job.id)"
                       >
-                        {{ job.is_active ? 'Deactivate' : 'Activate' }}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="employerJobs.length === 0">
-                  <td colspan="7" class="text-center py-4">
-                    <p class="text-muted mb-0">No jobs posted yet</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                        {{ job.is_active ? "Active" : "Inactive" }}
+                      </span>
+                    </td>
+                    <td class="text-nowrap">
+                      {{ formatDate(job.created_at) }}
+                    </td>
+                    <td>
+                      <div class="btn-group">
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          @click="viewApplications(job.id)"
+                          data-title="View Applications"
+                        >
+                          <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          @click="viewJobDetails(job)"
+                          data-title="View Details"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm"
+                          :class="[
+                            job.is_active
+                              ? 'btn-outline-secondary'
+                              : 'btn-outline-success',
+                          ]"
+                          @click="toggleJobStatus(job.id)"
+                          :data-title="
+                            job.is_active ? 'Deactivate Job' : 'Activate Job'
+                          "
+                        >
+                          <i
+                            :class="[
+                              'fas',
+                              job.is_active ? 'fa-toggle-off' : 'fa-toggle-on',
+                            ]"
+                          ></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="employerJobs.length === 0">
+                    <td colspan="7" class="text-center py-4">
+                      <p class="text-muted mb-0">No jobs posted yet</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- Pagination Controls -->
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <a class="page-link" @click="changePage(currentPage - 1)" tabindex="-1" style="cursor: pointer;">Previous</a>
+                  </li>
+                  <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: page === currentPage }">
+                    <a class="page-link" @click="changePage(page)" style="cursor: pointer;">{{ page }}</a>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <a class="page-link" @click="changePage(currentPage + 1)" style="cursor: pointer;">Next</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
       </div>
@@ -193,7 +256,11 @@
 
     <!-- Post Job Modal -->
     <Teleport to="body">
-      <div v-if="showPostJobModal" class="modal fade show" style="display: block; z-index: 10050;">
+      <div
+        v-if="showPostJobModal"
+        class="modal fade show"
+        style="display: block; z-index: 10050"
+      >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content job-post-modal">
             <div class="modal-header bg-primary text-white">
@@ -237,15 +304,23 @@
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Education Level*</label>
-                    <select class="form-select" v-model="jobForm.educationLevel" required>
+                    <select
+                      class="form-select"
+                      v-model="jobForm.educationLevel"
+                      required
+                    >
                       <option value="">Select Education Level</option>
                       <option value="Secondary School">Secondary School</option>
                       <option value="OND">OND</option>
                       <option value="HND">HND</option>
-                      <option value="Bachelor's Degree">Bachelor's Degree</option>
+                      <option value="Bachelor's Degree">
+                        Bachelor's Degree
+                      </option>
                       <option value="Master's Degree">Master's Degree</option>
                       <option value="PhD">PhD</option>
-                      <option value="Professional Certification">Professional Certification</option>
+                      <option value="Professional Certification">
+                        Professional Certification
+                      </option>
                       <option value="Not Required">Not Required</option>
                     </select>
                   </div>
@@ -262,11 +337,7 @@
                   </div>
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Type*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.type" 
-                      required
-                    >
+                    <select class="form-select" v-model="jobForm.type" required>
                       <option value="">Select Job Type</option>
                       <option value="full-time">Full-Time</option>
                       <option value="part-time">Part-Time</option>
@@ -277,9 +348,9 @@
                   <!-- Experience Level and Category -->
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Experience Level*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.experienceLevel" 
+                    <select
+                      class="form-select"
+                      v-model="jobForm.experienceLevel"
                       required
                     >
                       <option value="">Select Experience Level</option>
@@ -290,14 +361,16 @@
                   </div>
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Job Category*</label>
-                    <select 
-                      class="form-select" 
-                      v-model="jobForm.category" 
+                    <select
+                      class="form-select"
+                      v-model="jobForm.category"
                       required
                     >
-                      <option value="">Select Job Category</option>
-                      <option 
-                        v-for="category in filterOptions.categories" 
+                      <option value="" disabled selected>
+                        Select a category
+                      </option>
+                      <option
+                        v-for="category in jobCategories"
                         :key="category"
                         :value="category"
                       >
@@ -362,22 +435,43 @@
                       required
                     />
                   </div>
+
+                  <div class="col-12">
+                    <div class="form-check">
+                      <input
+                        v-model="jobForm.featured"
+                        type="checkbox"
+                        class="form-check-input"
+                        id="featuredJob"
+                      />
+                      <label class="form-check-label" for="featuredJob">
+                        Feature this job posting
+                        <span class="badge bg-warning text-dark ms-2"
+                          >Premium</span
+                        >
+                      </label>
+                      <div class="text-muted small mt-1">
+                        Featured jobs appear prominently on the homepage and
+                        receive higher visibility
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="modal-footer">
-                  <button 
-                    type="button" 
-                    class="btn btn-secondary" 
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
                     @click="closePostJobModal"
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
-                    class="btn btn-primary" 
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
                     :disabled="isSubmitting"
                   >
-                    {{ isSubmitting ? 'Posting...' : 'Post Job' }}
+                    {{ isSubmitting ? "Posting..." : "Post Job" }}
                   </button>
                 </div>
               </form>
@@ -385,29 +479,43 @@
           </div>
         </div>
       </div>
-      <div v-if="showPostJobModal" class="modal-backdrop fade show" style="z-index: 1040;"></div>
+      <div
+        v-if="showPostJobModal"
+        class="modal-backdrop fade show"
+        style="z-index: 1040"
+      ></div>
     </Teleport>
 
     <Teleport to="body">
-      <SuccessModal 
-        v-if="showSuccessModal" 
+      <SuccessModal
+        v-if="showSuccessModal"
         :message="`Job posted successfully: ${successJobTitle}`"
         @close="handleSuccessModalClose"
       />
     </Teleport>
+
+    <JobDetailsModal
+      v-if="selectedJob"
+      :show="showJobDetailsModal"
+      :job="selectedJob"
+      @close="closeJobDetailsModal"
+    />
   </div>
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
-import { useJobsStore } from '@/stores/jobs';
-import SuccessModal from '@/components/SuccessModal.vue';
+import { useAuthStore } from "@/stores/auth";
+import { useJobsStore } from "@/stores/jobs";
+import { useEmployerStore } from "@/stores/employer";
+import SuccessModal from "@/components/SuccessModal.vue";
+import JobDetailsModal from "@/components/JobDetailsModal.vue";
 
 export default {
-  name: 'EmployerDashboard',
-  
+  name: "EmployerDashboard",
+
   components: {
-    SuccessModal
+    SuccessModal,
+    JobDetailsModal,
   },
 
   data() {
@@ -415,47 +523,94 @@ export default {
       educationLevels: [
         "Secondary School",
         "OND",
-        "HND", 
+        "HND",
         "Bachelor's Degree",
         "Master's Degree",
         "PhD",
         "Professional Certification",
-        "Not Required"
+        "Not Required",
       ],
-      jobTypes: [
-        'full-time',
-        'part-time', 
-        'contract'
+      jobTypes: ["full-time", "part-time", "contract"],
+      jobCategories: [
+        "Technology",
+        "Healthcare",
+        "Education",
+        "Finance",
+        "Sales",
+        "Marketing",
+        "Engineering",
+        "Customer Service",
+        "Administration",
+        "Human Resources",
+        "Manufacturing",
+        "Retail",
+        "Construction",
+        "Hospitality",
+        "Media",
+        "Legal",
+        "Transportation",
+        "Others",
       ],
       jobForm: {
-        title: '',
-        description: '',
-        location: '',
-        type: '',
-        experienceLevel: '',
+        title: "",
+        description: "",
+        location: "",
+        type: "",
+        experienceLevel: "",
         salaryMin: null,
         salaryMax: null,
-        skills: '',
-        benefits: '',
-        deadline: '',
-        category: '',
-        educationLevel: ''
+        skills: "",
+        benefits: "",
+        deadline: "",
+        category: "",
+        educationLevel: "",
+        featured: false,
       },
       showPostJobModal: false,
       isSubmitting: false,
       expandedJobId: null,
       authStore: null,
       jobsStore: null,
+      employerStore: null,
       showSuccessModal: false,
-      successJobTitle: '',
+      successJobTitle: "",
       isJobCreationLoading: false,
-      isLoading: false
+      isLoading: true,
+      jobs: [],
+      jobStats: {
+        totalJobs: 0,
+        activeJobs: 0,
+        totalApplications: 0,
+      },
+      defaultJob: {
+        applications_count: {
+          total: 0,
+        },
+      },
+      showJobDetailsModal: false,
+      selectedJob: null,
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
 
   computed: {
     employerJobs() {
-      return this.jobsStore ? this.jobsStore.getEmployerJobs : [];
+      return this.jobs.map((job) => ({
+        ...job,
+        applications_count: {
+          total: parseInt(job.applications_count?.total) || 0,
+        },
+      }));
+    },
+
+    paginatedJobs() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.employerJobs.slice(start, start + this.itemsPerPage);
+    },
+
+    totalPages() {
+      return Math.ceil(this.employerJobs.length / this.itemsPerPage);
     },
 
     jobStats() {
@@ -463,48 +618,56 @@ export default {
     },
 
     filterOptions() {
-      return this.jobsStore ? {
-        ...this.jobsStore.getFilterOptions,
-        educationLevels: this.educationLevels,
-        jobTypes: this.jobTypes
-      } : {};
+      return this.jobsStore
+        ? {
+            ...this.jobsStore.getFilterOptions,
+            educationLevels: this.educationLevels,
+            jobTypes: this.jobTypes,
+          }
+        : {};
     },
 
     normalizeJobType() {
       return (type) => {
-        const lowercaseType = type.toLowerCase().replace(/\s+/g, '-');
-        return this.jobTypes.find(validType => validType === lowercaseType) || 'full-time';
+        const lowercaseType = type.toLowerCase().replace(/\s+/g, "-");
+        return (
+          this.jobTypes.find((validType) => validType === lowercaseType) ||
+          "full-time"
+        );
       };
     },
 
     formatDate() {
       return (dateString) => {
-        if (!dateString) return '';
+        if (!dateString) return "";
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
       };
     },
 
     today() {
-      return new Date().toISOString().split('T')[0];
-    }
+      return new Date().toISOString().split("T")[0];
+    },
   },
 
   methods: {
     async loadDashboardData() {
       try {
         this.isLoading = true;
-        await Promise.all([
-          this.jobsStore.fetchEmployerJobs(),
-          this.jobsStore.fetchJobStats(),
-          this.jobsStore.fetchFilterOptions()
-        ]);
+
+        // Initialize stores
+        this.authStore = useAuthStore();
+        this.jobsStore = useJobsStore();
+        this.employerStore = useEmployerStore();
+
+        // Fetch data in parallel
+        await Promise.all([this.loadJobs(), this.loadStats()]);
       } catch (error) {
-        console.error('Error loading dashboard:', error);
+        console.error("Error loading dashboard data:", error);
       } finally {
         this.isLoading = false;
       }
@@ -517,25 +680,26 @@ export default {
 
     resetJobForm() {
       this.jobForm = {
-        title: '',
-        description: '',
-        location: '',
-        type: 'full-time',
-        experienceLevel: '',
+        title: "",
+        description: "",
+        location: "",
+        type: "full-time",
+        experienceLevel: "",
         salaryMin: null,
         salaryMax: null,
-        skills: '',
-        benefits: '',
-        deadline: '',
-        category: '',
-        educationLevel: ''
+        skills: "",
+        benefits: "",
+        deadline: "",
+        category: "",
+        educationLevel: "",
+        featured: false,
       };
     },
 
     async handlePostJob() {
       try {
         this.isSubmitting = true;
-        
+
         const formData = {
           title: this.jobForm.title,
           description: this.jobForm.description,
@@ -543,42 +707,55 @@ export default {
           type: this.normalizeJobType(this.jobForm.type),
           experience_level: this.jobForm.experienceLevel,
           salary: {
-            min: this.jobForm.salaryMin ? parseInt(this.jobForm.salaryMin) : null,
-            max: this.jobForm.salaryMax ? parseInt(this.jobForm.salaryMax) : null
+            min: this.jobForm.salaryMin
+              ? parseInt(this.jobForm.salaryMin)
+              : null,
+            max: this.jobForm.salaryMax
+              ? parseInt(this.jobForm.salaryMax)
+              : null,
           },
-          requirements: this.jobForm.skills ? this.jobForm.skills.split(',').map(skill => skill.trim()) : [],
-          responsibilities: this.jobForm.benefits ? this.jobForm.benefits.split(',').map(benefit => benefit.trim()) : [],
+          requirements: this.jobForm.skills
+            ? this.jobForm.skills.split(",").map((skill) => skill.trim())
+            : [],
+          responsibilities: this.jobForm.benefits
+            ? this.jobForm.benefits.split(",").map((benefit) => benefit.trim())
+            : [],
           deadline: this.jobForm.deadline,
           category: this.jobForm.category,
-          education_level: this.jobForm.educationLevel
+          education_level: this.jobForm.educationLevel,
+          featured: this.jobForm.featured,
         };
-        
+
         this.isJobCreationLoading = true;
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         if (this.jobsStore) {
           await this.jobsStore.createJob(formData);
-          
+
           this.closePostJobModal();
-          
+
           this.successJobTitle = formData.title;
           this.showSuccessModal = true;
-          
+
           await this.loadDashboardData();
         }
       } catch (error) {
-        console.error('Error posting job:', error);
-        
-        if (error.response && error.response.data && error.response.data.errors) {
+        console.error("Error posting job:", error);
+
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
           const errors = error.response.data.errors;
-          let errorMessage = 'Please correct the following errors:\n';
-          Object.keys(errors).forEach(key => {
-            errorMessage += `- ${key}: ${errors[key].join(', ')}\n`;
+          let errorMessage = "Please correct the following errors:\n";
+          Object.keys(errors).forEach((key) => {
+            errorMessage += `- ${key}: ${errors[key].join(", ")}\n`;
           });
           alert(errorMessage);
         } else {
-          alert('Failed to create job. Please try again.');
+          alert("Failed to create job. Please try again.");
         }
       } finally {
         this.isJobCreationLoading = false;
@@ -596,37 +773,65 @@ export default {
       }
     },
 
-    // handleLogout() {
-    //   if (this.authStore) {
-    //     this.authStore.logout();
-    //   }
-    // },
-
     handleSuccessModalClose() {
       this.showSuccessModal = false;
-      this.successJobTitle = '';
+      this.successJobTitle = "";
     },
 
-    viewJob(jobId) {
-      this.$router.push({ 
-        name: 'JobApplications', 
-        params: { jobId: jobId } 
+    viewJobDetails(job) {
+      this.selectedJob = job;
+      this.showJobDetailsModal = true;
+    },
+
+    closeJobDetailsModal() {
+      this.showJobDetailsModal = false;
+      this.selectedJob = null;
+    },
+
+    async loadJobs() {
+      try {
+        const response = await this.employerStore.getJobs();
+        if (response?.data) {
+          this.jobs = response.data;
+        }
+      } catch (error) {
+        console.error("Error loading jobs:", error);
+      }
+    },
+
+    async loadStats() {
+      try {
+        await this.jobsStore.fetchJobStats();
+      } catch (error) {
+        console.error("Error loading job stats:", error);
+      }
+    },
+
+    viewApplications(jobId) {
+      this.$router.push({
+        name: "JobApplications",
+        params: { jobId: jobId },
       });
+    },
+
+    changePage(page) {
+      if (page < 1 || page > this.totalPages) return;
+      this.currentPage = page;
+      window.scrollTo(0, 0); // Scroll to top
     },
   },
 
-  created() {
-    this.authStore = useAuthStore();
-    this.jobsStore = useJobsStore();
-    this.loadDashboardData();
-  }
-}
+  async created() {
+    await this.loadDashboardData();
+  },
+};
 </script>
 
 <style scoped>
 .dashboard-container {
   background-color: #f8f9fa;
   min-height: 100vh;
+  position: relative;
 }
 
 .stat-card {
@@ -856,4 +1061,133 @@ export default {
   border-color: #ffc107;
 }
 
+.table td {
+  vertical-align: middle;
+}
+
+.applications-count {
+  font-size: 0.875rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
+}
+
+.btn-group {
+  gap: 0.25rem;
+}
+
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-group .btn i {
+  font-size: 0.875rem;
+}
+
+/* Custom tooltip styles */
+.btn {
+  position: relative;
+}
+
+[data-title] {
+  position: relative;
+  cursor: pointer;
+}
+
+[data-title]:hover::after {
+  content: attr(data-title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+[data-title]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+  margin-bottom: -5px;
+}
+
+.btn-group {
+  gap: 0.25rem;
+}
+
+.btn-group .btn {
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-group .btn i {
+  font-size: 0.875rem;
+}
+
+/* Add these new styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Optional: Add a subtle animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-overlay {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Style loading text */
+.loading-content p {
+  font-size: 1rem;
+  margin-top: 1rem;
+  color: #6c757d;
+}
 </style>

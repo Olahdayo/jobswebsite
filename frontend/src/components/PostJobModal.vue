@@ -165,7 +165,7 @@
                 </button>
               </div>
 
-              <!-- Add this after the Education Level field -->
+             
               <div class="col-12">
                 <div class="form-check">
                   <input
@@ -235,7 +235,7 @@ export default {
         educationLevel: "",
         description: "",
         requirements: [""],
-        featured: false,
+        featured: false
       },
     };
   },

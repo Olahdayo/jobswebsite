@@ -9,7 +9,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 // Interceptor to add auth token to requests
@@ -65,7 +65,7 @@ export const authService = {
       const response = await axios.post(`${API_URL}/login`, credentials);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user_type", response.data.userType); 
+        localStorage.setItem("user_type", response.data.userType);
         localStorage.setItem("user", JSON.stringify(response.data.user));
       }
       return response.data;
@@ -111,7 +111,7 @@ export const authService = {
   isAuthenticated: () => {
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user");
-    return !!(token && user); 
+    return !!(token && user);
   },
 
   // Get current user type
@@ -149,6 +149,17 @@ export const authService = {
       return response;
     } catch (error) {
       console.error("Error updating profile:", error);
+      throw error;
+    }
+  },
+
+  // Add this method to authService
+  async reapplyForJob(applicationId) {
+    try {
+      const response = await api.post(`/applications/${applicationId}/reapply`);
+      return response.data;
+    } catch (error) {
+      console.error("Error reapplying for job:", error);
       throw error;
     }
   },

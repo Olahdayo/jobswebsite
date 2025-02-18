@@ -51,7 +51,7 @@ class ApplicationController extends Controller
             ]);
 
             if ($validator->fails()) {
-               
+
                 return response()->json([
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
@@ -72,7 +72,7 @@ class ApplicationController extends Controller
                 ->first();
 
             if ($existingApplication) {
-               
+
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You have already applied for this job.',
@@ -87,7 +87,7 @@ class ApplicationController extends Controller
                 try {
                     $file = $request->file('resume');
                     $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-                    
+
                     // Store file in public/resumes directory
                     $path = $request->file('resume')->storeAs(
                         'resumes',
@@ -176,7 +176,7 @@ class ApplicationController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-           
+
             // Return a generic error response
             return response()->json([
                 'status' => 'error',
@@ -197,7 +197,7 @@ class ApplicationController extends Controller
 
             return response()->json($application);
         } catch (\Exception $e) {
-           
+
             return response()->json([
                 'message' => 'Failed to fetch application details',
                 'error' => $e->getMessage()
@@ -216,7 +216,7 @@ class ApplicationController extends Controller
         ]);
 
         if ($validator->fails()) {
-            
+
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
@@ -227,14 +227,14 @@ class ApplicationController extends Controller
             $application = Application::findOrFail($id);
             $application->update($request->only(['status', 'employer_notes']));
 
-           
+
 
             return response()->json([
                 'message' => 'Application status updated',
                 'data' => $application
             ]);
         } catch (\Exception $e) {
-            
+
             return response()->json([
                 'message' => 'Failed to update application status',
                 'error' => $e->getMessage()
@@ -283,6 +283,59 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'message' => 'Failed to cancel application',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reapply for a previously withdrawn job application
+     */
+    public function reapply(Application $application)
+    {
+        try {
+            $jobSeeker = request()->user();
+
+            // Verify the application belongs to this job seeker
+            if ($application->job_seeker_id !== $jobSeeker->id) {
+                return response()->json([
+                    'message' => 'You do not have permission to reapply for this application'
+                ], 403);
+            }
+
+            // Verify the application is withdrawn
+            if ($application->status !== 'withdrawn') {
+                return response()->json([
+                    'message' => 'Only withdrawn applications can be reapplied'
+                ], 400);
+            }
+
+            // Check if the job is still active and deadline hasn't passed
+            $job = $application->job;
+
+            if (!$job) {
+                return response()->json([
+                    'message' => 'Associated job not found'
+                ], 404);
+            }
+
+            if (!$job->is_active || ($job->deadline && now() > $job->deadline)) {
+                return response()->json([
+                    'message' => 'This job is no longer accepting applications'
+                ], 400);
+            }
+
+            // Update application status back to pending
+            $application->status = 'pending';
+            $application->save();
+
+            return response()->json([
+                'message' => 'Successfully reapplied for the job',
+                'data' => $application->load('job.employer')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to reapply for the job',
                 'error' => $e->getMessage()
             ], 500);
         }
