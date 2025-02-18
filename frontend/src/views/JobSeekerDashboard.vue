@@ -27,7 +27,7 @@
         </button>
       </div>
 
-      <div v-else>
+      <div v-else-if="!isLoading && !error">
         <!-- Stats Cards -->
         <div class="row">
           <div class="col-xl-3 col-md-6">
