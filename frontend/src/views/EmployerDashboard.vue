@@ -164,7 +164,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="job in employerJobs" :key="job.id">
+                  <tr v-for="job in paginatedJobs" :key="job.id">
                     <td>{{ job.title }}</td>
                     <td>{{ job.location }}</td>
                     <td>{{ job.type }}</td>
@@ -234,6 +234,20 @@
                   </tr>
                 </tbody>
               </table>
+              <!-- Pagination Controls -->
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <a class="page-link" @click="changePage(currentPage - 1)" tabindex="-1" style="cursor: pointer;">Previous</a>
+                  </li>
+                  <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: page === currentPage }">
+                    <a class="page-link" @click="changePage(page)" style="cursor: pointer;">{{ page }}</a>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <a class="page-link" @click="changePage(currentPage + 1)" style="cursor: pointer;">Next</a>
+                  </li>
+                </ul>
+              </nav>
             </div>
           </div>
         </div>
@@ -575,6 +589,8 @@ export default {
       },
       showJobDetailsModal: false,
       selectedJob: null,
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
 
@@ -586,6 +602,15 @@ export default {
           total: parseInt(job.applications_count?.total) || 0,
         },
       }));
+    },
+
+    paginatedJobs() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.employerJobs.slice(start, start + this.itemsPerPage);
+    },
+
+    totalPages() {
+      return Math.ceil(this.employerJobs.length / this.itemsPerPage);
     },
 
     jobStats() {
@@ -787,6 +812,12 @@ export default {
         name: "JobApplications",
         params: { jobId: jobId },
       });
+    },
+
+    changePage(page) {
+      if (page < 1 || page > this.totalPages) return;
+      this.currentPage = page;
+      window.scrollTo(0, 0); // Scroll to top
     },
   },
 
