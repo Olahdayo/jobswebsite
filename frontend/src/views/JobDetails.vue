@@ -14,123 +14,137 @@
 
     <!-- Job details -->
     <div v-else-if="job" class="job-details-container">
-        <div class="job-hero">
-          <div class="hero-content">
-            <div class="company-brand">
-              <img
-                :src="companyLogo"
-                :alt="job?.employer?.company_name"
-                class="company-logo"
-                loading="lazy"
-                @error="handleImageError"
-              />
-              <div class="company-info">
-                <h1 class="job-title">{{ job?.title }}</h1>
-                <h2 class="company-name">
-                  <i class="bi bi-building"></i>
-                  {{ job?.employer?.company_name }}
-                </h2>
-                <div class="job-meta">
-                  <p class="meta-item">
-                    <i class="bi bi-geo-alt"></i>
-                    {{ job?.location }}
-                  </p>
-                  <p class="meta-item">
-                    <i class="bi bi-briefcase"></i>
-                    {{ job?.type }}
-                  </p>
-                  <p class="meta-item" v-if="job?.salary_range">
-                    <i class="bi bi-cash"></i>
-                    {{ formatSalary(job?.salary_range) }}
-                  </p>
-                </div>
-                <div class="job-tags">
-                  <span class="tag" :class="{ 'tag-featured': job?.is_featured }">
-                    <i class="bi" :class="job?.is_featured ? 'bi-star-fill' : 'bi-star'"></i>
-                    {{ job?.is_featured ? 'Featured' : 'Standard' }}
-                  </span>
-                  <span class="tag tag-level">
-                    <i class="bi bi-bar-chart"></i>
-                    {{ job?.experience_level }}
-                  </span>
-                </div>
+      <div class="job-hero">
+        <div class="hero-content">
+          <div class="company-brand">
+            <img
+              :src="getLogoUrl(job.employer?.logo_url)"
+              @error="handleImageError"
+              class="company-logo"
+              alt="Company Logo"
+            />
+            <div class="company-info">
+              <h1 class="job-title">{{ job?.title }}</h1>
+              <h2 class="company-name">
+                <i class="bi bi-building"></i>
+                {{ job?.employer?.company_name }}
+              </h2>
+              <div class="job-meta">
+                <p class="meta-item">
+                  <i class="bi bi-geo-alt"></i>
+                  {{ job?.location }}
+                </p>
+                <p class="meta-item">
+                  <i class="bi bi-briefcase"></i>
+                  {{ job?.type }}
+                </p>
+                <p class="meta-item" v-if="job?.salary_range">
+                  <i class="bi bi-cash"></i>
+                  {{ formatSalary(job?.salary_range) }}
+                </p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Info Bar -->
-        <div class="job-meta">
-          <div class="d-flex flex-wrap gap-3">
-            <span class="meta-item">
-              <i class="bi bi-calendar3"></i>
-              Posted: {{ formatDate(job.created_at) }}
-            </span>
-            <span class="meta-item">
-              <i class="bi bi-clock"></i>
-              Deadline: {{ formatDate(job.deadline) }}
-            </span>
-            <span class="meta-item">
-              <i class="bi bi-cash"></i>
-            ₦{{ formatSalary(job.min_salary) }} - ₦{{
-              formatSalary(job.max_salary)
-            }}
-            </span>
-          </div>
-        </div>
-
-        <div class="content-grid">
-          <div class="main-content">
-            <div class="content-card">
-              <section class="job-section">
-                <h3 class="section-title">
-                  <i class="bi bi-file-text"></i>
-                  Job Description
-                </h3>
-                <div class="section-content" v-html="job?.description"></div>
-              </section>
-
-              <section class="job-section">
-                <h3 class="section-title">
-                  <i class="bi bi-list-task"></i>
-                  Key Responsibilities
-                </h3>
-                <ul class="requirements-list">
-                  <li v-for="(item, index) in parseList(job?.responsibilities)" :key="'resp-'+index">
-                    {{ item }}
-                  </li>
-                </ul>
-              </section>
-
-              <section class="job-section">
-                <h3 class="section-title">
-                  <i class="bi bi-check-circle"></i>
-                  Requirements
-                </h3>
-                <ul class="requirements-list">
-                  <li v-for="(item, index) in parseList(job?.requirements)" :key="'req-'+index">
-                    {{ item }}
-                  </li>
-                </ul>
-              </section>
-            </div>
-
-            <div class="mt-4">
-              <button 
-                @click="handleApply" 
-                class="btn btn-primary btn-lg"
-                :disabled="isApplying || hasApplied || isExpired"
-              >
-                <i class="bi bi-send me-2"></i>
-                {{ isExpired ? 'Expired' : (hasApplied ? 'Already Applied' : 'Apply Now') }}
-              </button>
-              <div v-if="applicationError" class="text-danger mt-2">
-                {{ applicationError }}
+              <div class="job-tags">
+                <span class="tag" :class="{ 'tag-featured': job?.is_featured }">
+                  <i
+                    class="bi"
+                    :class="job?.is_featured ? 'bi-star-fill' : 'bi-star'"
+                  ></i>
+                  {{ job?.is_featured ? "Featured" : "Standard" }}
+                </span>
+                <span class="tag tag-level">
+                  <i class="bi bi-bar-chart"></i>
+                  {{ job?.experience_level }}
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Quick Info Bar -->
+      <div class="job-meta">
+        <div class="d-flex flex-wrap gap-3">
+          <span class="meta-item">
+            <i class="bi bi-calendar3"></i>
+            Posted: {{ formatDate(job.created_at) }}
+          </span>
+          <span class="meta-item">
+            <i class="bi bi-clock"></i>
+            Deadline: {{ formatDate(job.deadline) }}
+          </span>
+          <span class="meta-item">
+            <i class="bi bi-cash"></i>
+            ₦{{ formatSalary(job.min_salary) }} - ₦{{
+              formatSalary(job.max_salary)
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="main-content">
+          <div class="content-card">
+            <section class="job-section">
+              <h3 class="section-title">
+                <i class="bi bi-file-text"></i>
+                Job Description
+              </h3>
+              <div class="section-content" v-html="job?.description"></div>
+            </section>
+
+            <section class="job-section">
+              <h3 class="section-title">
+                <i class="bi bi-list-task"></i>
+                Key Responsibilities
+              </h3>
+              <ul class="requirements-list">
+                <li
+                  v-for="(item, index) in parseList(job?.responsibilities)"
+                  :key="'resp-' + index"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+            </section>
+
+            <section class="job-section">
+              <h3 class="section-title">
+                <i class="bi bi-check-circle"></i>
+                Requirements
+              </h3>
+              <ul class="requirements-list">
+                <li
+                  v-for="(item, index) in parseList(job?.requirements)"
+                  :key="'req-' + index"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <div class="mt-4">
+            <button
+              @click="handleApply"
+              class="btn btn-primary btn-lg"
+              :disabled="isApplying || hasApplied || isExpired"
+            >
+              <i class="bi bi-send me-2"></i>
+              {{
+                isExpired
+                  ? "Expired"
+                  : hasApplied
+                  ? "Already Applied"
+                  : "Apply Now"
+              }}
+            </button>
+            <div v-if="applicationError" class="text-danger mt-2">
+              {{ applicationError }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- No job found -->
     <div v-else class="alert alert-warning m-4">Job not found</div>
@@ -216,16 +230,16 @@
               </div>
 
               <div class="d-flex justify-content-end gap-2 mt-4">
-                <button 
-                  type="button" 
-                  class="btn btn-outline-secondary" 
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
                   data-bs-dismiss="modal"
                   :disabled="isApplying"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   class="btn btn-primary"
                   :disabled="isApplying || !isFormValid"
                 >
@@ -332,6 +346,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { useJobsStore } from "@/stores/jobs";
 import { Modal } from "bootstrap";
+import { logoUrlMixin } from "@/mixins/logoUrlMixin";
 
 export default {
   name: "JobDetails",
@@ -352,7 +367,7 @@ export default {
       defaultCompanyLogo: "/images/dashboard-default.svg",
       applicationError: null,
       hasApplied: false,
-      isExpired: false, 
+      isExpired: false,
     };
   },
 
@@ -386,7 +401,12 @@ export default {
     companyLogo() {
       if (!this.job) return this.defaultCompanyLogo;
       // Check all possible paths for the logo
-      return this.job.employer?.logo || this.job.company_logo || this.job.logo || this.defaultCompanyLogo;
+      return (
+        this.job.employer?.logo ||
+        this.job.company_logo ||
+        this.job.logo ||
+        this.defaultCompanyLogo
+      );
     },
   },
 
@@ -394,20 +414,24 @@ export default {
     this.loadJobDetails();
   },
 
-  mounted() {   
-     
+  mounted() {
     this.applicationModal = new Modal(this.$refs.applicationModal);
     this.successModal = new Modal(this.$refs.successModal);
     this.errorModal = new Modal(this.$refs.errorModal);
 
     // Add event listener for modal close
-    this.$refs.applicationModal.addEventListener('hidden.bs.modal', this.resetForm);
+    this.$refs.applicationModal.addEventListener(
+      "hidden.bs.modal",
+      this.resetForm
+    );
   },
-
 
   beforeUnmount() {
     // Remove event listener
-    this.$refs.applicationModal.removeEventListener('hidden.bs.modal', this.resetForm);
+    this.$refs.applicationModal.removeEventListener(
+      "hidden.bs.modal",
+      this.resetForm
+    );
     this.hideModals();
   },
 
@@ -430,7 +454,11 @@ export default {
       }
 
       // Validate file type
-      const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       if (!allowedTypes.includes(file.type)) {
         this.formErrors.resume = "Please upload a PDF, DOC, or DOCX file";
         event.target.value = "";
@@ -453,76 +481,86 @@ export default {
     },
 
     async handleApply() {
-    // Reset any previous error
-    this.applicationError = null;
+      // Reset any previous error
+      this.applicationError = null;
 
-    try {
+      try {
         // Validate job exists and is numeric
         if (!this.job || !this.job.id || isNaN(this.job.id)) {
-            this.applicationError = 'Invalid job details';
-            return;
+          this.applicationError = "Invalid job details";
+          return;
         }
 
-        console.log('Job details:', this.job);
+        console.log("Job details:", this.job);
 
         const authStore = useAuthStore();
         if (authStore.isAuthenticated) {
-            // Check if user has already applied
-            const response = await this.jobsStore.fetchUserJobApplications(this.job.id);
-            console.log('Application check response:', response);
+          // Check if user has already applied
+          const response = await this.jobsStore.fetchUserJobApplications(
+            this.job.id
+          );
+          console.log("Application check response:", response);
 
-            // Defensive check for response structure
-            const applicationData = response && response.data ? response.data : {};
-            console.log('Application data:', applicationData);
+          // Defensive check for response structure
+          const applicationData =
+            response && response.data ? response.data : {};
+          console.log("Application data:", applicationData);
 
-            // Check for application deadline
-            if (applicationData.deadlineDate) {
-                const deadlineDate = new Date(applicationData.deadlineDate);
-                const currentDate = new Date();
+          // Check for application deadline
+          if (applicationData.deadlineDate) {
+            const deadlineDate = new Date(applicationData.deadlineDate);
+            const currentDate = new Date();
 
-                // Ensure deadline is in the past
-                if (currentDate > deadlineDate) {
-                    this.applicationError = `Application expired since ${this.formatDate(deadlineDate)}`;
-                    // Explicitly prevent modal from showing
-                    if (this.applicationModal && this.applicationModal.hide) {
-                        this.applicationModal.hide();
-                    }
-                    // Ensure error is visible
-                    this.$nextTick(() => {
-                        const errorElement = this.$el.querySelector('.text-danger');
-                        if (errorElement) {
-                            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    });
-                    return;
+            // Ensure deadline is in the past
+            if (currentDate > deadlineDate) {
+              this.applicationError = `Application expired since ${this.formatDate(
+                deadlineDate
+              )}`;
+              // Explicitly prevent modal from showing
+              if (this.applicationModal && this.applicationModal.hide) {
+                this.applicationModal.hide();
+              }
+              // Ensure error is visible
+              this.$nextTick(() => {
+                const errorElement = this.$el.querySelector(".text-danger");
+                if (errorElement) {
+                  errorElement.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
                 }
+              });
+              return;
             }
+          }
 
-            // Safely check for hasApplied property
-            if (applicationData.hasApplied) {
-                this.hasApplied = true;
-                this.applicationError = 'You have already applied for this job';
-                return;
-            }
-
-            // If no existing application, show modal
-            if (this.applicationModal && this.applicationModal.show) {
-                this.applicationModal.show();
-            }
-        } else {
-            // Redirect to login with the current job details URL
-            this.$router.push({
-                name: 'Login',
-                query: { redirect: this.$route.fullPath } 
-            });
+          // Safely check for hasApplied property
+          if (applicationData.hasApplied) {
+            this.hasApplied = true;
+            this.applicationError = "You have already applied for this job";
             return;
+          }
+
+          // If no existing application, show modal
+          if (this.applicationModal && this.applicationModal.show) {
+            this.applicationModal.show();
+          }
+        } else {
+          // Redirect to login with the current job details URL
+          this.$router.push({
+            name: "Login",
+            query: { redirect: this.$route.fullPath },
+          });
+          return;
         }
-    } catch (error) {
+      } catch (error) {
         // Log the error details for debugging
-        console.error('Error checking user job applications:', error);
-        this.applicationError = error.response ? error.response.data.message : 'Failed to check application status. Please try again later.';
-    }
-},
+        console.error("Error checking user job applications:", error);
+        this.applicationError = error.response
+          ? error.response.data.message
+          : "Failed to check application status. Please try again later.";
+      }
+    },
 
     async submitApplication() {
       if (!this.isFormValid) return;
@@ -533,42 +571,43 @@ export default {
         formData.append("resume", this.applicationForm.resume);
 
         await this.jobsStore.submitJobApplication(this.job.id, formData);
-        
+
         this.hideModals();
-        this.resetForm(); 
+        this.resetForm();
         this.successModal.show();
-        
       } catch (error) {
         console.error("Application submission error:", error);
-        this.errorMessage = error.message || 'Failed to submit application. Please try again.';
+        this.errorMessage =
+          error.message || "Failed to submit application. Please try again.";
         this.errorModal.show();
       }
     },
 
     async loadJobDetails() {
-    const jobId = this.$route.params.id;
-    if (!jobId) return;
+      const jobId = this.$route.params.id;
+      if (!jobId) return;
 
-    try {
+      try {
         await this.jobsStore.fetchJob(jobId);
 
         // Check if the job has expired
         const currentDate = new Date();
         if (this.job.deadline && new Date(this.job.deadline) < currentDate) {
-            this.isExpired = true; // Mark job as expired
+          this.isExpired = true; // Mark job as expired
         }
 
         const authStore = useAuthStore();
         if (authStore.isAuthenticated) {
-            // Check if user has already applied
-            const response = await this.jobsStore.fetchUserJobApplications(jobId);
-            this.hasApplied = response && response.data && response.data.hasApplied;
+          // Check if user has already applied
+          const response = await this.jobsStore.fetchUserJobApplications(jobId);
+          this.hasApplied =
+            response && response.data && response.data.hasApplied;
         }
-    } catch (error) {
-        this.loadError = 'Failed to load job details. Please try again later.';
+      } catch (error) {
+        this.loadError = "Failed to load job details. Please try again later.";
         console.error(error);
-    }
-},
+      }
+    },
 
     formatSalary(amount) {
       return amount ? amount.toLocaleString() : "Not specified";
@@ -586,33 +625,36 @@ export default {
     parseList(text) {
       // Handle null, undefined, or empty input
       if (!text) return [];
-      
+
       // If it's already an array, return it after filtering empty items
       if (Array.isArray(text)) {
         return text
-          .map(item => item?.toString().trim())
-          .filter(item => item && item.length > 0);
+          .map((item) => item?.toString().trim())
+          .filter((item) => item && item.length > 0);
       }
-      
+
       try {
         // If it's a JSON string, parse it first
-        if (typeof text === 'string' && (text.startsWith('[') || text.startsWith('{'))) {
+        if (
+          typeof text === "string" &&
+          (text.startsWith("[") || text.startsWith("{"))
+        ) {
           const parsed = JSON.parse(text);
           if (Array.isArray(parsed)) {
             return parsed
-              .map(item => item?.toString().trim())
-              .filter(item => item && item.length > 0);
+              .map((item) => item?.toString().trim())
+              .filter((item) => item && item.length > 0);
           }
         }
-        
+
         // Convert to string and split by commas
         return text
           .toString()
-          .split(',')
-          .map(item => item.trim())
-          .filter(item => item.length > 0);
+          .split(",")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0);
       } catch (error) {
-        console.error('Error parsing list:', error);
+        console.error("Error parsing list:", error);
         return [];
       }
     },
@@ -637,10 +679,11 @@ export default {
         resume: "",
       };
       // Reset file input
-      const fileInput = document.getElementById('resume');
-      if (fileInput) fileInput.value = '';
+      const fileInput = document.getElementById("resume");
+      if (fileInput) fileInput.value = "";
     },
   },
+  mixins: [logoUrlMixin],
 };
 </script>
 

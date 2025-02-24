@@ -35,10 +35,15 @@
           <!-- Jobs List -->
           <div v-else>
             <!-- Results Summary -->
-            <div class="results-summary mb-4 d-flex justify-content-between align-items-center">
+            <div
+              class="results-summary mb-4 d-flex justify-content-between align-items-center"
+            >
               <p class="text-muted mb-0">
-                <span v-if="hasActiveFilters" class="badge bg-info me-2">Filtered Results</span>
-                Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of {{ paginationInfo.total }} jobs
+                <span v-if="hasActiveFilters" class="badge bg-info me-2"
+                  >Filtered Results</span
+                >
+                Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of
+                {{ paginationInfo.total }} jobs
               </p>
               <div class="sort-options">
                 <select class="form-select form-select-sm">
@@ -67,9 +72,10 @@
                     <div class="card-body">
                       <div class="d-flex align-items-start gap-3">
                         <img
-                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
-                          :alt="job.employer?.company_name"
+                          :src="getLogoUrl(job.employer?.logo_url)"
+                          @error="handleImageError"
                           class="company-logo"
+                          alt="Company Logo"
                           width="80"
                           height="80"
                         />
@@ -77,7 +83,9 @@
                           <div class="d-flex justify-content-between">
                             <div>
                               <h5 class="card-title mb-1">{{ job.title }}</h5>
-                              <p class="company-name mb-2">Company: {{ job.employer?.company_name }}</p>
+                              <p class="company-name mb-2">
+                                Company: {{ job.employer?.company_name }}
+                              </p>
                             </div>
                             <span v-if="job.is_featured" class="featured-badge">
                               <i class="fas fa-star"></i>
@@ -96,12 +104,15 @@
                             </span>
                             <span class="meta-item">
                               <i class="fas fa-money-bill-wave"></i>
-                              Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}
+                              Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{
+                                formatSalary(job.max_salary)
+                              }}
                             </span>
                           </div>
 
                           <p class="job-description mb-3">
-                            Description: {{ job.description.substring(0, 150) }}...
+                            Description:
+                            {{ job.description.substring(0, 150) }}...
                           </p>
 
                           <div class="job-tags mb-3">
@@ -115,7 +126,9 @@
                             </span>
                           </div>
 
-                          <div class="d-flex justify-content-between align-items-center">
+                          <div
+                            class="d-flex justify-content-between align-items-center"
+                          >
                             <div class="job-dates">
                               <span class="posted-date me-3">
                                 <i class="fas fa-calendar"></i>
@@ -127,7 +140,8 @@
                               </span>
                             </div>
                             <button class="btn btn-primary btn-sm">
-                              View Details <i class="fas fa-arrow-right ms-1"></i>
+                              View Details
+                              <i class="fas fa-arrow-right ms-1"></i>
                             </button>
                           </div>
                         </div>
@@ -143,7 +157,12 @@
               <nav aria-label="Job listings pagination">
                 <ul class="pagination justify-content-center">
                   <!-- First Page -->
-                  <li :class="['page-item', { disabled: pagination.currentPage === 1 }]">
+                  <li
+                    :class="[
+                      'page-item',
+                      { disabled: pagination.currentPage === 1 },
+                    ]"
+                  >
                     <a
                       class="page-link"
                       href="#"
@@ -155,7 +174,12 @@
                   </li>
 
                   <!-- Previous Page -->
-                  <li :class="['page-item', { disabled: pagination.currentPage === 1 }]">
+                  <li
+                    :class="[
+                      'page-item',
+                      { disabled: pagination.currentPage === 1 },
+                    ]"
+                  >
                     <a
                       class="page-link"
                       href="#"
@@ -174,7 +198,7 @@
                       'page-item',
                       {
                         active: pagination.currentPage === page,
-                      }
+                      },
                     ]"
                   >
                     <a
@@ -187,7 +211,12 @@
                   </li>
 
                   <!-- Next Page -->
-                  <li :class="['page-item', { disabled: pagination.currentPage === totalPages }]">
+                  <li
+                    :class="[
+                      'page-item',
+                      { disabled: pagination.currentPage === totalPages },
+                    ]"
+                  >
                     <a
                       class="page-link"
                       href="#"
@@ -199,7 +228,12 @@
                   </li>
 
                   <!-- Last Page -->
-                  <li :class="['page-item', { disabled: pagination.currentPage === totalPages }]">
+                  <li
+                    :class="[
+                      'page-item',
+                      { disabled: pagination.currentPage === totalPages },
+                    ]"
+                  >
                     <a
                       class="page-link"
                       href="#"
@@ -211,12 +245,14 @@
                   </li>
                 </ul>
               </nav>
-              
+
               <!-- Pagination Info -->
               <div class="text-center mt-2">
                 <small class="text-muted">
-                  Page {{ paginationInfo.currentPage }} of {{ paginationInfo.lastPage }}
-                  (Showing {{ paginationInfo.from }} - {{ paginationInfo.to }} of {{ paginationInfo.total }} jobs)
+                  Page {{ paginationInfo.currentPage }} of
+                  {{ paginationInfo.lastPage }} (Showing
+                  {{ paginationInfo.from }} - {{ paginationInfo.to }} of
+                  {{ paginationInfo.total }} jobs)
                 </small>
               </div>
             </div>
@@ -241,14 +277,17 @@
 
 <script>
 import SearchFilter from "@/components/SearchFilter.vue";
-import { useJobsStore } from '@/stores/jobs';
+import { useJobsStore } from "@/stores/jobs";
+import { logoUrlMixin } from "@/mixins/logoUrlMixin";
 
 export default {
   name: "JobListings",
-  
+
   components: {
     SearchFilter,
   },
+
+  mixins: [logoUrlMixin],
 
   data() {
     return {
@@ -257,7 +296,7 @@ export default {
         currentPage: 1,
         perPage: 10,
       },
-      error: null
+      error: null,
     };
   },
 
@@ -291,20 +330,23 @@ export default {
 
     paginationInfo() {
       const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
-      const end = Math.min(start + this.pagination.perPage, this.allJobs.length);
+      const end = Math.min(
+        start + this.pagination.perPage,
+        this.allJobs.length
+      );
       return {
         from: this.allJobs.length ? start + 1 : 0,
         to: end,
-        total: this.allJobs.length
+        total: this.allJobs.length,
       };
     },
 
     hasActiveFilters() {
-      return Object.values(this.jobsStore.searchFilters).some(value => {
-        if (typeof value === 'boolean') return value;
-        return value && value !== '';
+      return Object.values(this.jobsStore.searchFilters).some((value) => {
+        if (typeof value === "boolean") return value;
+        return value && value !== "";
       });
-    }
+    },
   },
 
   methods: {
@@ -312,38 +354,38 @@ export default {
       try {
         await this.jobsStore.fetchJobs();
       } catch (error) {
-        console.error('Error loading jobs:', error);
+        console.error("Error loading jobs:", error);
       }
     },
 
     changePage(newPage) {
       if (newPage >= 1 && newPage <= this.totalPages) {
         this.pagination.currentPage = newPage;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
 
     toggleMobileSearch() {
       this.showMobileSearch = !this.showMobileSearch;
-      const searchFilter = document.querySelector('.search-filter');
+      const searchFilter = document.querySelector(".search-filter");
       if (searchFilter) {
-        searchFilter.classList.toggle('show');
+        searchFilter.classList.toggle("show");
       }
     },
 
     formatDate(date) {
-      if (!date) return 'N/A';
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      if (!date) return "N/A";
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     },
 
     formatSalary(salary) {
-      if (!salary) return 'Not specified';
-      return new Intl.NumberFormat('en-NG', {
-        maximumFractionDigits: 0
+      if (!salary) return "Not specified";
+      return new Intl.NumberFormat("en-NG", {
+        maximumFractionDigits: 0,
       }).format(salary);
     },
 
@@ -352,7 +394,7 @@ export default {
       try {
         await this.jobsStore.updateSearchFilters(searchFilters);
       } catch (error) {
-        console.error('Error searching jobs:', error);
+        console.error("Error searching jobs:", error);
       }
       if (window.innerWidth < 992) {
         this.toggleMobileSearch();
@@ -364,14 +406,14 @@ export default {
       try {
         await this.jobsStore.resetState();
       } catch (error) {
-        console.error('Error resetting search:', error);
+        console.error("Error resetting search:", error);
       }
-    }
+    },
   },
-  
+
   async created() {
     await this.jobsStore.initialize();
-  }
+  },
 };
 </script>
 
@@ -406,7 +448,8 @@ export default {
 }
 
 .job-card:hover .card {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .company-logo {
