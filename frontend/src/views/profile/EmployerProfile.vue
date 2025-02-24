@@ -1,65 +1,137 @@
 <template>
-  <div class="profile container mt-5">
-    <h1 class="text-center mb-4">Employer Profile</h1>
-    <div class="profile-header text-center">
-      <img :src="companyLogo" alt="Company Logo" class="profile-picture img-fluid rounded-circle mb-3" />
-      <h2 class="mb-2">{{ employer.name }}</h2>
-      <p class="text-muted">{{ employer.description }}</p>
-    </div>
-    <div class="profile-details mt-4">
-      <h3>Contact Information</h3>
-      <ul class="list-group">
-        <li class="list-group-item">Email: <strong>{{ employer.email }}</strong></li>
-        <li class="list-group-item">Phone: <strong>{{ employer.phone }}</strong></li>
-        <li class="list-group-item">Website: <strong><a :href="employer.website" target="_blank">{{ employer.website }}</a></strong></li>
-      </ul>
+  <div class="container mt-4">
+    <div class="row">
+      <div class="col-md-8 mx-auto">
+        <div class="card">
+          <div class="card-header">
+            <h3>Company Profile</h3>
+          </div>
+          <div class="card-body">
+            <form @submit.prevent="handleSubmit" v-if="!loading">
+              <div class="mb-3">
+                <label class="form-label">Company Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="formData.company_name"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="formData.phone"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Company Description</label>
+                <textarea
+                  class="form-control"
+                  v-model="formData.company_description"
+                  rows="4"
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Website</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  v-model="formData.website"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Industry</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="formData.industry"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Location</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="formData.location"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                Update Profile
+              </button>
+            </form>
+            <div v-else class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { useEmployerStore } from "@/stores/employer";
+import { ref, onMounted } from "vue";
+
 export default {
-  data() {
-    return {
-      employer: {},
-      companyLogo: '',
-    };
-  },
-  created() {
-    this.fetchEmployerData();
-  },
-  methods: {
-    async fetchEmployerData() {
+  name: "EmployerProfile",
+  setup() {
+    const employerStore = useEmployerStore();
+    const loading = ref(false);
+    const formData = ref({
+      company_name: "",
+      phone: "",
+      company_description: "",
+      website: "",
+      industry: "",
+      location: "",
+      logo_url: "",
+    });
+
+    const loadProfile = async () => {
+      loading.value = true;
       try {
-        const response = await fetch('/api/employer/profile');
-        if (!response.ok) throw new Error('Failed to fetch employer data');
-        const data = await response.json();
-        this.employer = data;
-        this.companyLogo = data.logo;
+        await employerStore.fetchProfile();
+        const profile = employerStore.profile;
+        Object.assign(formData.value, profile);
       } catch (error) {
-        console.error('Error fetching employer data:', error);
+        console.error("Failed to load profile:", error);
+      } finally {
+        loading.value = false;
       }
-    },
+    };
+
+    const handleSubmit = async () => {
+      loading.value = true;
+      try {
+        await employerStore.updateProfile(formData.value);
+        alert("Profile updated successfully");
+      } catch (error) {
+        console.error("Failed to update profile:", error);
+        alert("Failed to update profile");
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    onMounted(() => {
+      loadProfile();
+    });
+
+    return {
+      formData,
+      loading,
+      handleSubmit,
+    };
   },
 };
 </script>
-
-<style scoped>
-.profile {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-  border: 1px solid #dee2e6;
-  border-radius: 5px;
-  background-color: #f8f9fa;
-}
-.profile-picture {
-  width: 150px;
-  height: auto;
-  border-radius: 50%;
-  border: 2px solid #007bff;
-}
-.list-group-item {
-  background-color: #ffffff;
-}
-</style>
