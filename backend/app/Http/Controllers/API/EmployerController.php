@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class EmployerController extends Controller
 {
@@ -121,19 +122,30 @@ class EmployerController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $validated = $request->validate([
-            'company_name' => 'sometimes|string|max:255',
-            'phone' => 'nullable|string',
-            'company_description' => 'sometimes|string',
-            'website' => 'nullable|url',
-            'industry' => 'sometimes|string',
-            'location' => 'sometimes|string',
-            'logo_url' => 'nullable|url',
-        ]);
+        try {
+            $validated = $request->validate([
+                'company_name' => 'required|string|max:255',
+                'phone' => 'nullable|string',
+                'company_description' => 'nullable|string',
+                'website' => 'nullable|url',
+                'industry' => 'required|string',
+                'location' => 'required|string',
+                'logo_url' => 'nullable|string', // Changed from url to string to accept file paths
+            ]);
 
-        $request->user()->update($validated);
+            $employer = $request->user();
+            $employer->update($validated);
 
-        return response()->json($request->user());
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'employer' => $employer
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update profile',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -270,6 +282,52 @@ class EmployerController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error fetching employer stats',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function uploadLogo(Request $request)
+    {
+        try {
+            if (!$request->hasFile('logo')) {
+                return response()->json([
+                    'message' => 'No file uploaded',
+                    'error' => 'Please select a file to upload'
+                ], 400);
+            }
+
+            $file = $request->file('logo');
+
+            // Validate file
+            $validated = $request->validate([
+                'logo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            ]);
+
+            $employer = $request->user();
+
+            // Delete old logo if it exists
+            if ($employer->logo_url && !str_starts_with($employer->logo_url, 'http')) {
+                Storage::disk('public')->delete($employer->logo_url);
+            }
+
+            // Generate a unique filename
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Store the new logo
+            $path = $file->storeAs('company-logos', $filename, 'public');
+
+            // Update employer profile with new logo path
+            $employer->logo_url = $path;
+            $employer->save();
+
+            return response()->json([
+                'message' => 'Company logo uploaded successfully',
+                'employer' => $employer
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to upload company logo',
                 'error' => $e->getMessage()
             ], 500);
         }

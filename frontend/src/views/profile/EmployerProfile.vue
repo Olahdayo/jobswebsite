@@ -215,14 +215,14 @@ export default {
   },
 
   computed: {
-    ...mapState(useEmployerStore, ["profile"]),
+    ...mapState(useEmployerStore, ["profile", "loading", "error"]),
   },
 
   methods: {
     ...mapActions(useEmployerStore, [
       "fetchProfile",
       "updateProfile",
-      "updateProfilePicture",
+      "uploadLogo",
     ]),
 
     toggleEdit() {
@@ -236,23 +236,27 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
 
+      // Show preview immediately
       this.logoPreview = URL.createObjectURL(file);
 
       const formData = new FormData();
       formData.append("logo", file);
 
       try {
-        this.loading = true;
-        const response = await this.updateProfilePicture(formData);
+        const response = await this.uploadLogo(formData);
+
         if (response.employer && response.employer.logo_url) {
           this.formData.logo_url = response.employer.logo_url;
+          // Clear the preview after successful upload
+          URL.revokeObjectURL(this.logoPreview);
           this.logoPreview = null;
         }
       } catch (error) {
         console.error("Failed to upload logo:", error);
-        alert("Failed to upload company logo");
-      } finally {
-        this.loading = false;
+        alert(error.response?.data?.message || "Failed to upload company logo");
+        // Revert preview on error
+        URL.revokeObjectURL(this.logoPreview);
+        this.logoPreview = null;
       }
     },
 
@@ -270,30 +274,47 @@ export default {
       }
     },
 
-    async loadProfile() {
-      this.loading = true;
-      try {
-        await this.fetchProfile();
-        this.updateFormData();
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
     async handleSubmit() {
-      this.loading = true;
       try {
-        await this.updateProfile(this.formData);
-        alert("Profile updated successfully");
-        this.isEditing = false;
-        await this.loadProfile(); // Reload the profile after update
+        // Validate required fields
+        const requiredFields = ["company_name", "industry", "location"];
+        const missingFields = requiredFields.filter(
+          (field) => !this.formData[field]
+        );
+
+        if (missingFields.length > 0) {
+          throw new Error(
+            `Please fill in the following required fields: ${missingFields.join(
+              ", "
+            )}`
+          );
+        }
+
+        // Clean up the form data
+        const profileData = {
+          company_name: this.formData.company_name.trim(),
+          phone: this.formData.phone?.trim() || null,
+          company_description:
+            this.formData.company_description?.trim() || null,
+          website: this.formData.website?.trim() || null,
+          industry: this.formData.industry.trim(),
+          location: this.formData.location.trim(),
+          logo_url: this.formData.logo_url || null,
+        };
+
+        const response = await this.updateProfile(profileData);
+
+        if (response) {
+          this.isEditing = false;
+          alert("Profile updated successfully!");
+        }
       } catch (error) {
-        console.error("Failed to update profile:", error);
-        alert("Failed to update profile");
-      } finally {
-        this.loading = false;
+        console.error("Profile update error:", error);
+        alert(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to update profile"
+        );
       }
     },
 
@@ -304,26 +325,24 @@ export default {
     },
 
     handleImageError(event) {
-      // Set fallback image if the main image fails to load
       event.target.src = "/images/dashboard-default.svg";
-      // Remove the error handler to prevent infinite loops
       event.target.removeEventListener("error", this.handleImageError);
     },
-  },
-
-  mounted() {
-    this.loadProfile();
   },
 
   watch: {
     profile: {
       handler(newProfile) {
-        if (newProfile && !this.loading) {
+        if (newProfile) {
           this.updateFormData();
         }
       },
-      deep: true,
+      immediate: true,
     },
+  },
+
+  mounted() {
+    this.fetchProfile();
   },
 };
 </script>

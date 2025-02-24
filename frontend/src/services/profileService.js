@@ -37,23 +37,6 @@ export const profileService = {
       userType === "employer" ? "/employer/profile" : "/jobseeker/profile";
 
     try {
-      // Check if we're uploading a file
-      if (profileData instanceof FormData) {
-        const response = await authAxios.post(
-          `${baseEndpoint}/uploadProfilePicture`,
-          profileData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Accept: "application/json",
-            },
-          }
-        );
-        // console.log('Upload response:', response);
-        return response.data;
-      }
-
-      // Regular profile update
       const response = await authAxios.put(baseEndpoint, profileData);
       return response.data;
     } catch (error) {
@@ -122,6 +105,22 @@ export const profileService = {
       return response.data;
     } catch (error) {
       console.error("Error uploading company logo:", error);
+      throw error;
+    }
+  },
+
+  // Add this method to your profileService
+  async uploadEmployerLogo(formData) {
+    try {
+      const response = await authAxios.post("/employer/logo", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading logo:", error);
       throw error;
     }
   },
