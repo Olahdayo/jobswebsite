@@ -30,14 +30,10 @@
               <div class="text-center mb-4">
                 <div class="logo-container">
                   <img
-                    :src="
-                      logoPreview ||
-                      (formData.logo_url
-                        ? `${process.env.VUE_APP_API_URL}/storage/${formData.logo_url}`
-                        : '/images/defaultavatar.jpg')
-                    "
+                    :src="getLogoUrl(formData.logo_url)"
                     class="company-logo"
                     alt="Company Logo"
+                    @error="handleImageError"
                   />
                 </div>
               </div>
@@ -93,14 +89,10 @@
               <div class="text-center mb-4">
                 <div class="logo-container">
                   <img
-                    :src="
-                      logoPreview ||
-                      (formData.logo_url
-                        ? `${process.env.VUE_APP_API_URL}/storage/${formData.logo_url}`
-                        : '/default-company-logo.png')
-                    "
+                    :src="logoPreview || getLogoUrl(formData.logo_url)"
                     class="company-logo"
                     alt="Company Logo"
+                    @error="handleImageError"
                   />
                   <div class="logo-upload-overlay">
                     <label for="logo-upload" class="upload-label">
@@ -303,6 +295,19 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    getLogoUrl(logoUrl) {
+      if (!logoUrl) return "/images/dashboard-default.svg";
+      if (logoUrl.startsWith("http")) return logoUrl;
+      return `http://localhost:8000/storage/${logoUrl}`;
+    },
+
+    handleImageError(event) {
+      // Set fallback image if the main image fails to load
+      event.target.src = "/images/dashboard-default.svg";
+      // Remove the error handler to prevent infinite loops
+      event.target.removeEventListener("error", this.handleImageError);
     },
   },
 
