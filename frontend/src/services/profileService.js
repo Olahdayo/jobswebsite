@@ -106,4 +106,23 @@ export const profileService = {
       throw error;
     }
   },
+
+  // Add method for company logo upload
+  async uploadCompanyLogo(logoFile) {
+    const formData = new FormData();
+    formData.append("logo", logoFile);
+
+    try {
+      const response = await authAxios.post("/employer/upload-logo", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading company logo:", error);
+      throw error;
+    }
+  },
 };

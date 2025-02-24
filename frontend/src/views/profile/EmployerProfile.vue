@@ -30,7 +30,12 @@
               <div class="text-center mb-4">
                 <div class="logo-container">
                   <img
-                    :src="formData.logo_url || '/default-company-logo.png'"
+                    :src="
+                      logoPreview ||
+                      (formData.logo_url
+                        ? `${process.env.VUE_APP_API_URL}/storage/${formData.logo_url}`
+                        : '/images/defaultavatar.jpg')
+                    "
                     class="company-logo"
                     alt="Company Logo"
                   />
@@ -90,8 +95,9 @@
                   <img
                     :src="
                       logoPreview ||
-                      formData.logo_url ||
-                      '/default-company-logo.png'
+                      (formData.logo_url
+                        ? `${process.env.VUE_APP_API_URL}/storage/${formData.logo_url}`
+                        : '/default-company-logo.png')
                     "
                     class="company-logo"
                     alt="Company Logo"
@@ -230,7 +236,7 @@ export default {
     toggleEdit() {
       this.isEditing = !this.isEditing;
       if (!this.isEditing) {
-        this.loadProfile(); // Reset form data when canceling edit
+        this.updateFormData();
       }
     },
 
@@ -246,7 +252,10 @@ export default {
       try {
         this.loading = true;
         const response = await this.updateProfilePicture(formData);
-        this.formData.logo_url = response.data.logo_url;
+        if (response.employer && response.employer.logo_url) {
+          this.formData.logo_url = response.employer.logo_url;
+          this.logoPreview = null;
+        }
       } catch (error) {
         console.error("Failed to upload logo:", error);
         alert("Failed to upload company logo");
@@ -255,11 +264,25 @@ export default {
       }
     },
 
+    updateFormData() {
+      if (this.profile) {
+        Object.assign(this.formData, {
+          company_name: this.profile.company_name || "",
+          phone: this.profile.phone || "",
+          company_description: this.profile.company_description || "",
+          website: this.profile.website || "",
+          industry: this.profile.industry || "",
+          location: this.profile.location || "",
+          logo_url: this.profile.logo_url || "",
+        });
+      }
+    },
+
     async loadProfile() {
       this.loading = true;
       try {
         await this.fetchProfile();
-        Object.assign(this.formData, this.profile);
+        this.updateFormData();
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
@@ -273,6 +296,7 @@ export default {
         await this.updateProfile(this.formData);
         alert("Profile updated successfully");
         this.isEditing = false;
+        await this.loadProfile(); // Reload the profile after update
       } catch (error) {
         console.error("Failed to update profile:", error);
         alert("Failed to update profile");
@@ -284,6 +308,17 @@ export default {
 
   mounted() {
     this.loadProfile();
+  },
+
+  watch: {
+    profile: {
+      handler(newProfile) {
+        if (newProfile && !this.loading) {
+          this.updateFormData();
+        }
+      },
+      deep: true,
+    },
   },
 };
 </script>
