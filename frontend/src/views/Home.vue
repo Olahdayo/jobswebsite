@@ -6,7 +6,9 @@
       <div class="container position-relative">
         <div class="row min-vh-75 align-items-center py-5">
           <div class="col-lg-8 text-center text-lg-start">
-            <h1 class="display-4 fw-bold mb-4">Pin down your next career move!</h1>
+            <h1 class="display-4 fw-bold mb-4">
+              Pin down your next career move!
+            </h1>
             <p class="lead mb-5">
               Dive into a world of opportunities and discover your perfect
               match! Easily browse, apply, and connect with top employers in
@@ -15,7 +17,10 @@
             <div
               class="d-flex gap-3 justify-content-center justify-content-lg-start"
             >
-              <button @click="scrollToJobSection" class="btn btn-primary btn-lg btn-glow">
+              <button
+                @click="scrollToJobSection"
+                class="btn btn-primary btn-lg btn-glow"
+              >
                 <span class="btn-content">
                   <i class="bi bi-search me-2"></i>See Jobs
                   <span class="btn-shine"></span>
@@ -34,7 +39,9 @@
           </div>
           <div class="col-lg-4 d-none d-lg-block">
             <div class="hero-stats p-4 bg-white text-dark rounded-3 shadow-lg">
-              <div class="mb-4 d-flex justify-content-between align-items-center">
+              <div
+                class="mb-4 d-flex justify-content-between align-items-center"
+              >
                 <h4 class="m-0">Quick Stats</h4>
               </div>
               <div class="d-flex justify-content-between mb-3">
@@ -81,7 +88,9 @@
               id="featured-jobs"
               class="featured-jobs-container border-0 rounded-4 bg-white p-4 shadow-hover"
             >
-              <div class="mb-4 d-flex justify-content-between align-items-center">
+              <div
+                class="mb-4 d-flex justify-content-between align-items-center"
+              >
                 <h2 class="m-0 section-title">
                   <span class="highlight-text">Featured</span> Jobs
                   <div class="title-underline"></div>
@@ -93,23 +102,27 @@
               </div>
               <div class="row g-3">
                 <div class="col-md-6" v-for="job in featuredJobs" :key="job.id">
-                  <router-link 
-                    :to="'/jobs/' + job.id" 
+                  <router-link
+                    :to="'/jobs/' + job.id"
                     class="text-decoration-none"
                   >
-                    <div class="job-card" :class="{ 'featured-job': job.is_featured }">
+                    <div
+                      class="job-card"
+                      :class="{ 'featured-job': job.is_featured }"
+                    >
                       <div class="card-header">
                         <div class="company-info">
                           <img
-                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
-                          :alt="job.employer?.company_name"
-                          class="company-logo"
-                          width="80"
-                          height="80"
-                        />
+                            :src="getLogoUrl(job.employer?.logo_url)"
+                            @error="handleImageError"
+                            class="company-logo"
+                            alt="Company Logo"
+                          />
                           <div>
                             <h5 class="job-title">{{ job.title }}</h5>
-                            <p class="company-name">{{ job.employer?.company_name }}</p>
+                            <p class="company-name">
+                              {{ job.employer?.company_name }}
+                            </p>
                           </div>
                         </div>
                         <div class="featured-badge" v-if="job.is_featured">
@@ -117,7 +130,7 @@
                           Featured
                         </div>
                       </div>
-                      
+
                       <div class="card-body">
                         <div class="job-meta">
                           <div class="meta-item">
@@ -130,14 +143,23 @@
                           </div>
                           <div class="meta-item">
                             <i class="fas fa-money-bill-wave"></i>
-                            <span>Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                            <span
+                              >Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{
+                                formatSalary(job.max_salary)
+                              }}</span
+                            >
                           </div>
                         </div>
-                        
-                        <p class="job-description">Description: {{ job.description.substring(0, 100) }}...</p>
-                        
+
+                        <p class="job-description">
+                          Description:
+                          {{ job.description.substring(0, 100) }}...
+                        </p>
+
                         <div class="job-tags">
-                          <span class="tag">Experience: {{ job.experience_level }}</span>
+                          <span class="tag"
+                            >Experience: {{ job.experience_level }}</span
+                          >
                           <span class="tag">Category: {{ job.category }}</span>
                         </div>
                       </div>
@@ -171,23 +193,27 @@
             <h2 class="mb-4">Latest Jobs</h2>
             <div class="row g-3">
               <div class="col-12" v-for="job in latestJobs" :key="job.id">
-                <router-link 
-                  :to="'/jobs/' + job.id" 
+                <router-link
+                  :to="'/jobs/' + job.id"
                   class="text-decoration-none"
                 >
-                  <div class="job-card" :class="{ 'featured-job': job.is_featured }">
+                  <div
+                    class="job-card"
+                    :class="{ 'featured-job': job.is_featured }"
+                  >
                     <div class="card-header">
                       <div class="company-info">
                         <img
-                          :src="job.employer?.logo_url || '/images/dashboard-default.svg'"
-                          :alt="job.employer?.company_name"
+                          :src="getLogoUrl(job.employer?.logo_url)"
+                          @error="handleImageError"
                           class="company-logo"
-                          width="80"
-                          height="80"
+                          alt="Company Logo"
                         />
                         <div>
                           <h5 class="job-title">{{ job.title }}</h5>
-                          <p class="company-name">{{ job.employer?.company_name }}</p>
+                          <p class="company-name">
+                            {{ job.employer?.company_name }}
+                          </p>
                         </div>
                       </div>
                       <div class="featured-badge" v-if="job.is_featured">
@@ -195,7 +221,7 @@
                         Featured
                       </div>
                     </div>
-                    
+
                     <div class="card-body">
                       <div class="job-meta">
                         <div class="meta-item">
@@ -208,26 +234,40 @@
                         </div>
                         <div class="meta-item">
                           <i class="fas fa-money-bill-wave"></i>
-                          <span>Job Salary: ₦{{ formatSalary(job.min_salary) }} - ₦{{ formatSalary(job.max_salary) }}</span>
+                          <span
+                            >Job Salary: ₦{{ formatSalary(job.min_salary) }} -
+                            ₦{{ formatSalary(job.max_salary) }}</span
+                          >
                         </div>
                       </div>
-                      
-                      <p class="job-description">Job Description: {{ job.description.substring(0, 100) }}...</p>
-                      
+
+                      <p class="job-description">
+                        Job Description:
+                        {{ job.description.substring(0, 100) }}...
+                      </p>
+
                       <div class="job-tags">
-                        <span class="tag">Job Experience: {{ job.experience_level }}</span>
-                        <span class="tag">Job Category: {{ job.category }}</span>
+                        <span class="tag"
+                          >Job Experience: {{ job.experience_level }}</span
+                        >
+                        <span class="tag"
+                          >Job Category: {{ job.category }}</span
+                        >
                       </div>
                     </div>
 
                     <div class="card-footer">
                       <div class="deadline">
                         <i class="fas fa-clock"></i>
-                        <span>Job Deadline: {{ formatDate(job.deadline) }}</span>
+                        <span
+                          >Job Deadline: {{ formatDate(job.deadline) }}</span
+                        >
                       </div>
                       <div class="posted-date">
                         <i class="fas fa-calendar"></i>
-                        <span>Job Posted: {{ formatDate(job.created_at) }}</span>
+                        <span
+                          >Job Posted: {{ formatDate(job.created_at) }}</span
+                        >
                       </div>
                     </div>
                   </div>
@@ -259,9 +299,10 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
-import { jobService } from '@/services/jobService';
+import { jobService } from "@/services/jobService";
 import Sidebar from "@/components/Sidebar.vue";
 import Button from "@/components/Button.vue";
+import { logoUrlMixin } from "@/mixins/logoUrlMixin";
 
 export default {
   name: "Home",
@@ -269,6 +310,7 @@ export default {
     Sidebar,
     Button,
   },
+  mixins: [logoUrlMixin],
 
   data() {
     return {
@@ -279,23 +321,20 @@ export default {
         activeJobs: 0,
         totalLocations: 0,
         totalCategories: 0,
-        featuredJobs: 0
+        featuredJobs: 0,
       },
       jobsByState: {},
       jobsByField: {},
       recentPostings: [],
-      defaultCompanyLogo: '/images/dashboard-default.svg'
+      defaultCompanyLogo: "/images/dashboard-default.svg",
     };
   },
 
   async created() {
     try {
-      await Promise.all([
-        this.loadJobs(),
-        this.loadStats()
-      ]);
+      await Promise.all([this.loadJobs(), this.loadStats()]);
     } catch (error) {
-      console.error('Error initializing home page:', error);
+      console.error("Error initializing home page:", error);
     }
   },
 
@@ -308,11 +347,11 @@ export default {
             activeJobs: response.activeJobs || 0,
             totalLocations: response.totalLocations || 0,
             totalCategories: response.totalCategories || 0,
-            featuredJobs: response.featuredJobs || 0
+            featuredJobs: response.featuredJobs || 0,
           };
         }
       } catch (error) {
-        console.error('Error loading stats:', error);
+        console.error("Error loading stats:", error);
       }
     },
     async loadJobs() {
@@ -320,22 +359,28 @@ export default {
       try {
         // Load latest jobs first
         const latestResponse = await jobService.getAllJobs();
-        this.latestJobs = latestResponse.data ? latestResponse.data.slice(0, 5) : []; 
+        this.latestJobs = latestResponse.data
+          ? latestResponse.data.slice(0, 5)
+          : [];
 
         // Try to load featured jobs
         try {
           const featuredResponse = await jobService.getFeaturedJobs();
           // CheturedResponse has data property and it's an array
-          if (featuredResponse && featuredResponse.data && Array.isArray(featuredResponse.data)) {
+          if (
+            featuredResponse &&
+            featuredResponse.data &&
+            Array.isArray(featuredResponse.data)
+          ) {
             this.featuredJobs = featuredResponse.data.slice(0, 6);
           } else if (Array.isArray(featuredResponse)) {
             this.featuredJobs = featuredResponse.slice(0, 6);
           } else {
-            console.warn('Featured jobs response is not in expected format');
+            console.warn("Featured jobs response is not in expected format");
             this.featuredJobs = [];
           }
         } catch (error) {
-          console.error('Error loading featured jobs:', error);
+          console.error("Error loading featured jobs:", error);
           // Use latest jobs as fallback for featured
           this.featuredJobs = this.latestJobs.slice(0, 6);
         }
@@ -345,7 +390,7 @@ export default {
           this.processJobStats(latestResponse.data);
         }
       } catch (error) {
-        console.error('Error loading jobs:', error);
+        console.error("Error loading jobs:", error);
         this.latestJobs = [];
         this.featuredJobs = [];
       } finally {
@@ -355,14 +400,14 @@ export default {
 
     processJobStats(jobs) {
       if (!Array.isArray(jobs)) {
-        console.warn('Jobs data is not an array');
+        console.warn("Jobs data is not an array");
         return;
       }
 
       // Process jobs by state
       this.jobsByState = jobs.reduce((acc, job) => {
         if (job && job.location) {
-          const state = job.location.split(',').pop()?.trim() || 'Unknown';
+          const state = job.location.split(",").pop()?.trim() || "Unknown";
           acc[state] = (acc[state] || 0) + 1;
         }
         return acc;
@@ -371,7 +416,7 @@ export default {
       // Process jobs by field
       this.jobsByField = jobs.reduce((acc, job) => {
         if (job) {
-          const field = job.category || 'Other';
+          const field = job.category || "Other";
           acc[field] = (acc[field] || 0) + 1;
         }
         return acc;
@@ -384,39 +429,41 @@ export default {
     },
 
     formatJobDate(date) {
-      const days = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
-      if (days === 0) return 'Today';
-      if (days === 1) return 'Yesterday';
+      const days = Math.floor(
+        (new Date() - new Date(date)) / (1000 * 60 * 60 * 24)
+      );
+      if (days === 0) return "Today";
+      if (days === 1) return "Yesterday";
       if (days < 7) return `${days} days ago`;
       return this.formatDate(date);
     },
 
     formatDate(date) {
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     },
 
     formatSalary(salary) {
-      return salary.toLocaleString('en-US', {
+      return salary.toLocaleString("en-US", {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
       });
     },
 
     scrollToJobSection() {
-      const jobSection = document.getElementById('job-section');
+      const jobSection = document.getElementById("job-section");
       if (jobSection) {
-        jobSection.scrollIntoView({ behavior: 'smooth' });
+        jobSection.scrollIntoView({ behavior: "smooth" });
       }
     },
 
     handleSearch() {
-      this.$router.push('/jobs');
-    }
-  }
+      this.$router.push("/jobs");
+    },
+  },
 };
 </script>
 
@@ -533,7 +580,8 @@ html {
 }
 
 .job-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
   border-color: #3b82f6;
 }
@@ -831,7 +879,7 @@ html {
 }
 
 .badge-dot::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 100%;
   height: 100%;
@@ -894,7 +942,7 @@ html {
   .stat-card {
     padding: 0.5rem;
   }
-  
+
   .stat-icon {
     width: 36px;
     height: 36px;
@@ -902,4 +950,3 @@ html {
   }
 }
 </style>
-

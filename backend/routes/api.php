@@ -60,6 +60,9 @@ Route::middleware(['auth:sanctum,employer'])->group(function () {
         '/job-applications/{application}/download-resume',
         [JobController::class, 'downloadResume']
     )->name('job-applications.download-resume');
+
+    // Logo upload
+    Route::post('/employer/logo', [EmployerController::class, 'uploadLogo']);
 });
 
 // Protected routes for job seekers

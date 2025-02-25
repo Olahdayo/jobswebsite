@@ -28,11 +28,27 @@ export const useEmployerStore = defineStore("employer", {
       this.loading = true;
       try {
         const response = await profileService.updateProfile(profileData);
-        this.profile = response.data;
+        this.profile = response.employer;
         return response;
       } catch (error) {
         this.error =
           error.response?.data?.message || "Failed to update profile";
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async uploadLogo(formData) {
+      this.loading = true;
+      try {
+        const response = await profileService.uploadEmployerLogo(formData);
+        if (response.employer) {
+          this.profile = response.employer;
+        }
+        return response;
+      } catch (error) {
+        this.error = error.response?.data?.message || "Failed to upload logo";
         throw error;
       } finally {
         this.loading = false;

@@ -5,9 +5,9 @@ import EmployerDashboard from "@/views/EmployerDashboard.vue";
 import JobSeekerDashboard from "@/views/JobSeekerDashboard.vue";
 import PostJob from "../views/PostJob.vue";
 import Support from "../views/Support.vue";
-import Profile from '@/views/profile/Profile.vue'
-import EmployerProfile from '@/views/profile/EmployerProfile.vue';
-import JobSeekerProfile from '@/views/profile/Profile.vue';
+import Profile from "@/views/profile/Profile.vue";
+import EmployerProfile from "@/views/profile/EmployerProfile.vue";
+import JobSeekerProfile from "@/views/profile/Profile.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const publicPages = [
@@ -70,16 +70,16 @@ const router = createRouter({
       meta: { public: true },
     },
     {
-      path: "/job/:id",
+      path: "/jobs/:id",
       name: "JobDetails",
       component: JobDetails,
       meta: { public: true },
     },
     {
       path: "/job-details/:id",
-      name: 'job-details',
-      component: () => import('@/views/JobDetails.vue'),
-      meta: { requiresAuth: true }
+      name: "job-details",
+      component: () => import("@/views/JobDetails.vue"),
+      meta: { requiresAuth: false },
     },
     {
       path: "/jobs/state/:state",
@@ -122,19 +122,19 @@ const router = createRouter({
       path: "/profile",
       name: "Profile",
       component: Profile,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/employer-profile",
       name: "EmployerProfile",
       component: EmployerProfile,
-      meta: { requiresAuth: true, userType: "employer" }
+      meta: { requiresAuth: true, userType: "employer" },
     },
     {
       path: "/jobseeker-profile",
       name: "JobSeekerProfile",
       component: Profile,
-      meta: { requiresAuth: true, userType: "jobseeker" }
+      meta: { requiresAuth: true, userType: "jobseeker" },
     },
     {
       path: "/job-applications/:jobId",
@@ -143,9 +143,9 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         userType: "employer",
-        title: "Job Applications"
+        title: "Job Applications",
       },
-      props: true
+      props: true,
     },
   ],
   scrollBehavior(to, from, savedPosition) {
