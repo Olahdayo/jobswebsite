@@ -172,16 +172,26 @@ export const useJobsStore = defineStore("jobs", {
       try {
         this.loading = true;
         const response = await jobService.toggleJobStatus(jobId);
-        if (response.data) {
-          const index = this.employerJobs.findIndex((job) => job.id === jobId);
-          if (index !== -1) {
-            this.employerJobs[index] = response.data;
-          }
-          await this.fetchJobStats(); // Refresh stats after toggling status
+        
+        if (response?.data?.data) {
+          // Find and update the job in both jobs and employerJobs arrays
+          const updateJob = (jobs, jobId, newData) => {
+            const index = jobs.findIndex(job => job.id === jobId);
+            if (index !== -1) {
+              jobs[index] = {
+                ...jobs[index],
+                ...newData
+              };
+            }
+          };
+
+          updateJob(this.jobs, jobId, response.data.data);
+          updateJob(this.employerJobs, jobId, response.data.data);
         }
-        return response.data;
+        
+        return response;
       } catch (error) {
-        this.error = error.message;
+        console.error('Error toggling job status:', error);
         throw error;
       } finally {
         this.loading = false;

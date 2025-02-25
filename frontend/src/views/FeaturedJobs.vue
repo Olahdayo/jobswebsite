@@ -41,13 +41,12 @@
             <div class="card-header border-bottom bg-white">
               <div class="d-flex justify-content-between align-items-start">
                 <div class="company-info d-flex gap-3">
-                  <img 
-                    :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
-                    :alt="job.employer?.company_name"
-                    class="company-logo rounded"
-                    width="60"
-                    height="60"
-                  />
+                  <img
+                          :src="getLogoUrl(job.employer?.logo_url)"
+                          @error="handleImageError"
+                          class="company-logo"
+                          alt="Company Logo"
+                        />
                   <div>
                     <h5 class="card-title mb-1">{{ job.title }}</h5>
                     <p class="text-muted mb-0">{{ job.employer?.company_name }}</p>
@@ -107,9 +106,14 @@
 <script>
 // Import the jobs store
 import { useJobsStore } from '@/stores/jobs';
+import { logoUrlMixin } from "@/mixins/logoUrlMixin";
+
 
 export default {
   name: 'FeaturedJobs',
+
+  mixins: [logoUrlMixin],
+
   
   // Component data
   data() {
@@ -220,6 +224,13 @@ export default {
 
 .job-card:hover .view-details i {
   transform: translateX(4px);
+}
+
+.company-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 /* Responsive styles */
