@@ -1,5 +1,20 @@
 <template>
   <div class="dashboard-container">
+    <!-- Simple Alert for success/error messages -->
+    <div
+      v-if="showAlert"
+      class="alert alert-{{ alertType }} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+      role="alert"
+    >
+      {{ alertMessage }}
+      <button
+        type="button"
+        class="btn-close"
+        @click="showAlert = false"
+        aria-label="Close"
+      ></button>
+    </div>
+
     <!-- Dashboard Header -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div class="container-fluid px-4">
@@ -211,13 +226,22 @@
                             job.is_active
                               ? 'btn-outline-secondary'
                               : 'btn-outline-success',
+                            { disabled: loadingStates[job.id] },
                           ]"
                           @click="toggleJobStatus(job.id)"
                           :data-title="
                             job.is_active ? 'Deactivate Job' : 'Activate Job'
                           "
                         >
+                          <template v-if="loadingStates[job.id]">
+                            <span
+                              class="spinner-border spinner-border-sm"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                          </template>
                           <i
+                            v-else
                             :class="[
                               'fas',
                               job.is_active ? 'fa-toggle-off' : 'fa-toggle-on',
@@ -237,14 +261,41 @@
               <!-- Pagination Controls -->
               <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-center">
-                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" @click="changePage(currentPage - 1)" tabindex="-1" style="cursor: pointer;">Previous</a>
+                  <li
+                    class="page-item"
+                    :class="{ disabled: currentPage === 1 }"
+                  >
+                    <a
+                      class="page-link"
+                      @click="changePage(currentPage - 1)"
+                      tabindex="-1"
+                      style="cursor: pointer"
+                      >Previous</a
+                    >
                   </li>
-                  <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: page === currentPage }">
-                    <a class="page-link" @click="changePage(page)" style="cursor: pointer;">{{ page }}</a>
+                  <li
+                    class="page-item"
+                    v-for="page in totalPages"
+                    :key="page"
+                    :class="{ active: page === currentPage }"
+                  >
+                    <a
+                      class="page-link"
+                      @click="changePage(page)"
+                      style="cursor: pointer"
+                      >{{ page }}</a
+                    >
                   </li>
-                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" @click="changePage(currentPage + 1)" style="cursor: pointer;">Next</a>
+                  <li
+                    class="page-item"
+                    :class="{ disabled: currentPage === totalPages }"
+                  >
+                    <a
+                      class="page-link"
+                      @click="changePage(currentPage + 1)"
+                      style="cursor: pointer"
+                      >Next</a
+                    >
                   </li>
                 </ul>
               </nav>
@@ -591,6 +642,10 @@ export default {
       selectedJob: null,
       currentPage: 1,
       itemsPerPage: 10,
+      loadingStates: {},
+      showAlert: false,
+      alertMessage: "",
+      alertType: "",
     };
   },
 
@@ -599,7 +654,10 @@ export default {
       return this.jobs.map((job) => ({
         ...job,
         applications_count: {
-          total: parseInt(job.applications_count?.total) || 0,
+          total: job.applications_count?.total || 0,
+          pending: job.applications_count?.pending || 0,
+          accepted: job.applications_count?.accepted || 0,
+          rejected: job.applications_count?.rejected || 0,
         },
       }));
     },
@@ -767,9 +825,60 @@ export default {
       this.showPostJobModal = true;
     },
 
-    toggleJobStatus(jobId) {
-      if (this.jobsStore) {
-        this.jobsStore.toggleJobStatus(jobId);
+    async toggleJobStatus(jobId) {
+      console.log("Toggling job status for job ID:", jobId);
+      try {
+        const job = this.jobs.find((j) => j.id === jobId);
+        if (!job) {
+          console.log("Job not found");
+          return;
+        }
+
+        const newStatus = !job.is_active;
+        const action = newStatus ? "activate" : "deactivate";
+
+        // Show confirmation dialog
+        if (!confirm(`Are you sure you want to ${action} this job?`)) {
+          console.log("Action cancelled by user");
+          return;
+        }
+
+        // Update loading state
+        this.loadingStates[jobId] = true;
+
+        const response = await this.jobsStore.toggleJobStatus(jobId);
+        console.log("Response from toggleJobStatus:", response);
+
+        if (response?.data?.data) {
+          // Update the local job status
+          const jobIndex = this.jobs.findIndex((j) => j.id === jobId);
+          if (jobIndex !== -1) {
+            this.jobs[jobIndex] = {
+              ...this.jobs[jobIndex],
+              is_active: response.data.data.is_active,
+              applications_count: response.data.data.applications_count,
+            };
+          }
+
+          // Show success message
+          const statusText = response.data.data.is_active
+            ? "activated"
+            : "deactivated";
+          alert(`Job has been successfully ${statusText}`);
+          console.log(
+            "Alert message set:",
+            `Job has been successfully ${statusText}`
+          );
+        }
+
+        // Refresh job stats
+        await this.loadStats();
+      } catch (error) {
+        console.error("Error toggling job status:", error);
+        // Show error message
+        alert(error.response?.data?.message || "Failed to update job status");
+      } finally {
+        this.loadingStates[jobId] = false;
       }
     },
 
@@ -792,10 +901,20 @@ export default {
       try {
         const response = await this.employerStore.getJobs();
         if (response?.data) {
-          this.jobs = response.data;
+          // Ensure each job has the required properties
+          this.jobs = response.data.map((job) => ({
+            ...job,
+            applications_count: job.applications_count || {
+              total: 0,
+              pending: 0,
+              accepted: 0,
+              rejected: 0,
+            },
+          }));
         }
       } catch (error) {
         console.error("Error loading jobs:", error);
+        this.jobs = [];
       }
     },
 
@@ -1189,5 +1308,23 @@ export default {
   font-size: 1rem;
   margin-top: 1rem;
   color: #6c757d;
+}
+
+.alert {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  width: 400px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
 }
 </style>

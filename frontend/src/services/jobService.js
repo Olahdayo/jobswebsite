@@ -401,7 +401,7 @@ export const jobService = {
   // Toggle job status
   toggleJobStatus: async (jobId) => {
     try {
-      const response = await api.patch(`/employer/jobs/${jobId}/toggle-status`);
+      const response = await api.patch(`/jobs/${jobId}/toggle-status`);
       return response.data;
     } catch (error) {
       throw error;
@@ -442,3 +442,5 @@ export const jobService = {
     }
   },
 };
+
+export default jobService;

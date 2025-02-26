@@ -57,11 +57,12 @@
             </div>
             
             <div class="company-info">
-              <img 
-                :src="job.employer?.logo_url || '/images/dashboard-default.svg'" 
-                :alt="job.employer?.company_name"
-                class="company-logo"
-              >
+              <img
+                          :src="getLogoUrl(job.employer?.logo_url)"
+                          @error="handleImageError"
+                          class="company-logo"
+                          alt="Company Logo"
+                        />
               <div>
                 <h3>{{ job.employer?.company_name }}</h3>
                 <p class="location">
@@ -132,9 +133,14 @@
 
 <script>
 import { jobService } from '@/services/jobService'
+import { logoUrlMixin } from "@/mixins/logoUrlMixin";
+
 
 export default {
   name: 'JobsByCategory',
+
+  mixins: [logoUrlMixin],
+
   data() {
     return {
       categories: [],

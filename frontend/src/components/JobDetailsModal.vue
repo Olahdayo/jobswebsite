@@ -27,12 +27,12 @@
                     {{ job.is_active ? 'Active' : 'Inactive' }}
                   </span>
                 </p>
-                <p class="mb-3"><strong>Posted Date:</strong> {{ job.created_at }}</p>
+                <p class="mb-3"><strong>Posted Date:</strong> {{ formatDate (job.created_at) }}</p>
                 <p class="mb-3"><strong>Total Applications:</strong> {{ job.applications_count?.total || 0 }}</p>
                 <p class="mb-3">
                   <strong>Application Deadline:</strong>
                   <span :class="{ 'text-danger': isDeadlinePassed }">
-                    {{ job.deadline || 'No deadline set' }}
+                    {{ formatDate (job.deadline) || 'No deadline set' }}
                   </span>
                 </p>
               </div>
@@ -86,6 +86,18 @@ export default {
       type: Object,
       required: true
     }
+  },
+
+  methods: {
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    },
   },
   computed: {
     hasRequirements() {

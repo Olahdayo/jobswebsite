@@ -39,7 +39,6 @@ class JobController extends Controller
                     'per_page' => $jobs->count()
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch jobs',
@@ -58,7 +57,7 @@ class JobController extends Controller
             $validEducationLevels = [
                 'Secondary School',
                 'OND',
-                'HND', 
+                'HND',
                 "Bachelor's Degree",
                 "Master's Degree",
                 'PhD',
@@ -106,27 +105,25 @@ class JobController extends Controller
             $validated['is_featured'] = $request->input('featured', false);
             $validated['category'] = $validated['category'] ?? 'Other';
 
-            
+
 
             $job = JobListing::create($validated);
 
-           
+
 
             return response()->json([
                 'message' => 'Job created successfully',
                 'data' => $job
             ], 201);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
-            
+
 
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $e->errors()
             ], 422);
-
         } catch (\Exception $e) {
-           
+
 
             return response()->json([
                 'message' => 'An unexpected error occurred',
@@ -141,7 +138,7 @@ class JobController extends Controller
     public function show(JobListing $jobListing)
     {
         $jobListing->load('employer');
-        
+
         return response()->json([
             'data' => [
                 'id' => $jobListing->id,
@@ -211,7 +208,7 @@ class JobController extends Controller
     public function destroy(JobListing $job)
     {
         $this->authorize('delete', $job);
-        
+
         $job->delete();
 
         return response()->json(null, 204);
@@ -227,9 +224,9 @@ class JobController extends Controller
         // Filter by keyword (search in title and description)
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
-            $query->where(function($q) use ($keyword) {
+            $query->where(function ($q) use ($keyword) {
                 $q->where('title', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('description', 'LIKE', '%' . $keyword . '%');
+                    ->orWhere('description', 'LIKE', '%' . $keyword . '%');
             });
         }
 
@@ -411,7 +408,7 @@ class JobController extends Controller
 
             return response()->json($stats);
         } catch (\Exception $e) {
-           
+
             return response()->json([
                 'activeJobs' => 0,
                 'totalLocations' => 0,
@@ -474,7 +471,7 @@ class JobController extends Controller
     public function updateApplicationStatus(Request $request, $applicationId)
     {
         try {
-           
+
 
             // Validate request
             $validated = $request->validate([
@@ -498,30 +495,26 @@ class JobController extends Controller
                 'message' => 'Application status updated successfully',
                 'application' => $application
             ]);
-
         } catch (ModelNotFoundException $e) {
-            
+
             return response()->json([
                 'message' => 'Job application not found',
                 'error' => $e->getMessage()
             ], 404);
-
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            
+
             return response()->json([
                 'message' => 'This action is unauthorized',
                 'error' => $e->getMessage()
             ], 403);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
-           
+
             return response()->json([
                 'message' => 'Invalid status value',
                 'errors' => $e->errors()
             ], 422);
-
         } catch (\Exception $e) {
-           
+
             return response()->json([
                 'message' => 'An error occurred while updating the application status',
                 'error' => $e->getMessage()
@@ -534,19 +527,19 @@ class JobController extends Controller
      */
     public function downloadResume(JobApplication $application)
     {
-     
+
         // Authorize the user to view this application
         $this->authorize('view', $application);
 
         // Get the resume path (either from application or associated job seeker)
-        $resumePath = $application->resume_url ?? 
-                      ($application->jobSeeker ? $application->jobSeeker->resume_url : null);
+        $resumePath = $application->resume_url ??
+            ($application->jobSeeker ? $application->jobSeeker->resume_url : null);
 
-        
+
 
         // Check if resume exists
         if (!$resumePath) {
-            
+
 
             return response()->json([
                 'message' => 'No resume found for this application',
@@ -562,7 +555,7 @@ class JobController extends Controller
 
         // Check if file exists
         if (!file_exists($fullLocalPath)) {
-          
+
 
             return response()->json([
                 'message' => 'Resume file not found',
@@ -577,9 +570,9 @@ class JobController extends Controller
         if (filter_var($resumePath, FILTER_VALIDATE_URL)) {
             try {
                 $fileContents = file_get_contents($resumePath);
-                
+
                 if ($fileContents === false) {
-                    
+
 
                     return response()->json([
                         'message' => 'Unable to download resume from provided URL',
@@ -588,10 +581,10 @@ class JobController extends Controller
                 }
 
                 // Generate a filename
-                $applicantName = $application->jobSeeker ? 
-                    Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) : 
+                $applicantName = $application->jobSeeker ?
+                    Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) :
                     'applicant-' . $application->id;
-            
+
                 $fileExtension = pathinfo(parse_url($resumePath, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'pdf';
                 $filename = "{$applicantName}-resume.{$fileExtension}";
 
@@ -601,7 +594,7 @@ class JobController extends Controller
                     'Content-Disposition' => "attachment; filename={$filename}"
                 ]);
             } catch (\Exception $e) {
-               
+
 
                 return response()->json([
                     'message' => 'Error downloading resume',
@@ -613,17 +606,17 @@ class JobController extends Controller
         // For local files, use the full local path
         try {
             // Generate a filename
-            $applicantName = $application->jobSeeker ? 
-                Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) : 
+            $applicantName = $application->jobSeeker ?
+                Str::slug($application->jobSeeker->first_name . '-' . $application->jobSeeker->last_name) :
                 'applicant-' . $application->id;
-        
+
             $fileExtension = pathinfo($resumePath, PATHINFO_EXTENSION);
             $filename = "{$applicantName}-resume.{$fileExtension}";
 
             // Return file download
             return response()->download($fullLocalPath, $filename);
         } catch (\Exception $e) {
-           
+
 
             return response()->json([
                 'message' => 'Error downloading local resume',
@@ -648,7 +641,7 @@ class JobController extends Controller
 
             // Validate the job ID exists and get job details
             $job = JobListing::findOrFail($jobId);
-            
+
             // Check if job has exceeded application deadline
             $currentDate = now();
             $hasDeadlinePassed = $job->deadline && $currentDate > $job->deadline;
@@ -663,7 +656,7 @@ class JobController extends Controller
                     'applicationStatus' => null
                 ], 400);
             }
-            
+
             // Ensure user is authenticated
             $user = Auth::user();
             if (!$user) {
@@ -708,6 +701,77 @@ class JobController extends Controller
                 'hasApplied' => false,
                 'applicationStatus' => null,
                 'deadlineDate' => null
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle job status (active/inactive)
+     */
+    public function toggleStatus(JobListing $job)
+    {
+        try {
+            // Log the initial state
+            info('Attempting to toggle job status', [
+                'job_id' => $job->id,
+                'current_status' => $job->is_active,
+                'employer_id' => $job->employer_id
+            ]);
+
+            $this->authorize('update', $job);
+
+            DB::beginTransaction();
+
+            // Update the status
+            $job->is_active = !$job->is_active;
+            $success = $job->save();
+
+            // Log the save result
+            info('Job save result', [
+                'success' => $success,
+                'new_status' => $job->is_active
+            ]);
+
+            // Get fresh job data with applications count
+            $job->loadCount([
+                'applications as total_applications',
+                'applications as pending_applications' => function ($query) {
+                    $query->where('status', 'pending');
+                },
+                'applications as accepted_applications' => function ($query) {
+                    $query->where('status', 'accepted');
+                },
+                'applications as rejected_applications' => function ($query) {
+                    $query->where('status', 'rejected');
+                }
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => $job->is_active ? 'Job activated successfully' : 'Job deactivated successfully',
+                'data' => [
+                    'id' => $job->id,
+                    'is_active' => $job->is_active,
+                    'applications_count' => [
+                        'total' => $job->total_applications,
+                        'pending' => $job->pending_applications,
+                        'accepted' => $job->accepted_applications,
+                        'rejected' => $job->rejected_applications
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            info('Failed to toggle job status', [
+                'error' => $e->getMessage(),
+                'job_id' => $job->id ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to toggle job status',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
