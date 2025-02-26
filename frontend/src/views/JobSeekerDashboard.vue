@@ -548,4 +548,10 @@ export default {
   background-color: #f8f9fc;
   color: #2e2f37;
 }
+
+@media (max-width: 768px) {
+  .company-logo{
+    display: none;
+  }
+}
 </style>
